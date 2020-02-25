@@ -11,8 +11,8 @@ g = @(x,y) normpdf(y, x, sqrt(sigmaG));
 f = @(x) normpdf(x, 0.5, sqrt(sigmaF));
 
 N = 100;
-M = 1000;
-Niter = 10;
+M = 100;
+Niter = 100;
 lambda = 0.01;
 x = zeros(Niter, N);
 
@@ -30,7 +30,7 @@ for n=1:Niter
         gradient = normpdf(y, x(n, i), 0.045) .* (y - x(n, i))/(0.045^2);
         drift(i) = sum(gradient./hN);
     end
-    x(n+1, :) = x(n, :) + drift + sqrt(2*lambda)*randn(1, N);
+    x(n+1, :) = x(n, :) + drift/Niter + sqrt(2*lambda)*randn(1, N);
 end
 
 [KDEy, KDEx] = ksdensity(x(Niter, :), 'Function', 'pdf');
