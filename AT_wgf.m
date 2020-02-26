@@ -2,7 +2,7 @@ function [x]= AT_wgf(N, M, Niter, lambda)
 
 x = zeros(Niter, N);
 
-x(1, :) =  0.5 + 0.043 * randn(1, N);
+x(1, :) = 0.1*ones(1, N);
 for n=1:Niter
     % get samples from h(y)
     y = 0.5 + sqrt(0.043^2 + 0.045^2) * randn(M, 1);
@@ -16,6 +16,6 @@ for n=1:Niter
         gradient = normpdf(y, x(n, i), 0.045) .* (y - x(n, i))/(0.045^2);
         drift(i) = sum(gradient./hN);
     end
-    x(n+1, :) = x(n, :) + drift/Niter + sqrt(2*lambda/Niter)*randn(1, N);
+    x(n+1, :) = x(n, :) - drift/Niter + sqrt(2*lambda/Niter)*randn(1, N);
 end
 end

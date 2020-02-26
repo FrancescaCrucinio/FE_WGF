@@ -10,13 +10,11 @@ h = @(y) normpdf(y, 0.5, sqrt(sigmaH));
 g = @(x,y) normpdf(y, x, sqrt(sigmaG));
 f = @(x) normpdf(x, 0.5, sqrt(sigmaF));
 
-N = 5;
+N = 5000;
 M = 100;
 Niter = 100;
 lambda = 0.01;
 x = AT_wgf(N, M, Niter, lambda);
-figure(1);
-histogram(x(Niter, :))
 
 figure(2);
 fplot(f, [0, 1], '-k', 'Linewidth', 4)
