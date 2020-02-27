@@ -1,11 +1,10 @@
 function [x]= AT_wgf(N, M, Niter, lambda)
 
 x = zeros(Niter, N);
-
-x(1, :) = 0.1*ones(1, N);
-for n=1:Niter
     % get samples from h(y)
     y = 0.5 + sqrt(0.043^2 + 0.045^2) * randn(M, 1);
+x(1, :) = rand(1, N);
+for n=1:Niter
     % Compute h^N_{n}
     hN = zeros(M,1);
     for j=1:M
