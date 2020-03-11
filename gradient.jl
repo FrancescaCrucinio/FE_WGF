@@ -19,6 +19,12 @@ for i=1:M
     plot!(p2, x, gradient[i, :])
 end
 title!("gradient")
-drift = drift_exact(0.5, sigma0, sigmaG, sigmaH, x);
-p3 = plot(x, drift)
-plot(p1, p2, p3, layout=(3, 1))
+driftE = drift_exact(0.5, sigma0, sigmaG, sigmaH, x);
+p3 = plot(x, driftE)
+title!("exact drift")
+driftA = drift_approximate(0.5, sigma0, sigmaG, sigmaH, x, 1000000);
+p4 = plot(x, driftA)
+title!("approximate drift")
+plot(p1, p2, p3, p4, layout=(4, 1))
+
+plot(p3, p4, layout=(1,2))
