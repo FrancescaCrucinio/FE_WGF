@@ -1,5 +1,7 @@
 using Distributions;
 using Plots;
+include("drift_exact.jl")
+include("drift_approximate.jl")
 
 x = collect(range(0, 1, length = 1000));
 sigmaG = 0.045^2;
