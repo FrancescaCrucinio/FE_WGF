@@ -50,32 +50,32 @@ Take $X_0\sim \N(\mu, \sigma_0^2)$. Then
 \begin{align*}
 \int \nu(dy)\frac{\nabla K(X_0, y)}{\varrho_0 K(y)} &= \int \N(y; \mu, \sigma_h^2)\frac{y - X_0}{\sigma_g^2}\frac{\N(y; X_0, \sigma_g^2)}{\N(y; \mu, \sigma_g^2 + \sigma_0^2)}\ dy\\
 &= \frac{\sqrt{\sigma_g^2 + \sigma_0^2}}{\sqrt{2\pi}\sigma_g^3\sigma_h}\int (y - X_0)\exp\left( -(y - \mu)^2\left(\frac{1}{2\sigma_h^2} - \frac{1}{2(\sigma_g^2 + \sigma_0^2)} \right)\right)\exp\left( -\frac{(y - X_0)^2}{2\sigma_g^2}\right)\ dy\\
-&= \exp\left( -\mu^2\frac{\sigma_g^2 + \sigma_0^2 - \sigma_h^2}{(\sigma_g^2 + \sigma_0^2)\sigma_h^2} - \frac{X_0^2}{2\sigma_g^2}\right)\frac{\sqrt{\sigma_g^2 + \sigma_0^2}}{\sqrt{2\pi}\sigma_g^3\sigma_h}\\
+&= \exp\left( -\mu^2\frac{\sigma_g^2 + \sigma_0^2 - \sigma_h^2}{2\sigma_h^2(\sigma_g^2 + \sigma_0^2)} - \frac{X_0^2}{2\sigma_g^2}\right)\frac{\sqrt{\sigma_g^2 + \sigma_0^2}}{\sqrt{2\pi}\sigma_g^3\sigma_h}\\
 &\int (y - X_0)\exp\left( \frac{-y^2(\beta + \gamma)+2y(\mu \beta + X_0\gamma)}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)}\right)\ dy
 \end{align*}
-where $\beta := 2\sigma_g^4 + 2\sigma_g^2\sigma_0^2 - 2\sigma_h^2\sigma_g^2$ and $\gamma := \sigma_h^2(\sigma_g^2 + \sigma_0^2)$.
+where $\beta := \sigma_g^4 + \sigma_g^2\sigma_0^2 - \sigma_h^2\sigma_g^2$ and $\gamma := \sigma_h^2(\sigma_g^2 + \sigma_0^2)$.
 
 The exponential inside the integral becomes
 \begin{align*}
 \exp\left( \frac{-y^2(\beta + \gamma)+2y(\mu \beta + X_0\gamma)}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)}\right) &= \exp\left( \frac{-y^2+2y(\mu \beta + X_0\gamma)/(\beta + \gamma)}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)^{-1}}\right)\\
 &= \exp\left( \frac{-\left(y - (\mu \beta + X_0\gamma)/(\beta + \gamma)\right)^2}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)^{-1}}\right)\exp\left( \frac{\left((\mu \beta + X_0\gamma)/(\beta + \gamma)\right)^2}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)^{-1}}\right)\\
-&= \frac{\sqrt{2\pi}\sqrt{\beta + \gamma}}{\sigma_g\sigma_h\sqrt{\sigma_g^2 + \sigma_0^2}}\N\left(y; \frac{\mu \beta + X_0\gamma}{\beta + \gamma}, \sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)^{-1}\right)\\
+&= \frac{\sqrt{2\pi}\sigma_g\sigma_h\sqrt{\sigma_g^2 + \sigma_0^2}}{\sqrt{\beta + \gamma}}\N\left(y; \frac{\mu \beta + X_0\gamma}{\beta + \gamma}, \sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)^{-1}\right)\\
 &\exp\left( \frac{\left((\mu \beta + X_0\gamma)/(\beta + \gamma)\right)^2}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)^{-1}}\right).
 \end{align*}
 Thus
 \begin{align*}
-\int \nu(dy)\frac{\nabla K(X_0, y)}{\varrho_0 K(y)} &= \exp\left( -\mu^2\frac{\sigma_g^2 + \sigma_0^2 - \sigma_h^2}{(\sigma_g^2 + \sigma_0^2)\sigma_h^2} - \frac{X_0^2}{2\sigma_g^2}\right)\frac{\sqrt{\sigma_g^2 + \sigma_0^2}}{\sqrt{2\pi}\sigma_g^3\sigma_h}\exp\left( \frac{\left((\mu \beta + X_0\gamma)/(\beta + \gamma)\right)^2}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)^{-1}}\right)\frac{\sqrt{2\pi}\sqrt{\beta + \gamma}}{\sigma_g\sigma_h\sqrt{\sigma_g^2 + \sigma_0^2}}\\
-&\int (y - X_0)\N\left(y; \frac{\mu \beta + X_0\gamma}{\beta + \gamma}, \sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)^{-1}\right)\ dy\\
-&= \frac{\sqrt{\beta + \gamma}}{\sigma_g^4\sigma_h^2}\exp\left( -\frac{(\mu^2\beta + X_0^2\gamma)(\beta + \gamma)}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)}\right)\exp\left( \frac{\left(\mu \beta + X_0\gamma\right)^2}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)}\right)\left(\frac{\mu \beta + X_0\gamma}{\beta + \gamma} - X_0\right)\\
-&= \frac{\sqrt{\beta + \gamma}}{\sigma_g^4\sigma_h^2}\exp\left( -\frac{\beta\gamma\left(\mu - X_0\right)^2}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)}\right)\left(\frac{\mu \beta + X_0\gamma}{\beta + \gamma} - X_0\right)\\
-&= \frac{\sqrt{\beta + \gamma}}{\sigma_g^4\sigma_h^2}\exp\left(- \frac{\beta\gamma\left(\mu - X_0\right)^2}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)}\right)\frac{(\mu - X_0)\beta}{\beta + \gamma}\\
-&= \frac{2\sigma_g^2 + 2\sigma_0^2 - 2\sigma_h^2}{\sqrt{\beta + \gamma}\sigma_g^2\sigma_h^2}\exp\left(- \frac{\beta\gamma\left(\mu - X_0\right)^2}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)}\right)(\mu - X_0)\\
-&= \frac{2\sigma_g^2 + 2\sigma_0^2 - 2\sigma_h^2}{\sqrt{\beta + \gamma}\sigma_g^2\sigma_h^2}\exp\left(- \frac{\beta\left(\mu - X_0\right)^2}{2\sigma_g^2(\beta + \gamma)}\right)(\mu - X_0)
+\int \nu(dy)\frac{\nabla K(X_0, y)}{\varrho_0 K(y)} &= \exp\left( -\mu^2\frac{\sigma_g^2 + \sigma_0^2 - \sigma_h^2}{2\sigma_h^2(\sigma_g^2 + \sigma_0^2)} - \frac{X_0^2}{2\sigma_g^2}\right)\frac{\sqrt{\sigma_g^2 + \sigma_0^2}}{\sqrt{2\pi}\sigma_g^3\sigma_h}\exp\left( \frac{\left((\mu \beta + X_0\gamma)/(\beta + \gamma)\right)^2}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)^{-1}}\right)\\
+&\frac{\sqrt{2\pi}\sigma_g\sigma_h\sqrt{\sigma_g^2 + \sigma_0^2}}{\sqrt{\beta + \gamma}}\int (y - X_0)\N\left(y; \frac{\mu \beta + X_0\gamma}{\beta + \gamma}, \sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)^{-1}\right)\ dy\\
+&= \frac{(\sigma_g^2 + \sigma_0^2)}{\sigma_g^2\sqrt{\beta + \gamma}}\exp\left( -\frac{(\mu^2\beta + X_0^2\gamma)(\beta + \gamma)}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)}\right)\exp\left( \frac{\left(\mu \beta + X_0\gamma\right)^2}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)}\right)\left(\frac{\mu \beta + X_0\gamma}{\beta + \gamma} - X_0\right)\\
+&= \frac{(\sigma_g^2 + \sigma_0^2)}{\sigma_g^2\sqrt{\beta + \gamma}}\exp\left( -\frac{\beta\gamma\left(\mu - X_0\right)^2}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)}\right)\left(\frac{\mu \beta + X_0\gamma}{\beta + \gamma} - X_0\right)\\
+&= \frac{(\sigma_g^2 + \sigma_0^2)}{\sigma_g^2\sqrt{\beta + \gamma}}\exp\left(- \frac{\beta\gamma\left(\mu - X_0\right)^2}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)}\right)\frac{(\mu - X_0)\beta}{\beta + \gamma}\\
+&= \frac{(\sigma_g^2 + \sigma_0^2)(\sigma_g^2 + \sigma_0^2 - \sigma_h^2)}{(\beta + \gamma)^{3/2}}\exp\left(- \frac{\beta\gamma\left(\mu - X_0\right)^2}{2\sigma_g^2\sigma_h^2(\sigma_g^2 + \sigma_0^2)(\beta + \gamma)}\right)(\mu - X_0)\\
+&= \frac{(\sigma_g^2 + \sigma_0^2)(\sigma_g^2 + \sigma_0^2 - \sigma_h^2)}{(\beta + \gamma)^{3/2}}\exp\left(- \frac{\left(\mu - X_0\right)^2}{2(\beta + \gamma)(\sigma_g^2 + \sigma_0^2 - \sigma_h^2)^{-1}}\right)(\mu - X_0)
 \end{align*}
 
 Finally,
 \begin{align*}
-X_1 = X_0 -\frac{2\sigma_g^2 + 2\sigma_0^2 - 2\sigma_h^2}{\sqrt{\beta + \gamma}\sigma_g^2\sigma_h^2}\exp\left(- \frac{\beta\left(\mu - X_0\right)^2}{2\sigma_g^2(\beta + \gamma)}\right)(\mu - X_0) \Delta t + \sqrt{2\lambda}\Delta W_n
+X_1 = X_0 -\frac{(\sigma_g^2 + \sigma_0^2)(\sigma_g^2 + \sigma_0^2 - \sigma_h^2)}{(\beta + \gamma)^{3/2}}\exp\left(- \frac{\left(\mu - X_0\right)^2}{2(\beta + \gamma)(\sigma_g^2 + \sigma_0^2 - \sigma_h^2)^{-1}}\right)(\mu - X_0) \Delta t + \sqrt{2\lambda}\Delta W_1
 \end{align*}
 But what is the distribution of $X_1$?
 \end{document}

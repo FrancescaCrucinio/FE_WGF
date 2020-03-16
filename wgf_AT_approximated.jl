@@ -8,14 +8,14 @@ function wgf_AT_approximated(dt, lambda, M, N)
     for n=1:(Niter-1)
         hN = zeros(M, 1);
         for j=1:M
-            hN[j] = sum(pdf.(Normal.(x[n, :], 0.045), y[j]));
+            hN[j] = mean(pdf.(Normal.(x[n, :], 0.045), y[j]));
         end
 
         for i=1:N
             gradient = pdf.(Normal.(x[n, i], 0.045), y) .* (y .- x[n, i])/(0.045^2);
-            drift[n, i] = sum(gradient./hN);
+            drift[n, i] = mean(gradient./hN);
         end
-        x[n+1, :] = x[n, :] .- drift[n, :]*dt .+ sqrt(2*lambda)*dt*randn(N, 1);
+        x[n+1, :] = x[n, :] .+ drift[n, :]*dt .+ sqrt(2*lambda)*dt*randn(N, 1);
     end
     return x, drift
 end

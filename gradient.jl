@@ -24,9 +24,7 @@ title!("gradient")
 driftE = drift_exact(0.5, sigma0, sigmaG, sigmaH, x);
 p3 = plot(x, driftE)
 title!("exact drift")
-driftA = drift_approximate(0.5, sigma0, sigmaG, sigmaH, x, 1000000);
+driftA = drift_approximate(0.5, sigma0, sigmaG, sigmaH, x, 10000);
 p4 = plot(x, driftA)
 title!("approximate drift")
 plot(p1, p2, p3, p4, layout=(4, 1))
-
-plot(p3, p4, layout=(1,2))
