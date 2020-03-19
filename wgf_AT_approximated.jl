@@ -2,7 +2,7 @@ function wgf_AT_approximated(dt, lambda, M, N)
 
     Niter = trunc(Int, 1/dt);
     x = zeros(Niter, N);
-    drift = zeros(Niter, N);
+    drift = zeros(Niter-1, N);
     y = rand(Normal(0.5, sqrt(0.043^2 + 0.045^2)), M);
     x[1, :] = rand(1, N);
     for n=1:(Niter-1)

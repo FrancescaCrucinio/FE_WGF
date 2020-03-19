@@ -3,7 +3,7 @@ using Plots;
 include("drift_exact.jl")
 include("drift_approximate.jl")
 
-x = collect(range(0, 1, length = 1000));
+x = range(0, 1, length = 1000);
 sigmaG = 0.045^2;
 sigmaF = 0.043^2;
 sigmaH = sigmaF + sigmaG;
