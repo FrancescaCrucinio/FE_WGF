@@ -19,3 +19,10 @@ function wgf_AT_approximated(dt, lambda, M, N)
     end
     return x, drift
 end
+
+function exact_minimizer(sigmaG, sigmaH, lambda)
+    variance  = (sigmaH - sigmaG .+ 2*lambda*sigmaG +
+                sqrt.(sigmaG^2 + sigmaH^2 .- 2*sigmaG*sigmaH.*(1 .- 2*lambda)))./
+                (2*(1 .- lambda));
+    return variance
+end
