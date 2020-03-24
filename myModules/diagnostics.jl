@@ -5,6 +5,7 @@ using StatsBase;
 
 export diagnosticsH
 export diagnosticsF
+export diagnosticsALL
 
 #=
 Diagnostics for approximations of h
@@ -48,6 +49,7 @@ Diagnostics for approximations of f
 OUTPUTS
 1 - mean
 2 - variance
+4 - mean squared error
 3 - mean integrated squared error
 INPUTS
 'f' true f (function handle)
@@ -62,9 +64,32 @@ function diagnosticsF(f, x, y)
     # exact f
     trueF = f.(x);
     # compute MISE for f
-    mise= var(trueF .- y, corrected = false);
+    difference = (trueF .- y).^2;
+    mise = mean(difference);
+    return m, v, difference, mise
+end
 
-    return m, v, mise
+# Combine diagnostics for f and for h
+# OUTPUTS
+# 1 - mean
+# 2 - variance
+# 3 - 95th percentile of Mean squared error
+# 4 - Mean Integrated Squared Error for f
+# 5 - Kullback Leibler divergence
+# INPUTS
+# 'f' true f (function handle)
+# 'h' true h (function handle)
+# 'g' mixing kernel (function handle)
+# 'KDEx' points in the domain of f at which the approximated f
+# and the true f are compared
+# 'KDEy' approximated f
+# 'refY' points in the domain of h at which the approximated h
+# and the true h are compared
+function diagnosticsALL(f, h, g, KDEx, KDEy, refY)
+    m, v, difference, misef = diagnosticsF(f, KDEx, KDEy);
+    q = quantile!(difference, 0.95);
+    _, div = diagnosticsH(h, g, KDEx, KDEy, refY);
+    return m, v, q, misef, div
 end
 
 end

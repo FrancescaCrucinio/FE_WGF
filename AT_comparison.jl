@@ -27,11 +27,9 @@ g(x, y) = pdf.(Normal(x, sqrt(sigmaG)), y);
 # number of iterations
 Niter = trunc(Int, 1e03);
 # samples from h(y)
-M = 100;
-# initial distribution
-x0 = rand(1, N);
+M = 1000;
 # number of particles
-Nparticles = [100, 500];
+Nparticles = [100, 500, 1000, 5000, 10000];
 # other parameters
 ### SMC
 epsilon = 1e-03;
@@ -54,6 +52,8 @@ for i=1:length(Nparticles)
     drepSMC = zeros(Nrep, 3);
     drepWGF = zeros(Nrep, 3);
     for j=1:Nrep
+        # initial distribution
+        x0 = rand(1, Nparticles[i]);
         # run SMC
         trepSMC[j] = @elapsed begin
              xSMC, W = smc_AT_approximated_potential(Nparticles[i], Niter, epsilon, x0, M);
@@ -62,17 +62,32 @@ for i=1:length(Nparticles)
             KDEx = range(0, stop = 1, length = 1000);
             KDEySMC = weightedKDE(xSMC[end, :], W[end, :], bw, KDEx);
         end
-        drepSMC[j, :] = diagnosticsF(f, KDEx, KDEySMC);
+        drepSMC[j, :] .= diagnosticsF(f, KDEx, KDEySMC);
 
         # run WGF
         trepWGF[j] = @elapsed begin
             xWGF, drift = wgf_AT_approximated(Nparticles[i], Niter, lambda, x0, M);
             KDEyWGF = kerneldensity(xWGF[end, :], xeval = KDEx);
         end
-        drepWGF[j, :] = diagnosticsF(f, KDEx, KDEyWGF);
+        drepWGF[j, :] .= diagnosticsF(f, KDEx, KDEyWGF);
     end
-    tSMC[i] = mean(trepSMC, 1);
-    tWGF[i] = mean(trepWGF, 1);
-    diagnosticsSMC[i, :] = mean(drepSMC, 1);
-    diagnosticsWGF[i, :] = mean(drepWGF, 1);
+    tSMC[i] = mean(trepSMC);
+    tWGF[i] = mean(trepWGF);
+    diagnosticsSMC[i, :] = mean(drepSMC, dims = 1);
+    diagnosticsWGF[i, :] = mean(drepWGF,dims = 1);
 end
+
+p1 = plot(Nparticles, [tSMC, tWGF], lw = 3);
+title!("Runtime")
+p2 = plot(Nparticles, [diagnosticsSMC[:, 1], diagnosticsWGF[:, 1]],
+    lw = 3, legend = false);
+hline!([0.5]);
+title!("Mean")
+p3 = plot(Nparticles, [diagnosticsSMC[:, 2], diagnosticsWGF[:, 2]],
+    lw = 3, legend = false);
+hline!([0.043^2]);
+title!("Variance")
+p4 = plot(Nparticles, [diagnosticsSMC[:, 3], diagnosticsWGF[:, 3]],
+    lw = 3, legend = false);
+title!("MISE")
+plot(p1, p2, p3, p4, layout = (2, 2))
