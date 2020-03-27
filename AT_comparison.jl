@@ -29,12 +29,12 @@ Niter = trunc(Int, 1e03);
 # samples from h(y)
 M = 1000;
 # number of particles
-Nparticles = [100, 500, 1000, 5000, 10000];
+Nparticles = [100, 500, 1000, 5000];
 # other parameters
 ### SMC
 epsilon = 1e-03;
 ### WGF
-lambda = 30;
+lambda = 10;
 
 # number of repetitions
 Nrep = 5;
@@ -44,14 +44,15 @@ tSMC = zeros(length(Nparticles), 1);
 diagnosticsSMC = zeros(length(Nparticles), 3);
 tWGF = zeros(length(Nparticles), 1);
 diagnosticsWGF = zeros(length(Nparticles), 3);
-for i=1:length(Nparticles)
+Threads.@threads for i=1:length(Nparticles)
     # times
     trepSMC = zeros(Nrep, 1);
     trepWGF = zeros(Nrep, 1);
     # mise, mean and variance
     drepSMC = zeros(Nrep, 3);
     drepWGF = zeros(Nrep, 3);
-    for j=1:Nrep
+    @simd for j=1:Nrep
+        println("$i, $j")
         # initial distribution
         x0 = rand(1, Nparticles[i]);
         # run SMC
@@ -62,14 +63,15 @@ for i=1:length(Nparticles)
             KDEx = range(0, stop = 1, length = 1000);
             KDEySMC = weightedKDE(xSMC[end, :], W[end, :], bw, KDEx);
         end
-        drepSMC[j, :] .= diagnosticsF(f, KDEx, KDEySMC);
-
+        mSMC, vSMC, _, miseSMC, _ = diagnosticsF(f, KDEx, KDEySMC);
+        drepSMC[j, :] = [mSMC, vSMC, miseSMC];
         # run WGF
         trepWGF[j] = @elapsed begin
             xWGF, drift = wgf_AT_approximated(Nparticles[i], Niter, lambda, x0, M);
             KDEyWGF = kerneldensity(xWGF[end, :], xeval = KDEx);
         end
-        drepWGF[j, :] .= diagnosticsF(f, KDEx, KDEyWGF);
+        mWGF, vWGF, _, miseWGF, _ = diagnosticsF(f, KDEx, KDEyWGF);
+        drepWGF[j, :] = [mWGF, vWGF, miseWGF];
     end
     tSMC[i] = mean(trepSMC);
     tWGF[i] = mean(trepWGF);

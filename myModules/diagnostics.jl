@@ -49,8 +49,9 @@ Diagnostics for approximations of f
 OUTPUTS
 1 - mean
 2 - variance
-4 - mean squared error
-3 - mean integrated squared error
+3 - mean squared error
+4 - mean integrated squared error
+5 - entropy
 INPUTS
 'f' true f (function handle)
 'x' sample points in the domain of f
@@ -66,7 +67,8 @@ function diagnosticsF(f, x, y)
     # compute MISE for f
     difference = (trueF .- y).^2;
     mise = mean(difference);
-    return m, v, difference, mise
+    ent = entropy(y)./length(y);
+    return m, v, difference, mise, ent
 end
 
 # Combine diagnostics for f and for h
@@ -76,6 +78,7 @@ end
 # 3 - 95th percentile of Mean squared error
 # 4 - Mean Integrated Squared Error for f
 # 5 - Kullback Leibler divergence
+# 6 - entropy of f
 # INPUTS
 # 'f' true f (function handle)
 # 'h' true h (function handle)
@@ -86,10 +89,10 @@ end
 # 'refY' points in the domain of h at which the approximated h
 # and the true h are compared
 function diagnosticsALL(f, h, g, KDEx, KDEy, refY)
-    m, v, difference, misef = diagnosticsF(f, KDEx, KDEy);
+    m, v, difference, misef, ent = diagnosticsF(f, KDEx, KDEy);
     q = quantile!(difference, 0.95);
     _, div = diagnosticsH(h, g, KDEx, KDEy, refY);
-    return m, v, q, misef, div
+    return m, v, q, misef, div, ent
 end
 
 end

@@ -1,6 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
 # push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
-push!(LOAD_PATH, "/homes/crucinio/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -37,11 +36,10 @@ KDEx = range(0, stop = 1, length = 1000);
 # number of particles
 Nparticles = 1000;
 # regularisation parameters
-lambda = [range(0, stop = 0.9, length = 10); range(1, stop = 9, length = 9);
-            range(10, stop = 100, length = 10)];
+lambda = [range(0, stop = 0.9, length = 10); range(1, stop = 10, length = 10)];
 
 # number of repetitions
-Nrep = 10;
+Nrep = 2;
 
 # diagnostics
 diagnosticsWGF = zeros(length(lambda), 5);
@@ -49,12 +47,14 @@ Threads.@threads for i=1:length(lambda)
     # mise, mean and variance
     drepWGF = zeros(Nrep, 5);
     @simd for j=1:Nrep
+        println("$i, $j")
         # initial distribution
         x0 = rand(1, Nparticles);
         # run WGF
         x, drift = wgf_AT_approximated(Nparticles, Niter, lambda[i], x0, M);
         KDEyWGF = kerneldensity(x[end, :], xeval = KDEx);
-        drepWGF[j, :] .= diagnosticsALL(f, h, g, KDEx, KDEyWGF, refY);
+        m, v, mse95 , mise, div, ent = diagnosticsALL(f, h, g, KDEx, KDEyWGF, refY);
+        drepWGF[j, :] = [m, v, mse95 , mise, div - lambda[i]*ent];
     end
     diagnosticsWGF[i, :] = mean(drepWGF,dims = 1);
 end
@@ -70,12 +70,12 @@ title!("95th quantile MSE")
 p4 = plot(lambda, diagnosticsWGF[:, 4], lw = 3, legend = false);
 title!("MISE")
 p5 = plot(lambda, diagnosticsWGF[:, 5], lw = 3, legend = false);
-title!("KL")
-p6 = plot()
+title!("KL - entropy")
+p6 = plot();
 plot(p1, p2, p3, p4, p5, p6, layout = (2, 3))
 
 
-save("parameters.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
+save("parameters10rep.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
         "Nparticles", Nparticles, "Niter", Niter)
 # save("C:/Users/francesca/Dropbox/parameters.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
 #         "Nparticles", Nparticles, "Niter", Niter)

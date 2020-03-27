@@ -6,6 +6,9 @@
 \usepackage{amssymb}
 \usepackage{graphicx, subfig}
 
+% bibliography
+\usepackage[round]{natbib}
+
 \DeclareMathOperator{\N}{\mathcal{N}}
 
 \title{Solving Fredholm integral equations of the first kind via Wasserstein gradient flow}
@@ -59,17 +62,19 @@ so
 \frac{\delta \text{KL}}{\delta\rho}\left(x\right)=-\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}.
 \]
 Hence, it follows that 
-\[
+\begin{equation}
+\label{eq:derivative}
 \frac{\delta E}{\delta\rho}\left(x\right)=-\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}+\lambda\left(1+\log\rho\left(x\right)\right).
-\]
+\end{equation}
 We can now compute the gradient of this functional derivative equation w.r.t. $x$
 \[
 \nabla\frac{\delta E}{\delta\rho}\left(x\right)=-\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho K(y)}+\lambda\nabla\log\rho\left(x\right).
 \]
 We now consider the following PDE
-\[
+\begin{equation}
+\label{eq:pde}
 \partial_{t}\rho_{t}=\nabla\cdot\left(\rho_{t}\nabla\frac{\delta E}{\delta\rho_{t}}\right),
-\]
+\end{equation}
 where $\nabla\cdot f=\sum_{i}\partial_{i}f_{i}$ is the divergence operator.
 The corresponding nonlinear ODE 
 \begin{equation}
@@ -91,10 +96,26 @@ Approximating the first term on the r.h.s. is fine as practically $\mu\left(dy\r
 This is ugly and would be most likely highly inefficient.
 In the next section, we show how to address this issue.
 
+\subsection{Existence and uniqueness of the gradient flow}
+
+Corollary 11.1.8 in \cite{ambrosio2008gradient} give existence of a gradient flow solution of \eqref{eq:pde} since the first variation \eqref{eq:derivative} is single-valued.
+Uniqueness is given by Theorem 11.1.4 in \cite{ambrosio2008gradient} since the functional $E$ is geodesically convex in $\rho$:
+\begin{align*}
+E(\rho)= & \text{{KL}}(\mu,\rho K)-\lambda\text{{Ent}}(\rho)\\
+=- & \int\mu\log\rho K+\lambda\int\rho\log\rho+\int\mu\log\mu.
+\end{align*}
+The last integral $\int\mu\log\mu$ is constant w.r.t. $\rho$ and the negative entropy $\lambda\int\rho\log\rho$ is geodesically convex in $\rho$ \citep[page 130]{santambrogio2017euclidean}.
+Regarding the first integral $- \int\mu\log\rho K$, we have that
+\begin{itemize}
+\item $\rho K = \int K(x, y) \ d\rho(x)$ is geodesically convex if $K$ is convex in $x$ \citep[page 128]{santambrogio2017euclidean}
+\item $-log s$ is a convex function
+\end{itemize}
+hence $\int\mu\left( -\log\rho K\right)$ is convex in $\rho$ (integrating w.r.t. $\mu$ does not change convexity).
+
 \section{Nonlinear SDE approach and numerical implementation}
 
 Let us rewrite the PDE 
-\begin{align*}{1}
+\begin{align*}
 \partial_{t}\rho_{t}= & \nabla\cdot\left(\rho_{t}\nabla\frac{\delta E}{\delta\rho_{t}}\right)\\
 = & -\nabla\cdot\left(\rho_{t}\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho_{t}K(y)}\right)+\lambda\nabla\cdot\left(\rho_{t}\nabla\log\rho_{t}\right).
 \end{align*}
@@ -131,4 +152,7 @@ We set $N=10^{4}$, $\lambda = 10$, $dt = 10^{-3}$. The initial distribution $\rh
 \caption{ }
 \label{fig:at}
 \end{figure}
+
+\bibliographystyle{abbrvnat}
+\bibliography{wgf_biblio}
 \end{document}
