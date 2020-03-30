@@ -10,6 +10,10 @@
 \usepackage[round]{natbib}
 
 \DeclareMathOperator{\N}{\mathcal{N}}
+\DeclareMathOperator{\KL}{KL}
+\DeclareMathOperator{\ent}{Ent}
+\newcommand{\norm}[2]{\ensuremath{\Vert #1 \Vert_{#2}}}
+\def\real{\mathbb{R}}
 
 \title{Solving Fredholm integral equations of the first kind via Wasserstein gradient flow}
 \author{Arnaud -> Adam, Francesca }
@@ -24,27 +28,63 @@ We want to solve the integral equation
 \[
 \mu(y)=\int\rho\left(x\right)K(x,y)dx,
 \]
-where $\rho$ and $\mu$ are probability densities on $\mathbb{R}^{n}$ and $\mathbb{R}^{m}$ and $K$ a Markov transition density, i.e. $\mu=\rho K$ in operator notation. The solution to this problem is not unique and we propose to regularize the problem using an entropy constraint; i.e. for a given $\lambda>0$ we propose to minimize w.r.t. $\rho$
-\[
-E(\rho)=\text{{KL}}(\mu,\rho K)-\lambda\text{{Ent}}(\rho)
-\]
+where $\rho$ and $\mu$ are probability densities on $\real^{n}$ and $\real^{m}$ and $K$ a Markov transition density, i.e. $\mu=\rho K$ in operator notation. The solution to this problem is not unique and we propose to regularize the problem using an entropy constraint; i.e. for a given $\lambda>0$ we propose to minimize w.r.t. $\rho$
+\begin{equation}
+\label{eq:minimisation}
+E(\rho)=\KL(\mu,\rho K)-\lambda\ent(\rho)
+\end{equation}
 where 
-$\text{{KL}}(\mu,\rho K)$ is the Kullback-Leibler divergence between $\mu$ and $\rho K$ and $\text{{Ent}}(\rho)=-\int\rho\log\rho$ is the entropy of $\rho$.
+$\KL(\mu,\rho K)$ is the Kullback-Leibler divergence between $\mu$ and $\rho K$ and $\ent(\rho)=-\int\rho\log\rho$ is the entropy of $\rho$.
 This requires solving a minimization problem in the space of probability measures. We are going to follow a Wasserstein gradient flow approach.
 
 \section{Gradient flow approach}
-We first need to compute 
-\[
-\lim_{\epsilon\rightarrow0}\epsilon^{-1}\left(E(\rho+\epsilon\chi)-E(\rho)\right)=\int\frac{\delta E}{\delta\rho}\left(x\right)\chi\left(dx\right)
-\]
-where $\chi$ is any signed measure such that $\rho+\epsilon\chi$ is a probability measure. We have
+\subsection{Notation}
+
+Let us denote the set of probability measures with finite second moment on $\real^d$ by
 \begin{align*}
-E(\rho)= & \text{{KL}}(\mu,\rho K)-\lambda\text{{Ent}}(\rho)\\
+\mathcal{P}_2(\real^d) = \left\lbrace \mu\in \mathcal{P}(\real^d): \int \norm{ x}{2}^2 \ d\mu(x)< \infty\right\rbrace
+\end{align*}
+and we define the 2-Wasserstein distance on this set
+\begin{align*}
+W_2(\mu, \nu) := \left( \inf_{\pi\in\Pi(\mu, \nu)}\int\norm{x - y}{2}\ d\pi(x, y)\right)^{1/2}
+\end{align*}
+where $\Pi(\mu, \nu)$ is the set of all possible couplings between $\mu$ and $\nu$.
+
+For any proper and lower semicontinuous functional $F$ defined on $\mathcal{P}_2(\real^d)$ we define the sub-differential as the set of $\xi$ such that
+\begin{align*}
+F(\mu) - F(\nu) \geq \int\langle \xi(x), T(x) - x\rangle\ d\mu(x) +o\left( W_2(\mu, \nu)\right)
+\end{align*}
+with $T$ transport map from $\mu$ to $\nu$.
+
+\subsection{Gradient flow} 
+
+We consider the functional $E$ in \eqref{eq:minimisation} defined on $\mathcal{P}_2(\real^n)$. 
+Following \citet[Definition 11.1.1]{ambrosio2008gradient}, we say that $\rho_t$ is a solution to the gradient flow equation for $E$ with the $W_2$ metric if
+\begin{equation*}
+v_t \in -\partial E(\rho_t)
+\end{equation*}
+where $\partial E(\rho_t)$ is the sub-differential of $E$ evaluated at $\rho_t$ and there exists $v_t$ is a "gradient" for $E$ at $\rho_t$ such that
+\begin{align*}
+\partial_{t}\rho_{t}=\nabla\cdot\left(\rho_{t}v_t\right),
+\end{align*} 
+holds.
+
+To arrive to an expression for $v_t$ we compute the first variation of $E$
+\begin{align*}
+\lim_{\epsilon\rightarrow0}\epsilon^{-1}\left(E(\rho+\epsilon\chi)-E(\rho)\right)=\int\frac{\delta E}{\delta\rho}\left(x\right)\chi\left(dx\right),
+\end{align*}
+where $\chi$ is any signed measure such that $\rho+\epsilon\chi$ is a probability measure, and then we need to show that this is a sub-differential for $E$.
+
+\subsubsection{First variation}
+
+We have
+\begin{align*}
+E(\rho)= & \KL(\mu,\rho K)-\lambda\ent(\rho)\\
 =- & \int\mu\log\rho K+\lambda\int\rho\log\rho+\int\mu\log\mu.
 \end{align*}
 It follows directly that 
 \[
-\frac{\delta\text{{Ent}}\left(\rho\right)}{\delta\rho}=1+\log\rho.
+\frac{\delta\ent }{\left(\rho\right)}{\delta\rho}=1+\log\rho.
 \]
 and 
 \begin{align*}
@@ -59,7 +99,7 @@ We have
 \]
 so 
 \[
-\frac{\delta \text{KL}}{\delta\rho}\left(x\right)=-\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}.
+\frac{\delta \KL}{\delta\rho}\left(x\right)=-\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}.
 \]
 Hence, it follows that 
 \begin{equation}
@@ -137,6 +177,20 @@ dX_{t}^{i}=\int\mu\left(dy\right)\frac{\nabla K(X_{t},y)}{\rho_{t}^{N}K(y)}dt+\s
 
 We will also need to further discretize in time these SDEs obviously.
 
+\section{Connections with other methods}
+Minimisation of a functional involving the $\KL$ divergence is a common method to solve Fredholm integral equations of the first kind.
+For example, if we consider the functional
+\begin{align*}
+L(\rho) = \KL(\mu, \rho K) + \int \rho
+\end{align*}
+the corresponding first variation is
+\begin{align*}
+\frac{\delta L}{\delta \rho}= \int \mu\frac{K}{\rho K} - 1.
+\end{align*}
+Setting the first variation to 0 and multiplying by $\rho$ leads to the EM iteration
+\begin{align*}
+\rho\int \mu\frac{K}{\rho K} - \rho = 0
+\end{align*}
 \section{Toy Example}
 
 We consider the toy Fredholm integral equation

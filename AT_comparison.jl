@@ -1,12 +1,14 @@
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "/homes/crucinio/WGF/myModules")
 # Julia packages
-using Revise;
+# using Revise;
 using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
 using KernelEstimator;
 using Random;
+using JLD2;
 # custom packages
 using diagnostics;
 using smcems;
@@ -37,7 +39,7 @@ epsilon = 1e-03;
 lambda = 10;
 
 # number of repetitions
-Nrep = 5;
+Nrep = 1000;
 
 # diagnostics
 tSMC = zeros(length(Nparticles), 1);
@@ -79,17 +81,19 @@ Threads.@threads for i=1:length(Nparticles)
     diagnosticsWGF[i, :] = mean(drepWGF,dims = 1);
 end
 
-p1 = plot(Nparticles, [tSMC, tWGF], lw = 3);
-title!("Runtime")
-p2 = plot(Nparticles, [diagnosticsSMC[:, 1], diagnosticsWGF[:, 1]],
-    lw = 3, legend = false);
-hline!([0.5]);
-title!("Mean")
-p3 = plot(Nparticles, [diagnosticsSMC[:, 2], diagnosticsWGF[:, 2]],
-    lw = 3, legend = false);
-hline!([0.043^2]);
-title!("Variance")
-p4 = plot(Nparticles, [diagnosticsSMC[:, 3], diagnosticsWGF[:, 3]],
-    lw = 3, legend = false);
-title!("MISE")
-plot(p1, p2, p3, p4, layout = (2, 2))
+# p1 = plot(Nparticles, [tSMC, tWGF], lw = 3);
+# title!("Runtime")
+# p2 = plot(Nparticles, [diagnosticsSMC[:, 1], diagnosticsWGF[:, 1]],
+#     lw = 3, legend = false);
+# hline!([0.5]);
+# title!("Mean")
+# p3 = plot(Nparticles, [diagnosticsSMC[:, 2], diagnosticsWGF[:, 2]],
+#     lw = 3, legend = false);
+# hline!([0.043^2]);
+# title!("Variance")
+# p4 = plot(Nparticles, [diagnosticsSMC[:, 3], diagnosticsWGF[:, 3]],
+#     lw = 3, legend = false);
+# title!("MISE")
+# plot(p1, p2, p3, p4, layout = (2, 2))
+
+@save "comparison.jld"
