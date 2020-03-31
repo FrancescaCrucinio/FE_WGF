@@ -10,30 +10,30 @@ using Random;
 using ImageMagick;
 using TestImages, Colors;
 using Images;
+using DelimitedFiles;
 # custom packages
 using diagnostics;
 using smcems;
 using wgf;
 using samplers;
 
-I = load("BCblurred.png");
-I = Gray.(I);
-I = convert(Array{Float64}, I);
+I = readdlm("sinogram.txt", ',', Float64)
 pixels = size(I);
 
+phi = range(0, stop = 2*pi, length = pixels[2]);
+offsets = floor(pixels[1]/2);
+xi = range(-offsets, stop = offsets, length = pixels[1]);
 # number of iterations
-Niter = trunc(Int, 1e04);
+Niter = trunc(Int, 1e03);
 # samples from h(y)
-M = 1000;
+M = 10000;
 # number of particles
-Nparticles = 5000;
+Nparticles = 10000;
 # regularisation parameter
 lambda = 50;
 
 sigma = 0.02;
-a = 1.01;
-b = 1.01;
-v = 128;
-x, y = wgf_deblurring(Nparticles, Niter, lambda, I, M, sigma, v, a, b);
+
+x, y = wgf_pet(Nparticles, Niter, lambda, I, M, phi, xi, sigma);
 
 scatter(x[Niter, :], y[Niter, :])

@@ -5,6 +5,7 @@
 \usepackage{amsmath,amsthm}
 \usepackage{amssymb}
 \usepackage{graphicx, subfig}
+\usepackage{xcolor}
 
 % bibliography
 \usepackage[round]{natbib}
@@ -13,7 +14,11 @@
 \DeclareMathOperator{\KL}{KL}
 \DeclareMathOperator{\ent}{Ent}
 \newcommand{\norm}[2]{\ensuremath{\Vert #1 \Vert_{#2}}}
+\newcommand{\variation}[1]{\ensuremath{\frac{\delta E}{\delta #1}}}
+
 \def\real{\mathbb{R}}
+\def\testfn{\varphi}
+
 
 \title{Solving Fredholm integral equations of the first kind via Wasserstein gradient flow}
 \author{Arnaud -> Adam, Francesca }
@@ -58,12 +63,23 @@ with $T$ transport map from $\mu$ to $\nu$.
 
 \subsection{Gradient flow} 
 
-We consider the functional $E$ in \eqref{eq:minimisation} defined on $\mathcal{P}_2(\real^n)$. 
+We consider the functional $E$ in \eqref{eq:minimisation} defined on $\mathcal{P}_2(\real^n)$.
+It is easy to see that this functional is geodesically convex in $\rho$.
+
+The integral $\int\mu\log\mu$ is constant w.r.t. $\rho$ and the negative entropy $\lambda\int\rho\log\rho$ is geodesically convex in $\rho$ \citep[page 130]{santambrogio2017euclidean}.
+Regarding the integral $- \int\mu\log\rho K$, we have that
+\begin{itemize}
+\item $\rho K = \int K(x, y) \ d\rho(x)$ is geodesically convex if $K$ is convex in $x$ \citep[page 128]{santambrogio2017euclidean}
+\item $-log s$ is a convex function
+\end{itemize}
+hence $\int\mu\left( -\log\rho K\right)$ is convex in $\rho$ (integrating w.r.t. $\mu$ does not change convexity).
+
+
 Following \citet[Definition 11.1.1]{ambrosio2008gradient}, we say that $\rho_t$ is a solution to the gradient flow equation for $E$ with the $W_2$ metric if
 \begin{equation*}
-v_t \in -\partial E(\rho_t)
+v_t \in -\partial E(\rho_t),
 \end{equation*}
-where $\partial E(\rho_t)$ is the sub-differential of $E$ evaluated at $\rho_t$ and there exists $v_t$ is a "gradient" for $E$ at $\rho_t$ such that
+where $\partial E(\rho_t)$ is the sub-differential of $E$ evaluated at $\rho_t$, and $v_t$ is a "gradient" for $E$ at $\rho_t$ such that
 \begin{align*}
 \partial_{t}\rho_{t}=\nabla\cdot\left(\rho_{t}v_t\right),
 \end{align*} 
@@ -74,6 +90,7 @@ To arrive to an expression for $v_t$ we compute the first variation of $E$
 \lim_{\epsilon\rightarrow0}\epsilon^{-1}\left(E(\rho+\epsilon\chi)-E(\rho)\right)=\int\frac{\delta E}{\delta\rho}\left(x\right)\chi\left(dx\right),
 \end{align*}
 where $\chi$ is any signed measure such that $\rho+\epsilon\chi$ is a probability measure, and then we need to show that this is a sub-differential for $E$.
+\textcolor{red}{I don't think we can immediately say that the first variation is a sub-differential because $E$ is not a free energy \citep[Lemma 8-10]{carrillo2006contractions})}
 
 \subsubsection{First variation}
 
@@ -84,7 +101,7 @@ E(\rho)= & \KL(\mu,\rho K)-\lambda\ent(\rho)\\
 \end{align*}
 It follows directly that 
 \[
-\frac{\delta\ent }{\left(\rho\right)}{\delta\rho}=1+\log\rho.
+\frac{\delta\ent }{\delta\rho}\left(\rho\right)=1+\log\rho.
 \]
 and 
 \begin{align*}
@@ -106,26 +123,35 @@ Hence, it follows that
 \label{eq:derivative}
 \frac{\delta E}{\delta\rho}\left(x\right)=-\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}+\lambda\left(1+\log\rho\left(x\right)\right).
 \end{equation}
-We can now compute the gradient of this functional derivative equation w.r.t. $x$
-\[
-\nabla\frac{\delta E}{\delta\rho}\left(x\right)=-\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho K(y)}+\lambda\nabla\log\rho\left(x\right).
-\]
-We now consider the following PDE
+
+We know $1+\log\rho\left(x\right)$ is a sub-differantial for $\ent(\rho)$ and $\int \mu \log \mu$ is constant w.r.t $\rho$, so we just need to show that $-\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}$ is a sub-differential for $\int \mu\log(\rho K)$.
+
+\subsubsection{Existence and uniqueness of the gradient flow}
+
+Corollary 11.1.8 in \cite{ambrosio2008gradient} give existence of a gradient flow solution of \eqref{eq:pde} since the first variation \eqref{eq:derivative} is single-valued \textcolor{red}{if we can prove that it's a sub-differential}.
+
+Uniqueness is given by Theorem 11.1.4 in \cite{ambrosio2008gradient} since the functional $E$ is geodesically convex in $\rho$.
+
+\subsection{PDE}
+From \citet[Definition 11.1.1]{ambrosio2008gradient} we know that the continuity-equation must hold
 \begin{equation}
 \label{eq:pde}
 \partial_{t}\rho_{t}=\nabla\cdot\left(\rho_{t}\nabla\frac{\delta E}{\delta\rho_{t}}\right),
 \end{equation}
 where $\nabla\cdot f=\sum_{i}\partial_{i}f_{i}$ is the divergence operator.
-The corresponding nonlinear ODE 
+
+Thi is a Fokker-Plank/Kolmogorov forward equation type with corresponding nonlinear ODE \citep{jordan1998variational}
 \begin{equation}
 dX_{t}=-\nabla\frac{\delta E}{\delta\rho_{t}}\left(X_{t}\right)dt,\quad X_{0}\sim\rho_{0}\label{eq:nonlinearODE}
 \end{equation}
-is such that $Law(X_{t})=\rho_{t}$.
-Then, by construction, one has
-\[
-\frac{dE\left(\rho_{t}\right)}{dt}=-\int\left\Vert \nabla\frac{\delta E}{\delta\rho_{t}}\left(x\right)\right\Vert ^{2}\rho_{t}\left(dx\right).
-\]
+such that $Law(X_{t})=\rho_{t}$.
 The terminology nonlinear ODE is here used to indicate that the drift depends not only on $X_{t}$ but on its distribution too.
+
+Then, by construction (see \citet[page 14]{arbel2019maximum}), one has the the infinitesimal reduction of $E$ along $\rho_t$ is
+\begin{align*}
+\frac{dE\left(\rho_{t}\right)}{dt}=-\int\left\Vert \nabla\frac{\delta E}{\delta\rho_{t}}\left(x\right)\right\Vert ^{2}\rho_{t}\left(dx\right).
+\end{align*}
+
 
 Practically, what we would like to do is to simulate $N$ particles $(X_{t}^{1},...,X_{t}^{N})$ such that, at initialization, we sample iid particles  $X_{0}^{i}\sim\rho_{0}$ and then implement numerically the $N$ nonlinear ODEs
 \[
@@ -136,27 +162,19 @@ Approximating the first term on the r.h.s. is fine as practically $\mu\left(dy\r
 This is ugly and would be most likely highly inefficient.
 In the next section, we show how to address this issue.
 
-\subsection{Existence and uniqueness of the gradient flow}
-
-Corollary 11.1.8 in \cite{ambrosio2008gradient} give existence of a gradient flow solution of \eqref{eq:pde} since the first variation \eqref{eq:derivative} is single-valued.
-Uniqueness is given by Theorem 11.1.4 in \cite{ambrosio2008gradient} since the functional $E$ is geodesically convex in $\rho$:
-\begin{align*}
-E(\rho)= & \text{{KL}}(\mu,\rho K)-\lambda\text{{Ent}}(\rho)\\
-=- & \int\mu\log\rho K+\lambda\int\rho\log\rho+\int\mu\log\mu.
-\end{align*}
-The last integral $\int\mu\log\mu$ is constant w.r.t. $\rho$ and the negative entropy $\lambda\int\rho\log\rho$ is geodesically convex in $\rho$ \citep[page 130]{santambrogio2017euclidean}.
-Regarding the first integral $- \int\mu\log\rho K$, we have that
-\begin{itemize}
-\item $\rho K = \int K(x, y) \ d\rho(x)$ is geodesically convex if $K$ is convex in $x$ \citep[page 128]{santambrogio2017euclidean}
-\item $-log s$ is a convex function
-\end{itemize}
-hence $\int\mu\left( -\log\rho K\right)$ is convex in $\rho$ (integrating w.r.t. $\mu$ does not change convexity).
 
 \section{Nonlinear SDE approach and numerical implementation}
 
-Let us rewrite the PDE 
+We can now compute the gradient of this functional derivative equation w.r.t. $x$
 \begin{align*}
-\partial_{t}\rho_{t}= & \nabla\cdot\left(\rho_{t}\nabla\frac{\delta E}{\delta\rho_{t}}\right)\\
+\nabla\frac{\delta E}{\delta\rho}\left(x\right) & = \nabla\left[-\int\mu\left(dy\right)\frac{ K(x,y)}{\rho K(y)}+\lambda(1 + \log\rho\left(x\right))\right]\\
+&= -\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho K(y)}+\lambda\nabla\log\rho\left(x\right).
+\end{align*}
+Swapping integral and gradient is not a problem because $\nabla$ is over $x$ and the integral is over $y$.
+
+Hence \eqref{eq:pde} is equivalent to
+\begin{align*}
+\partial_{t}\rho_{t}= & \nabla\cdot\left(\rho_{t}\nabla\variation{\rho_{t}}\right)\\
 = & -\nabla\cdot\left(\rho_{t}\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho_{t}K(y)}\right)+\lambda\nabla\cdot\left(\rho_{t}\nabla\log\rho_{t}\right).
 \end{align*}
 However, we have
@@ -169,7 +187,7 @@ So we can consider the following non-linear SDE (McKean-Vlasov)
 dX_{t}=\int\mu\left(dy\right)\frac{\nabla K(X_{t},y)}{\rho_{t}K(y)}dt+\sqrt{2\lambda}dW_{t},\quad X_{0}\sim\rho_{0},\label{eq:nonlinearSDE}
 \end{equation}
 where $W_{t}$ is a standard $n-$dimensional Brownian motion.
-The SDE \eqref{eq:nonlinearSDE} has the same marginal distributions as the nonlinear ODE \eqref{eq:nonlinearODE}.
+The SDE \eqref{eq:nonlinearSDE} has the same marginal distributions as the nonlinear ODE \eqref{eq:nonlinearODE} (It\^o's Lemma).
 So to solve the minimization problem of interest, we will simulate in practice $N$ particles $(X_{t}^{1},...,X_{t}^{N})$ such that, at initialization, we sample iid particles $X_{0}^{i}\sim\rho_{0}$ and then they evolve according to the non-linear (McKean-Vlasov) SDE
 \[
 dX_{t}^{i}=\int\mu\left(dy\right)\frac{\nabla K(X_{t},y)}{\rho_{t}^{N}K(y)}dt+\sqrt{2\lambda}dW_{t}^{i},\quad\rho_{t}^{N}=\frac{1}{N}\sum_{i=1}^{N}\delta_{X_{t}^{i}}.
@@ -177,6 +195,36 @@ dX_{t}^{i}=\int\mu\left(dy\right)\frac{\nabla K(X_{t},y)}{\rho_{t}^{N}K(y)}dt+\s
 
 We will also need to further discretize in time these SDEs obviously.
 
+\subsection{Existence and uniqueness}
+To show that the nonlinear SDE \eqref{eq:nonlinearSDE} admits a solution we need to show that the drift if Lipschitz continuous in $(x, \rho)$ \citep{jourdain2007nonlinear}.
+
+We can use the following equivalence: in $\real^n$ the $W_2$ distance is equal to
+\begin{align*}
+W_2(\mu, \nu) = \sup\left\lvert \int \testfn \ d(\mu  \nu)\right\rvert
+\end{align*}
+where $\testfn$ is 1-Lipschitz continuous \citep[page 112]{santambrogio2017euclidean}.
+
+Take $x, x^\prime\in \real^n$  and $\rho, \rho^\prime \in \mathcal{P}_2(\real^n)$ and consider
+\begin{align*}
+\norm{ \nabla\variation{\rho}(x) - \nabla\variation{\rho^\prime}(x^\prime)}{2} &= \norm{- \int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho K(y)}+\lambda\nabla\log\rho + \int\mu\left(dy\right)\frac{\nabla K(x^\prime,y)}{\rho^\prime K(y)}-\lambda\nabla\log\rho^\prime}{2}\\
+&\leq \norm{\int\mu\left(dy\right)\left[\frac{\nabla K(x^\prime,y)}{\rho^\prime K(y)}- \frac{\nabla K(x,y)}{\rho K(y)}\right]}{2} +\lambda\norm{\nabla\log\rho - \nabla\log\rho^\prime}{2}\\
+&\leq \norm{\int\mu\left(dy\right)\left[\frac{\nabla K(x^\prime,y) - \nabla K(x,y)}{\rho^\prime K(y)}\right]}{2}\\
+& +\norm{\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho^\prime K(y)\rho K(y)}\left[\rho K(y) - \rho^\prime K(y)\right]}{2}
+\\
+& +\lambda\norm{\nabla\log\rho - \nabla\log\rho^\prime}{2}\\
+\end{align*}
+The first term is bounded by assuming $\nabla K(x, y)$ is Lipschitz continuous in $x$ uniformly in $y$:
+\begin{align*}
+\norm{\int\mu\left(dy\right)\left[\frac{\nabla K(x^\prime,y) - \nabla K(x,y)}{\rho^\prime K(y)}\right]}{2} \leq L_K\norm{x^\prime - x}{2}\norm{\int\frac{\mu\left(dy\right)}{\rho^\prime K(y)}}{2}\\
+\leq m_K L_K\norm{x^\prime - x}{2}
+\end{align*}
+if $K(x, y) \geq m_K>0$.
+If we assume that $K$ is Lipschitz continuous in $x$ uniformly in $y$ with constant $L$ we also have
+\begin{align*}
+\norm{\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho^\prime K(y)\rho K(y)}\left[\rho K(y) - \rho^\prime K(y)\right]}{2} \leq LW_2(\rho, \rho^\prime)\norm{\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho^\prime K(y)\rho K(y)}}{2}
+\end{align*}
+
+What about the third term?
 \section{Connections with other methods}
 Minimisation of a functional involving the $\KL$ divergence is a common method to solve Fredholm integral equations of the first kind.
 For example, if we consider the functional
