@@ -8,7 +8,7 @@ using Statistics;
 using StatsBase;
 using KernelEstimator;
 using Random;
-using JLD;
+using JLD2;
 # custom packages
 using diagnostics;
 using smcems;
@@ -36,10 +36,10 @@ KDEx = range(0, stop = 1, length = 1000);
 # number of particles
 Nparticles = 1000;
 # regularisation parameters
-lambda = [range(0, stop = 0.9, length = 10); range(1, stop = 10, length = 10)];
-
+lambda = [range(0, stop = 0.9, length = 10); range(1, stop = 9, length = 9);
+range(10, stop = 100, length = 9)];
 # number of repetitions
-Nrep = 2;
+Nrep = 1000;
 
 # diagnostics
 diagnosticsWGF = zeros(length(lambda), 5);
@@ -53,29 +53,26 @@ Threads.@threads for i=1:length(lambda)
         # run WGF
         x, drift = wgf_AT_approximated(Nparticles, Niter, lambda[i], x0, M);
         KDEyWGF = kerneldensity(x[end, :], xeval = KDEx);
-        m, v, mse95 , mise, div, ent = diagnosticsALL(f, h, g, KDEx, KDEyWGF, refY);
-        drepWGF[j, :] = [m, v, mse95 , mise, div - lambda[i]*ent];
+        m, v, mse95 , mise, kl, ent = diagnosticsALL(f, h, g, KDEx, KDEyWGF, refY);
+        drepWGF[j, :] = [m, v, mse95 , mise, kl - lambda[i]*ent];
     end
     diagnosticsWGF[i, :] = mean(drepWGF,dims = 1);
 end
 
-p1 = plot(lambda, diagnosticsWGF[:, 1], lw = 3, legend = false);
-hline!([0.5]);
-title!("Mean")
-p2 = plot(lambda, diagnosticsWGF[:, 2], lw = 3, legend = false);
-hline!([0.043^2]);
-title!("Variance")
-p3 = plot(lambda, diagnosticsWGF[:, 3], lw = 3, legend = false);
-title!("95th quantile MSE")
-p4 = plot(lambda, diagnosticsWGF[:, 4], lw = 3, legend = false);
-title!("MISE")
-p5 = plot(lambda, diagnosticsWGF[:, 5], lw = 3, legend = false);
-title!("KL - entropy")
-p6 = plot();
-plot(p1, p2, p3, p4, p5, p6, layout = (2, 3))
+# p1 = plot(lambda, diagnosticsWGF[:, 1], lw = 3, legend = false);
+# hline!([0.5]);
+# title!("Mean")
+# p2 = plot(lambda, diagnosticsWGF[:, 2], lw = 3, legend = false);
+# hline!([0.043^2]);
+# title!("Variance")
+# p3 = plot(lambda, diagnosticsWGF[:, 3], lw = 3, legend = false);
+# title!("95th quantile MSE")
+# p4 = plot(lambda, diagnosticsWGF[:, 4], lw = 3, legend = false);
+# title!("MISE")
+# p5 = plot(lambda, diagnosticsWGF[:, 5], lw = 3, legend = false);
+# title!("KL - entropy")
+# p6 = plot();
+# plot(p1, p2, p3, p4, p5, p6, layout = (2, 3))
 
 
-save("parameters10rep.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
-        "Nparticles", Nparticles, "Niter", Niter)
-# save("C:/Users/francesca/Dropbox/parameters.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
-#         "Nparticles", Nparticles, "Niter", Niter)
+@save "parametersN1000.jld"

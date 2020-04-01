@@ -36,7 +36,7 @@ We want to solve the integral equation
 where $\rho$ and $\mu$ are probability densities on $\real^{n}$ and $\real^{m}$ and $K$ a Markov transition density, i.e. $\mu=\rho K$ in operator notation. The solution to this problem is not unique and we propose to regularize the problem using an entropy constraint; i.e. for a given $\lambda>0$ we propose to minimize w.r.t. $\rho$
 \begin{equation}
 \label{eq:minimisation}
-E(\rho)=\KL(\mu,\rho K)-\lambda\ent(\rho)
+E(\rho)=\KL(\mu,\rho K)-\lambda\ent(\rho) = 
 \end{equation}
 where 
 $\KL(\mu,\rho K)$ is the Kullback-Leibler divergence between $\mu$ and $\rho K$ and $\ent(\rho)=-\int\rho\log\rho$ is the entropy of $\rho$.
@@ -65,7 +65,11 @@ with $T$ transport map from $\mu$ to $\nu$.
 
 We consider the functional $E$ in \eqref{eq:minimisation} defined on $\mathcal{P}_2(\real^n)$.
 It is easy to see that this functional is geodesically convex in $\rho$.
-
+We have
+\begin{align*}
+E(\rho)= & \KL(\mu,\rho K)-\lambda\ent(\rho)\\
+=- & \int\mu\log\rho K+\lambda\int\rho\log\rho+\int\mu\log\mu.
+\end{align*}
 The integral $\int\mu\log\mu$ is constant w.r.t. $\rho$ and the negative entropy $\lambda\int\rho\log\rho$ is geodesically convex in $\rho$ \citep[page 130]{santambrogio2017euclidean}.
 Regarding the integral $- \int\mu\log\rho K$, we have that
 \begin{itemize}
@@ -73,6 +77,21 @@ Regarding the integral $- \int\mu\log\rho K$, we have that
 \item $-log s$ is a convex function
 \end{itemize}
 hence $\int\mu\left( -\log\rho K\right)$ is convex in $\rho$ (integrating w.r.t. $\mu$ does not change convexity).
+
+The functional $E$ is also continuous.
+\begin{proof}
+Under some boundedness assumptions on $\rho$.
+As $W_2$ metrizes weak convergence, take $\rho_n \rightharpoonup \rho$. Then
+\begin{align*}
+\vert E(\rho_n) - E(\rho)\vert &= \left\lvert -\int\mu\log\rho_n K+\lambda\int\rho_n\log\rho_n +\int\mu\log\rho K-\lambda\int\rho\log\rho\right\rvert\\
+&\leq  \left\lvert \int\mu\left[\log\rho K - \log\rho_n K \right]\right\rvert +\lambda\left\lvert\int\left[ \rho_n\log\rho_n -\rho\log\rho\right]\right\rvert
+\end{align*}
+if $K$ is continuous, since $\rho_n \rightharpoonup \rho$, we also have that $rho_n K \rightarrow \rho K$ and the continuity of the logarithm gives $\log\rho K \rightarrow\log\rho_n K$. The dominated convergence theorem gives
+\begin{align*}
+\left\lvert \int\mu\left[\log\rho K - \log\rho_n K \right]\right\rvert \rightarrow 0.
+\end{align*}
+Similarly, continuity of the second term is given by the continuity of the entropy function and the dominated convergence theorem.
+\end{proof}
 
 
 Following \citet[Definition 11.1.1]{ambrosio2008gradient}, we say that $\rho_t$ is a solution to the gradient flow equation for $E$ with the $W_2$ metric if
@@ -206,12 +225,10 @@ where $\testfn$ is 1-Lipschitz continuous \citep[page 112]{santambrogio2017eucli
 
 Take $x, x^\prime\in \real^n$  and $\rho, \rho^\prime \in \mathcal{P}_2(\real^n)$ and consider
 \begin{align*}
-\norm{ \nabla\variation{\rho}(x) - \nabla\variation{\rho^\prime}(x^\prime)}{2} &= \norm{- \int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho K(y)}+\lambda\nabla\log\rho + \int\mu\left(dy\right)\frac{\nabla K(x^\prime,y)}{\rho^\prime K(y)}-\lambda\nabla\log\rho^\prime}{2}\\
-&\leq \norm{\int\mu\left(dy\right)\left[\frac{\nabla K(x^\prime,y)}{\rho^\prime K(y)}- \frac{\nabla K(x,y)}{\rho K(y)}\right]}{2} +\lambda\norm{\nabla\log\rho - \nabla\log\rho^\prime}{2}\\
-&\leq \norm{\int\mu\left(dy\right)\left[\frac{\nabla K(x^\prime,y) - \nabla K(x,y)}{\rho^\prime K(y)}\right]}{2}\\
-& +\norm{\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho^\prime K(y)\rho K(y)}\left[\rho K(y) - \rho^\prime K(y)\right]}{2}
+\norm{ \int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho K(y)}- \int\mu\left(dy\right)\frac{\nabla K(x^\prime,y)}{\rho^\prime K(y)}}{2} &\leq \norm{\int\mu\left(dy\right)\left[\frac{\nabla K(x,y)}{\rho K(y)}- \frac{\nabla K(x^\prime,y)}{\rho^\prime K(y)}\right]}{2} \\
+&\leq \norm{\int\mu\left(dy\right)\left[\frac{\nabla K(x,y) - \nabla K(x^\prime,y)}{\rho K(y)}\right]}{2}\\
+& +\norm{\int\mu\left(dy\right)\frac{\nabla K(x^\prime,y)}{\rho^\prime K(y)\rho K(y)}\left[\rho^\prime K(y) - \rho K(y)\right]}{2}
 \\
-& +\lambda\norm{\nabla\log\rho - \nabla\log\rho^\prime}{2}\\
 \end{align*}
 The first term is bounded by assuming $\nabla K(x, y)$ is Lipschitz continuous in $x$ uniformly in $y$:
 \begin{align*}
@@ -224,7 +241,6 @@ If we assume that $K$ is Lipschitz continuous in $x$ uniformly in $y$ with const
 \norm{\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho^\prime K(y)\rho K(y)}\left[\rho K(y) - \rho^\prime K(y)\right]}{2} \leq LW_2(\rho, \rho^\prime)\norm{\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho^\prime K(y)\rho K(y)}}{2}
 \end{align*}
 
-What about the third term?
 \section{Connections with other methods}
 Minimisation of a functional involving the $\KL$ divergence is a common method to solve Fredholm integral equations of the first kind.
 For example, if we consider the functional

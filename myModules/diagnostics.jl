@@ -40,9 +40,9 @@ function diagnosticsH(h, g, KDEx, KDEy, refY)
     # compute log of hatH for Kl divergence
     hatHlog = log.(hatH);
     hatHlog[isnan.(hatHlog)] .= 0;
-    div = sum(trueH.*(trueHlog .- hatHlog));
+    kl = sum(trueH.*(trueHlog .- hatHlog));
 
-    return mise, div
+    return mise, kl
 end
 #=
 Diagnostics for approximations of f
@@ -91,8 +91,8 @@ end
 function diagnosticsALL(f, h, g, KDEx, KDEy, refY)
     m, v, difference, misef, ent = diagnosticsF(f, KDEx, KDEy);
     q = quantile!(difference, 0.95);
-    _, div = diagnosticsH(h, g, KDEx, KDEy, refY);
-    return m, v, q, misef, div, ent
+    _, kl = diagnosticsH(h, g, KDEx, KDEy, refY);
+    return m, v, q, misef, kl, ent
 end
 
 end

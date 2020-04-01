@@ -28,7 +28,7 @@ Niter = trunc(Int, 1e03);
 # samples from h(y)
 M = 10000;
 # number of particles
-Nparticles = 10000;
+Nparticles = 5000;
 # regularisation parameter
 lambda = 50;
 

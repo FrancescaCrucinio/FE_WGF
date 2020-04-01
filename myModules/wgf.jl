@@ -130,10 +130,9 @@ function wgf_deblurring(N, Niter, lambda, I, M, sigma, v, a, b)
     evalX = range(-1 + 1/pixels[2], stop = 1 - 1/pixels[2], length = pixels[2]);
     # y is in [-0.5, 0.5]
     evalY = range(0.5 - 1/pixels[1], stop = -0.5 + 1/pixels[1], length = pixels[1]);
-
+    # get sample from (y)
+    hSample = histogram2D_sampler(I, evalX, evalY, M);
     for n=1:(Niter-1)
-        # get sample from (y)
-        hSample = histogram2D_sampler(I, evalX, evalY, M);
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M
