@@ -6,9 +6,36 @@
 \usepackage{amssymb}
 \usepackage{graphicx, subfig}
 \usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
 
 % bibliography
 \usepackage[round]{natbib}
+
+% itemize
+\renewcommand{\descriptionlabel}[1]{%
+  \hspace\labelsep \upshape\bfseries #1%
+}
+
+% example
+\theoremstyle{definition}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+% referencing description
+\makeatletter
+\let\orgdescriptionlabel\descriptionlabel
+\renewcommand*{\descriptionlabel}[1]{%
+  \let\orglabel\label
+  \let\label\@gobble
+  \phantomsection
+  \edef\@currentlabel{#1\unskip}%
+  %\edef\@currentlabelname{#1}%
+  \let\label\orglabel
+  \orgdescriptionlabel{#1}%
+}
+\makeatother
 
 \DeclareMathOperator{\N}{\mathcal{N}}
 \DeclareMathOperator{\KL}{KL}
@@ -36,12 +63,24 @@ We want to solve the integral equation
 where $\rho$ and $\mu$ are probability densities on $\real^{n}$ and $\real^{m}$ and $K$ a Markov transition density, i.e. $\mu=\rho K$ in operator notation. The solution to this problem is not unique and we propose to regularize the problem using an entropy constraint; i.e. for a given $\lambda>0$ we propose to minimize w.r.t. $\rho$
 \begin{equation}
 \label{eq:minimisation}
-E(\rho)=\KL(\mu,\rho K)-\lambda\ent(\rho) = 
+E(\rho)=\KL(\mu,\rho K)-\lambda\ent(\rho)
 \end{equation}
 where 
 $\KL(\mu,\rho K)$ is the Kullback-Leibler divergence between $\mu$ and $\rho K$ and $\ent(\rho)=-\int\rho\log\rho$ is the entropy of $\rho$.
 This requires solving a minimization problem in the space of probability measures. We are going to follow a Wasserstein gradient flow approach.
 
+\subsection{Assumptions}
+\begin{description}
+\item[(A0) \label{a}] $\mu, \rho$ are probability densities with finite second moment and $K$ is a the density of a Markov kernel for each $x$.
+\item[(A1)\label{a:k}] the kernel $K(x, y)$ is bounded above and below
+\begin{equation*}
+ \exists m_K>0 \text{ such that }\qquad 0<  \frac{1}{m_K} \leq  K(x, y)\leq m_K < \infty \qquad \forall (x, y),
+\end{equation*}
+is convex in $x$ uniformly in $y$ and is Lipschitz continuous in $x$ uniformly in $y$ with Lipschitz constant $L$.
+\item[(A2)\label{a:gradientk}] the gradient $\nabla K(x, y)$ is Lipschitz continuous in $x$ uniformly in $y$ with Lipschitz constant $L^\prime$.
+\end{description}
+
+\ref{a:k} implies that $\mu$ is bounded too.
 \section{Gradient flow approach}
 \subsection{Notation}
 
@@ -55,16 +94,20 @@ W_2(\mu, \nu) := \left( \inf_{\pi\in\Pi(\mu, \nu)}\int\norm{x - y}{2}\ d\pi(x, y
 \end{align*}
 where $\Pi(\mu, \nu)$ is the set of all possible couplings between $\mu$ and $\nu$.
 
-For any proper and lower semicontinuous functional $F$ defined on $\mathcal{P}_2(\real^d)$ we define the sub-differential as the set of $\xi$ such that
+
+
+For any proper and lower semicontinuous functional $F$ defined on $\mathcal{P}_2(\real^d)$, $\xi$ belongs to the sub-differential $\partial F(\mu)$ if
 \begin{align*}
-F(\mu) - F(\nu) \geq \int\langle \xi(x), T(x) - x\rangle\ d\mu(x) +o\left( W_2(\mu, \nu)\right)
+F(\nu) - F(\mu) \geq \int\langle \xi(x), T(x) - x\rangle\ d\mu(x) +o\left( W_2(\mu, \nu)\right)
 \end{align*}
 with $T$ transport map from $\mu$ to $\nu$.
 
-\subsection{Gradient flow} 
+\subsection{Properties of the functional $E$}
 
 We consider the functional $E$ in \eqref{eq:minimisation} defined on $\mathcal{P}_2(\real^n)$.
+
 It is easy to see that this functional is geodesically convex in $\rho$.
+\begin{proof}
 We have
 \begin{align*}
 E(\rho)= & \KL(\mu,\rho K)-\lambda\ent(\rho)\\
@@ -74,33 +117,33 @@ The integral $\int\mu\log\mu$ is constant w.r.t. $\rho$ and the negative entropy
 Regarding the integral $- \int\mu\log\rho K$, we have that
 \begin{itemize}
 \item $\rho K = \int K(x, y) \ d\rho(x)$ is geodesically convex if $K$ is convex in $x$ \citep[page 128]{santambrogio2017euclidean}
-\item $-log s$ is a convex function
+\item $-\log s$ is a convex function
 \end{itemize}
 hence $\int\mu\left( -\log\rho K\right)$ is convex in $\rho$ (integrating w.r.t. $\mu$ does not change convexity).
+\end{proof}
 
 The functional $E$ is also continuous.
 \begin{proof}
-Under some boundedness assumptions on $\rho$.
 As $W_2$ metrizes weak convergence, take $\rho_n \rightharpoonup \rho$. Then
 \begin{align*}
 \vert E(\rho_n) - E(\rho)\vert &= \left\lvert -\int\mu\log\rho_n K+\lambda\int\rho_n\log\rho_n +\int\mu\log\rho K-\lambda\int\rho\log\rho\right\rvert\\
 &\leq  \left\lvert \int\mu\left[\log\rho K - \log\rho_n K \right]\right\rvert +\lambda\left\lvert\int\left[ \rho_n\log\rho_n -\rho\log\rho\right]\right\rvert
 \end{align*}
-if $K$ is continuous, since $\rho_n \rightharpoonup \rho$, we also have that $rho_n K \rightarrow \rho K$ and the continuity of the logarithm gives $\log\rho K \rightarrow\log\rho_n K$. The dominated convergence theorem gives
+if $K$ is continuous, since $\rho_n \rightharpoonup \rho$, we also have that $\rho_n K \rightarrow \rho K$ and the continuity of the logarithm gives $\log\rho K \rightarrow\log\rho_n K$. The dominated convergence theorem gives
 \begin{align*}
 \left\lvert \int\mu\left[\log\rho K - \log\rho_n K \right]\right\rvert \rightarrow 0.
 \end{align*}
 Similarly, continuity of the second term is given by the continuity of the entropy function and the dominated convergence theorem.
 \end{proof}
 
-
+\subsection{Gradient flow}
 Following \citet[Definition 11.1.1]{ambrosio2008gradient}, we say that $\rho_t$ is a solution to the gradient flow equation for $E$ with the $W_2$ metric if
 \begin{equation*}
 v_t \in -\partial E(\rho_t),
 \end{equation*}
 where $\partial E(\rho_t)$ is the sub-differential of $E$ evaluated at $\rho_t$, and $v_t$ is a "gradient" for $E$ at $\rho_t$ such that
 \begin{align*}
-\partial_{t}\rho_{t}=\nabla\cdot\left(\rho_{t}v_t\right),
+\partial_{t}\rho_{t}=-\nabla\cdot\left(\rho_{t}v_t\right)
 \end{align*} 
 holds.
 
@@ -120,7 +163,7 @@ E(\rho)= & \KL(\mu,\rho K)-\lambda\ent(\rho)\\
 \end{align*}
 It follows directly that 
 \[
-\frac{\delta\ent }{\delta\rho}\left(\rho\right)=1+\log\rho.
+\frac{\delta\ent }{\delta\rho}\left(\rho\right)=-(1+\log\rho).
 \]
 and 
 \begin{align*}
@@ -143,7 +186,7 @@ Hence, it follows that
 \frac{\delta E}{\delta\rho}\left(x\right)=-\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}+\lambda\left(1+\log\rho\left(x\right)\right).
 \end{equation}
 
-We know $1+\log\rho\left(x\right)$ is a sub-differantial for $\ent(\rho)$ and $\int \mu \log \mu$ is constant w.r.t $\rho$, so we just need to show that $-\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}$ is a sub-differential for $\int \mu\log(\rho K)$.
+We know $1+\log\rho\left(x\right)$ is a sub-differential for $-\ent(\rho)$ \citep[Lemma 8]{carrillo2006contractions} and $\int \mu \log \mu$ is constant w.r.t $\rho$, so we just need to show that $-\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}$ is a sub-differential for $\int \mu\log(\rho K)$.
 
 \subsubsection{Existence and uniqueness of the gradient flow}
 
@@ -181,6 +224,7 @@ Approximating the first term on the r.h.s. is fine as practically $\mu\left(dy\r
 This is ugly and would be most likely highly inefficient.
 In the next section, we show how to address this issue.
 
+Also, standard existence/uniqueness theorems do not apply because the drift $-\nabla\frac{\delta E}{\delta\rho_{t}}\left(X_{t}\right)$ is not Lipschitz continuous.
 
 \section{Nonlinear SDE approach and numerical implementation}
 
@@ -215,11 +259,11 @@ dX_{t}^{i}=\int\mu\left(dy\right)\frac{\nabla K(X_{t},y)}{\rho_{t}^{N}K(y)}dt+\s
 We will also need to further discretize in time these SDEs obviously.
 
 \subsection{Existence and uniqueness}
-To show that the nonlinear SDE \eqref{eq:nonlinearSDE} admits a solution we need to show that the drift if Lipschitz continuous in $(x, \rho)$ \citep{jourdain2007nonlinear}.
+To show that the nonlinear SDE \eqref{eq:nonlinearSDE} admits a solution we need to show that the drift is Lipschitz continuous in $(x, \rho)$ \citep{jourdain2007nonlinear}.
 
 We can use the following equivalence: in $\real^n$ the $W_2$ distance is equal to
 \begin{align*}
-W_2(\mu, \nu) = \sup\left\lvert \int \testfn \ d(\mu  \nu)\right\rvert
+W_2(\mu, \nu) = \sup\left\lvert \int \testfn \ d(\mu - \nu)\right\rvert
 \end{align*}
 where $\testfn$ is 1-Lipschitz continuous \citep[page 112]{santambrogio2017euclidean}.
 
@@ -230,17 +274,19 @@ Take $x, x^\prime\in \real^n$  and $\rho, \rho^\prime \in \mathcal{P}_2(\real^n)
 & +\norm{\int\mu\left(dy\right)\frac{\nabla K(x^\prime,y)}{\rho^\prime K(y)\rho K(y)}\left[\rho^\prime K(y) - \rho K(y)\right]}{2}
 \\
 \end{align*}
-The first term is bounded by assuming $\nabla K(x, y)$ is Lipschitz continuous in $x$ uniformly in $y$:
+The first term is bounded under \ref{a:gradientk}
 \begin{align*}
-\norm{\int\mu\left(dy\right)\left[\frac{\nabla K(x^\prime,y) - \nabla K(x,y)}{\rho^\prime K(y)}\right]}{2} \leq L_K\norm{x^\prime - x}{2}\norm{\int\frac{\mu\left(dy\right)}{\rho^\prime K(y)}}{2}\\
-\leq m_K L_K\norm{x^\prime - x}{2}
+\norm{\int\mu\left(dy\right)\left[\frac{\nabla K(x,y) - \nabla K(x^\prime,y)}{\rho K(y)}\right]}{2} \leq L^\prime\norm{x^\prime - x}{2}\norm{\int\frac{\mu\left(dy\right)}{\rho^\prime K(y)}}{2}\\
+\leq m_K L^\prime\norm{x^\prime - x}{2}
 \end{align*}
-if $K(x, y) \geq m_K>0$.
-If we assume that $K$ is Lipschitz continuous in $x$ uniformly in $y$ with constant $L$ we also have
+and the last inequality follows from \ref{a:k}.
+Using \ref{a:k}, the second term is bounded by
 \begin{align*}
-\norm{\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho^\prime K(y)\rho K(y)}\left[\rho K(y) - \rho^\prime K(y)\right]}{2} \leq LW_2(\rho, \rho^\prime)\norm{\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho^\prime K(y)\rho K(y)}}{2}
+\norm{\int\mu\left(dy\right)\frac{\nabla K(x^\prime,y)}{\rho^\prime K(y)\rho K(y)}\left[\rho^\prime K(y) - \rho K(y)\right]}{2} &\leq LW_2(\rho, \rho^\prime)\norm{\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho^\prime K(y)\rho K(y)}}{2}\\
+&\leq m_K^2LW_2(\rho, \rho^\prime)\norm{\int\mu\left(dy\right)\nabla K(x,y)}{2}\\
+&\leq m_K^2LW_2(\rho, \rho^\prime)\norm{\text{argmax}_{x} K(x, y) - x}{2}\\
+&\leq m_K^2LW_2(\rho, \rho^\prime)\norm{m_K - x}{2}.
 \end{align*}
-
 \section{Connections with other methods}
 Minimisation of a functional involving the $\KL$ divergence is a common method to solve Fredholm integral equations of the first kind.
 For example, if we consider the functional

@@ -1,4 +1,4 @@
-module wgf;
+module wgfserver;
 
 using Distributions;
 using Statistics;
