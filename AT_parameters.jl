@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "/home/u1693998/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using StatsPlots;
 using Distributions;
@@ -74,5 +74,5 @@ p6 = plot(lambda, diagnosticsWGF[:, 6], lw = 3, legend = false);
 title!("entropy")
 plot(p1, p2, p3, p4, p5, p6, layout = (2, 3))
 
-save("parametersN500.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
-    "Niter", Niter)
+save("C:/Users/francesca/Dropbox/parameters.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
+     "Nparticles", Nparticles, "Niter", Niter)
