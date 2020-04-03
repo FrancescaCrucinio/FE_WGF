@@ -1,4 +1,5 @@
-push!(LOAD_PATH, "/home/u1693998/WGF/myModules")
+# push!(LOAD_PATH, "/home/u1693998/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
 # Julia packages
 using StatsPlots;
 using Distributions;
@@ -32,12 +33,12 @@ refY = range(0, stop = 1, length = 1000);
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 500;
+Nparticles = 5000;
 # regularisation parameters
-lambda = [range(0, stop = 0.9, length = 10); range(1, stop = 9, length = 9);
-range(10, stop = 100, length = 9)];
+lambda = [range(1, stop = 9, length = 9);
+range(10, stop = 30, length = 3)];
 # number of repetitions
-Nrep = 1000;
+Nrep = 5;
 
 # diagnostics
 diagnosticsWGF = zeros(length(lambda), 7);
