@@ -1,4 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -38,7 +39,7 @@ M = 1000;
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 1000;
+Nparticles = 10000;
 # regularisation parameter
 lambda = 20;
 
@@ -52,3 +53,6 @@ p1 = scatter(x[Niter, :], y[Niter, :])
 sample = rand(MvNormal(mu, sigmaF), 100000);
 p2 = scatter(sample[1, :], sample[2, :])
 plot(p1, p2, layout =(1, 2))
+sampleH = rand(MvNormal(mu, sigmaH), 100000);
+p3 = scatter(sampleH[1, :], sampleH[2, :])
+plot(p1, p2, p3, layout =(1, 3))
