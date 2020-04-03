@@ -8,6 +8,7 @@ export wgf_AT_approximated
 export wgf_gaussian_mixture
 export wgf_deblurring
 export wgf_pet
+export wgf_mvnormal
 
 #=
  WGF for analytically tractable example (approximated drift)
@@ -209,6 +210,65 @@ function wgf_pet(N, Niter, lambda, I, M, phi, xi, sigma)
                     y[n, i] * sin.(hSample[:, 2]) .- hSample[:, 1])/sigma^2;
             gradientX = prec .* cos.(hSample[:, 2]);
             gradientY = prec .* sin.(hSample[:, 2]);
+            driftX[i] = mean(gradientX./hN);
+            driftY[i] = mean(gradientY./hN);
+        end
+        # update locations
+        x[n+1, :] = x[n, :] .+ driftX*dt .+ sqrt(2*lambda)*dt*randn(N, 1);
+        y[n+1, :] = y[n, :] .+ driftY*dt .+ sqrt(2*lambda)*dt*randn(N, 1);
+    end
+    return x, y
+end
+
+#=
+ WGF for multivariate normal
+OUTPUTS
+1 - particle locations (2D)
+INPUTS
+'N' number of particles
+'Niter' number of time steps
+'lambda' regularisation parameter
+'x0' user selected initial distribution
+'M' number of samples from h(y) to be drawn at each iteration
+'mu' mean of data Distribution
+'sigmaH' covariance matrix of data distribution
+'sigmaG' covariance matrix of mixing kernel
+=#
+function wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
+    # time step
+    dt = 1/Niter;
+    # initialise two matrices x, y storing the particles
+    x = zeros(Niter, N);
+    y = zeros(Niter, N);
+    # initial distribution is given as input:
+    x[1, :] = x0[1, :];
+    y[1, :] = x0[2, :];
+    # get samples from h(y)
+    hSample = rand(MvNormal(mu, sigmaH), M);
+
+    for n=1:(Niter-1)
+        # Compute h^N_{n}
+        hN = zeros(M, 1);
+        for j=1:M
+            for i=1:N
+                hN[j] = hN[j] + pdf(MvNormal([x[n, i]; y[n, i]], sigmaG), hSample[:, j]);
+            end
+        end
+        hN .= hN./N;
+        # gradient and drift
+        driftX = zeros(N, 1);
+        driftY = zeros(N, 1);
+        for i=1:N
+            # precompute common quantities for gradient
+            prec = zeros(M, 1);;
+            for j=1:M
+                prec[j] = prec[j] + pdf(MvNormal([x[n, i]; y[n, i]], sigmaG), hSample[:, j]) *
+                        ((hSample[2, j] - y[n, i])/sigmaG[2, 2] -
+                        (hSample[1, j] - x[n, i])/sigmaG[1, 1]);
+            end
+            prec = prec./(1 - sigmaG[1, 2]^2);
+            gradientX = -prec./sigmaG[1, 1];
+            gradientY = prec./sigmaG[2, 2];
             driftX[i] = mean(gradientX./hN);
             driftY[i] = mean(gradientY./hN);
         end

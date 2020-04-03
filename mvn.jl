@@ -52,7 +52,6 @@ p1 = scatter(x[Niter, :], y[Niter, :])
 
 sample = rand(MvNormal(mu, sigmaF), 100000);
 p2 = scatter(sample[1, :], sample[2, :])
-plot(p1, p2, layout =(1, 2))
 sampleH = rand(MvNormal(mu, sigmaH), 100000);
 p3 = scatter(sampleH[1, :], sampleH[2, :])
 plot(p1, p2, p3, layout =(1, 3))
