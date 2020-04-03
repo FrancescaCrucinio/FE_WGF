@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -74,7 +74,7 @@ p6 = plot()
 plot(p1, p2, p3, p4, p5, p6, layout = (2, 3))
 
 
-save("parameters.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
-        "Nparticles", Nparticles, "Niter", Niter)
-# save("C:/Users/francesca/Dropbox/parameters.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
-#         "Nparticles", Nparticles, "Niter", Niter)
+# save("parameters.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
+#        "Nparticles", Nparticles, "Niter", Niter)
+save("C:/Users/francesca/Dropbox/parameters.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
+     "Nparticles", Nparticles, "Niter", Niter)
