@@ -250,22 +250,21 @@ function wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M
-            for i=1:N
-                hN[j] = hN[j] + pdf(MvNormal([x[n, i]; y[n, i]], sigmaG), hSample[:, j]);
-            end
+            # define Gaussian pdf
+            phi(t) = pdf(MvNormal(hSample[:, j], sigmaG), t);
+            # apply it to c, y
+            hN = mean(mapslices(phi, [x[n, :] y[n, :]], dims = 2));
         end
-        hN .= hN./N;
         # gradient and drift
         driftX = zeros(N, 1);
         driftY = zeros(N, 1);
         for i=1:N
             # precompute common quantities for gradient
-            prec = zeros(M, 1);;
-            for j=1:M
-                prec[j] = prec[j] + pdf(MvNormal([x[n, i]; y[n, i]], sigmaG), hSample[:, j]) *
-                        ((hSample[2, j] - y[n, i])/sigmaG[2, 2] -
-                        (hSample[1, j] - x[n, i])/sigmaG[1, 1]);
-            end
+            # define Gaussian pdf
+            psi(t) = pdf(MvNormal([x[n, i]; y[n, i]], sigmaG), t);
+            prec = mapslices(psi, hSample', dims = 2) .*
+                ((hSample[2, :] .- y[n, i])/sigmaG[2, 2] -
+                (hSample[1, :] .- x[n, i])/sigmaG[1, 1]);
             prec = prec./(1 - sigmaG[1, 2]^2);
             gradientX = -prec./sigmaG[1, 1];
             gradientY = prec./sigmaG[2, 2];

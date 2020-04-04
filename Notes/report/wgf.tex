@@ -5,6 +5,8 @@
 \usepackage{amsmath,amsthm}
 \usepackage{amssymb}
 \usepackage{graphicx, subfig}
+\usepackage{tikz}
+\usetikzlibrary{positioning, shapes, calc, arrows.meta}
 \usepackage{xcolor}
 \usepackage{enumitem}
 \usepackage[hidelinks]{hyperref}
@@ -39,6 +41,8 @@
 
 \DeclareMathOperator{\N}{\mathcal{N}}
 \DeclareMathOperator{\KL}{KL}
+\DeclareMathOperator{\mise}{MISE}
+\DeclareMathOperator{\mse}{MSE}
 \DeclareMathOperator{\ent}{Ent}
 \newcommand{\norm}[2]{\ensuremath{\Vert #1 \Vert_{#2}}}
 \newcommand{\variation}[1]{\ensuremath{\frac{\delta E}{\delta #1}}}
@@ -53,6 +57,10 @@
 
 \begin{document}
 \maketitle
+
+
+% images location
+\graphicspath{{Images/}}
 
 \section{Fredholm integral equation of first kind}
 
@@ -317,6 +325,51 @@ We set $N=10^{4}$, $\lambda = 10$, $dt = 10^{-3}$. The initial distribution $\rh
 \label{fig:at}
 \end{figure}
 
+\subsection{Simulation Study}
+
+\begin{figure}
+\centering
+\resizebox{0.9\textwidth}{!}{%
+\begin{tikzpicture}[baseline, every node/.append style={font=\normalsize}]
+\node (img1) {\includegraphics[width=0.40\textwidth]{mean500}};
+\node[below=of img1, node distance = 0, yshift = 1cm] (label1){$\lambda$};
+  \node[left=of img1, node distance = 0, rotate=90, anchor = center, yshift = -0.7cm] {$\hat{\mu}$};
+\end{tikzpicture}
+\begin{tikzpicture}[baseline, every node/.append style={font=\normalsize}]
+\node[right=of img1] (img2) {\includegraphics[width=0.40\textwidth]{var500}};
+\node[below=of img2, node distance = 0, yshift = 1cm] {$\lambda$};
+  \node[left=of img2, node distance = 0, rotate=90, anchor = center, yshift = -0.7cm] {$\hat{\sigma}_\rho^2$};
+\end{tikzpicture}
+}
+\resizebox{0.9\textwidth}{!}{%
+\begin{tikzpicture}[baseline, every node/.append style={font=\normalsize}]
+\node[right=of img2] (img3) {\includegraphics[width=0.40\textwidth]{mse500}};
+\node[below=of img3, node distance = 0, yshift = 1cm] {$\lambda$};
+  \node[left=of img3, node distance = 0, rotate=90, anchor = center, yshift = -0.7cm] {95th - $\mse$};
+\end{tikzpicture}
+\begin{tikzpicture}[baseline, every node/.append style={font=\normalsize}]
+\node (img5) {\includegraphics[width=0.40\textwidth]{mise500}};
+\node[below=of img5, node distance = 0, yshift = 1cm] {$\lambda$};
+  \node[left=of img5, node distance = 0, rotate=90, anchor = center, yshift = -0.7cm] {$\mise$};
+\end{tikzpicture}
+}
+\resizebox{0.9\textwidth}{!}{%
+\begin{tikzpicture}[baseline, every node/.append style={font=\normalsize}]
+\node[right=of img5] (img6) {\includegraphics[width=0.40\textwidth]{e500}};
+\node[below=of img6, node distance = 0, yshift = 1cm] {$\lambda$};
+  \node[left=of img6, node distance = 0, rotate=90, anchor = center, yshift = -0.7cm] {$E(\rho)$};
+\end{tikzpicture}
+\begin{tikzpicture}[baseline, every node/.append style={font=\normalsize}]
+\node[right=of img6] (img7) {\includegraphics[width=0.40\textwidth]{entropy500}};
+\node[below=of img7, node distance = 0, yshift = 1cm] {$\lambda$};
+  \node[left=of img7, node distance = 0, rotate=90, anchor = center, yshift = -0.7cm] {$\ent(\rho)$};
+\end{tikzpicture}
+}
+\caption{$N=500$, $dt=10^{-3}$, $\lambda\in[0, 100]$, 1000 repetitions for each $\lambda$}
+\end{figure}
+
+\section{Gaussian Mixture 1D}
+\section{Bivariate Gaussian}
 \bibliographystyle{abbrvnat}
 \bibliography{wgf_biblio}
 \end{document}
