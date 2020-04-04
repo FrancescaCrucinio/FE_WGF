@@ -41,7 +41,7 @@ KDEx = range(0, stop = 1, length = 1000);
 # number of particles
 Nparticles = 1000;
 # regularisation parameter
-lambda = 20;
+lambda = 50;
 
 # initial distribution
 x0 = rand(2, Nparticles);
