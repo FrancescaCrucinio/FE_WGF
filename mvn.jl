@@ -46,7 +46,7 @@ lambda = 20;
 # initial distribution
 x0 = rand(2, Nparticles);
 # run WGF
-x, y = wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG);
+x, y = wgf_mvnormal(Nparticles, Niter, lambda, x0, M, mu, sigmaH, sigmaG);
 p1 = scatter(x[Niter, :], y[Niter, :])
 
 
