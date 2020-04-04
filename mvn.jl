@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -39,7 +39,7 @@ M = 1000;
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 10000;
+Nparticles = 1000;
 # regularisation parameter
 lambda = 20;
 
