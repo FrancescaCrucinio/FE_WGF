@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -45,7 +45,7 @@ Nparticles = 500;
 lambda = 50;
 
 # initial distribution
-x0 = rand(2, Nparticles);
+x0 = 2*rand(2, Nparticles) .- 1;
 # run WGF
 x, y = wgf_mvnormal(Nparticles, Niter, lambda, x0, M, mu, sigmaH, sigmaG);
 p1 = scatter(x[Niter, :], y[Niter, :])
