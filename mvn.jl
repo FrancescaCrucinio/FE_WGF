@@ -6,9 +6,10 @@ using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
-using KernelEstimator;
 using Random;
 using JLD;
+using KernelDensity;
+using Interpolations;
 using LinearAlgebra;
 # custom packages
 using diagnostics;
@@ -39,14 +40,14 @@ M = 1000;
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 1000;
+Nparticles = 500;
 # regularisation parameter
 lambda = 50;
 
 # initial distribution
 x0 = rand(2, Nparticles);
 # run WGF
-x, y = wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG);
+x, y = wgf_mvnormal(Nparticles, Niter, lambda, x0, M, mu, sigmaH, sigmaG);
 p1 = scatter(x[Niter, :], y[Niter, :])
 
 
@@ -55,3 +56,10 @@ p2 = scatter(sample[1, :], sample[2, :])
 sampleH = rand(MvNormal(mu, sigmaH), 100000);
 p3 = scatter(sampleH[1, :], sampleH[2, :])
 plot(p1, p2, p3, layout =(1, 3))
+
+
+KDEyWGF =  KernelDensity.kde((x[end, :], y[end, :]));
+Xbins = range(-0.5, stop = 1.5, length = 1000);
+Ybins = range(-1, stop = 2, length = 2000);
+res = pdf(KDEyWGF, Ybins, Xbins);
+heatmap(Xbins, Ybins, res)

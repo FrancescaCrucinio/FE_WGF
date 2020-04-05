@@ -38,8 +38,9 @@ lambda = 20;
 x0 = rand(1, Nparticles);
 # run WGF
 x, drift =  wgf_gaussian_mixture(Nparticles, Niter, lambda, x0, M);
+
 KDEyWGF = kerneldensity(x[end, :], xeval = KDEx);
 stats = diagnosticsF(f, KDEx, KDEyWGF);
 
-plot(f, 0, 1, lw = 3)
-plot!(KDEx, KDEyWGF, lw = 3)
+StatsPlots.plot(f, 0, 1, lw = 3)
+StatsPlots.plot!(KDEx, KDEyWGF, lw = 3)
