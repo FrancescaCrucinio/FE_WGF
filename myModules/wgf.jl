@@ -266,8 +266,8 @@ function wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
                 ((hSample[2, :] .- y[n, i])/sigmaG[2, 2] -
                 (hSample[1, :] .- x[n, i])/sigmaG[1, 1]);
             prec = prec./(1 - sigmaG[1, 2]^2);
-            gradientX = -prec./sigmaG[1, 1];
-            gradientY = prec./sigmaG[2, 2];
+            gradientX = prec./sigmaG[1, 1];
+            gradientY = -prec./sigmaG[2, 2];
             driftX[i] = mean(gradientX./hN);
             driftY[i] = mean(gradientY./hN);
         end
