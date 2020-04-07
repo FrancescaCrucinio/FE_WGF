@@ -11,6 +11,8 @@ using ImageMagick;
 using TestImages, Colors;
 using Images;
 using DelimitedFiles;
+using KernelDensity;
+using Interpolations;
 # custom packages
 using diagnostics;
 using smcems;
@@ -26,7 +28,7 @@ xi = range(-offsets, stop = offsets, length = pixels[1]);
 # number of iterations
 Niter = trunc(Int, 1e03);
 # samples from h(y)
-M = 10000;
+M = 1000;
 # number of particles
 Nparticles = 5000;
 # regularisation parameter
@@ -36,4 +38,8 @@ sigma = 0.02;
 
 x, y = wgf_pet(Nparticles, Niter, lambda, I, M, phi, xi, sigma);
 
-scatter(x[Niter, :], y[Niter, :])
+KDEyWGF =  KernelDensity.kde((x[end, :], y[end, :]));
+Xbins = range(-1, stop = 2, length = 1000);
+Ybins = range(-1, stop = 2, length = 1000);
+res = pdf(KDEyWGF, Ybins, Xbins);
+heatmap(Xbins, Ybins, res)

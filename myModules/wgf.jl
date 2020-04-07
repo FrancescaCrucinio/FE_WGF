@@ -65,24 +65,25 @@ OUTPUTS
 2 - drift evolution
 INPUTS
 'N' number of particles
-'Niter' number of time steps
+'dt' discretisation step
+'T' final time
 'lambda' regularisation parameter
 'x0' user selected initial distribution
 'M' number of samples from h(y) to be drawn at each iteration
 =#
-function wgf_gaussian_mixture(N, Niter, lambda, x0, M)
-    # time step
-    dt = 1/Niter;
+function wgf_gaussian_mixture(N, dt, T, lambda, x0, M)
+    # number of iterations
+    Niter = trunc(Int, T/dt);
     # initialise a matrix x storing the particles
     x = zeros(Niter, N);
     # initial distribution is given as input:
     x[1, :] = x0;
     # initialise a matrix drift storing the drift
     drift = zeros(Niter-1, N);
-    # get samples from h(y)
-    y = Ysample_gaussian_mixture(M);
 
     for n=1:(Niter-1)
+        # get samples from h(y)
+        y = Ysample_gaussian_mixture(M);
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M
@@ -181,6 +182,8 @@ INPUTS
 function wgf_pet(N, Niter, lambda, I, M, phi, xi, sigma)
     # time step
     dt = 1/Niter;
+    # normalise xi
+    xi = xi./maximum(xi);
     # initialise two matrices x, y storing the particles
     x = zeros(Niter, N);
     y = zeros(Niter, N);
@@ -195,8 +198,8 @@ function wgf_pet(N, Niter, lambda, I, M, phi, xi, sigma)
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M
-            hN[j] = mean(pdf.(Normal.(0, sigma), x[n, :] * cos(hSample[j, 2]) .+
-                    y[n, :] * sin(hSample[j, 2]) .- hSample[j, 1])
+            hN[j] = mean(pdf.(Normal.(0, sigma), x[n, :] * cos(hSample[j, 1]) .+
+                    y[n, :] * sin(hSample[j, 1]) .- hSample[j, 2])
                     );
         end
         # gradient and drift
@@ -204,12 +207,12 @@ function wgf_pet(N, Niter, lambda, I, M, phi, xi, sigma)
         driftY = zeros(N, 1);
         for i=1:N
             # precompute common quantities for gradient
-            prec = -pdf.(Normal.(0, sigma), x[n, i] * cos.(hSample[:, 2]) .+
-                    y[n, i] * sin.(hSample[:, 2]) .- hSample[:, 1]) .*
-                    (x[n, i] * cos.(hSample[:, 2]) .+
-                    y[n, i] * sin.(hSample[:, 2]) .- hSample[:, 1])/sigma^2;
-            gradientX = prec .* cos.(hSample[:, 2]);
-            gradientY = prec .* sin.(hSample[:, 2]);
+            prec = -pdf.(Normal.(0, sigma), x[n, i] * cos.(hSample[:, 1]) .+
+                    y[n, i] * sin.(hSample[:, 1]) .- hSample[:, 2]) .*
+                    (x[n, i] * cos.(hSample[:, 1]) .+
+                    y[n, i] * sin.(hSample[:, 1]) .- hSample[:, 2])/sigma^2;
+            gradientX = prec .* cos.(hSample[:, 1]);
+            gradientY = prec .* sin.(hSample[:, 1]);
             driftX[i] = mean(gradientX./hN);
             driftY[i] = mean(gradientY./hN);
         end

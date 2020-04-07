@@ -23,8 +23,10 @@ h(x) = 2*pdf.(Normal(0.3, sqrt(0.043^2 + 0.045^2)), x)/3 +
         pdf.(Normal(0.5, sqrt(0.015^2 + 0.045^2)), x)/3;
 g(x, y) = pdf.(Normal(x, 0.045, y));
 
-# number of iterations
-Niter = trunc(Int, 1e03);
+# dt and final time
+dt = 1e-03;
+T = 1;
+
 # samples from h(y)
 M = 1000;
 # values at which evaluate KDE
@@ -37,7 +39,7 @@ lambda = 20;
 
 x0 = rand(1, Nparticles);
 # run WGF
-x, drift =  wgf_gaussian_mixture(Nparticles, Niter, lambda, x0, M);
+x, drift =  wgf_gaussian_mixture(Nparticles, dt, T, lambda, x0, M);
 
 KDEyWGF = kerneldensity(x[end, :], xeval = KDEx);
 stats = diagnosticsF(f, KDEx, KDEyWGF);
