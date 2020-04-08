@@ -17,11 +17,13 @@ using samplers;
 # set seed
 Random.seed!(1234);
 
-# data for gaussian mixture example
-f(x) = pdf.(Normal(0.3, 0.015), x)/3 + 2*pdf.(Normal(0.5, 0.043), x)/3;
-h(x) = 2*pdf.(Normal(0.3, sqrt(0.043^2 + 0.045^2)), x)/3 +
-        pdf.(Normal(0.5, sqrt(0.015^2 + 0.045^2)), x)/3;
-g(x, y) = pdf.(Normal(x, 0.045, y));
+# data for anaytically tractable example
+sigmaG = 0.045^2;
+sigmaF = 0.043^2;
+sigmaH = sigmaF + sigmaG;
+f(x) = pdf.(Normal(0.5, sqrt(sigmaF)), x);
+h(x) = pdf.(Normal(0.5, sqrt(sigmaH)), x);
+g(x, y) = pdf.(Normal(x, sqrt(sigmaG)), y);
 
 # dt and final time
 dt = 1e-03;
@@ -39,7 +41,7 @@ lambda = 25;
 
 x0 = rand(1, Nparticles);
 # run WGF
-x, drift =  wgf_gaussian_mixture(Nparticles, dt, T, lambda, x0, M);
+x, drift =  wgf_AT_approximated(Nparticles, Niter, lambda, x0, M);
 
 KDEyWGF = kerneldensity(x[end, :], xeval = KDEx);
 stats = diagnosticsF(f, KDEx, KDEyWGF);
@@ -47,4 +49,4 @@ stats = diagnosticsF(f, KDEx, KDEyWGF);
 p = StatsPlots.plot(f, 0, 1, lw = 3, label = "True f")
 StatsPlots.plot!(KDEx, KDEyWGF, lw = 3, label = "WGF")
 
-savefig(p, "mixture.pdf")
+savefig(p, "at.pdf")

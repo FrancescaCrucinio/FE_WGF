@@ -1,4 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -7,9 +8,9 @@ using Statistics;
 using StatsBase;
 using KernelEstimator;
 using Random;
-using ImageMagick;
-using TestImages, Colors;
-using Images;
+# using ImageMagick;
+# using TestImages, Colors;
+# using Images;
 using DelimitedFiles;
 using KernelDensity;
 using Interpolations;
@@ -32,14 +33,16 @@ M = 1000;
 # number of particles
 Nparticles = 5000;
 # regularisation parameter
-lambda = 50;
+lambda = 25;
 
 sigma = 0.02;
 
 x, y = wgf_pet(Nparticles, Niter, lambda, I, M, phi, xi, sigma);
 
-KDEyWGF =  KernelDensity.kde((x[end, :], y[end, :]));
-Xbins = range(-1, stop = 2, length = 1000);
-Ybins = range(-1, stop = 2, length = 1000);
+KDEyWGF =  KernelDensity.kde((y[end, :], x[end, :]));
+Xbins = range(-1, stop = 1, length = 1000);
+Ybins = range(-1, stop = 1, length = 1000);
 res = pdf(KDEyWGF, Ybins, Xbins);
-heatmap(Xbins, Ybins, res)
+p = heatmap(Xbins, Ybins, res)
+
+savefig(p, "pet.pdf")
