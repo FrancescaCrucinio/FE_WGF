@@ -243,10 +243,10 @@ function wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
     # initial distribution is given as input:
     x[1, :] = x0[1, :];
     y[1, :] = x0[2, :];
-    # get samples from h(y)
-    hSample = rand(MvNormal(mu, sigmaH), M);
 
     for n=1:(Niter-1)
+        # get samples from h(y)
+        hSample = rand(MvNormal(mu, sigmaH), M);
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M
@@ -265,9 +265,10 @@ function wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
             prec = mapslices(psi, hSample', dims = 2) .*
                 ((hSample[2, :] .- y[n, i])/sqrt(sigmaG[2, 2]) -
                 (hSample[1, :] .- x[n, i])/sqrt(sigmaG[1, 1]));
-            prec = prec./(1 - sigmaG[1, 2]^2/(sigmaG[2, 2] * sigmaG[1, 1]));
-            gradientX = prec./sqrt(sigmaG[1, 1]);
-            gradientY = -prec./sqrt(sigmaG[2, 2]);
+            prec = sigmaG[2, 2] * sigmaG[1, 1] *
+                prec./(sigmaG[2, 2] * sigmaG[1, 1] - sigmaG[1, 2]^2);
+            gradientX = -prec./sqrt(sigmaG[1, 1]);
+            gradientY = prec./sqrt(sigmaG[2, 2]);
             driftX[i] = mean(gradientX./hN);
             driftY[i] = mean(gradientY./hN);
         end

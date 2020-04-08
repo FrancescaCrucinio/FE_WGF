@@ -22,7 +22,8 @@ Random.seed!(1234);
 
 # variances and means
 mu = [0.5, 0.5];
-sigmaF = [0.015 0.0; 0.0 0.043];
+
+sigmaF = [0.15 -0.0645; -0.0645 0.43];
 sigmaG = [0.45 0.5; 0.5 0.9];
 sigmaH = sigmaF + sigmaG;
 
@@ -34,18 +35,18 @@ h(x) = pdf.(MvNormal(mu, sigmaH), x);
 g(x, y) = pdf.(MvNormal(x, sigmaG), y);
 
 # number of iterations
-Niter = trunc(Int, 1e03);
+Niter = trunc(Int, 1e04);
 # samples from h(y)
-M = 1000;
+M = 10000;
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 500;
+Nparticles = 10000;
 # regularisation parameter
-lambda = 50;
+lambda = 10;
 
 # initial distribution
-x0 = 2*rand(2, Nparticles) .- 1;
+x0 = 6*rand(2, Nparticles) .- 3;
 # run WGF
 x, y = wgf_mvnormal(Nparticles, Niter, lambda, x0, M, mu, sigmaH, sigmaG);
 p1 = scatter(x[Niter, :], y[Niter, :])
