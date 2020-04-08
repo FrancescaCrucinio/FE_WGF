@@ -79,7 +79,7 @@ This requires solving a minimization problem in the space of probability measure
 
 \subsection{Assumptions}
 \begin{description}
-\item[(A0) \label{a}] $\mu, \rho$ are probability densities with finite second moment and $K$ is a the density of a Markov kernel for each $x$.
+\item[(A0)\label{a}] $\mu, \rho$ are probability densities with finite second moment and $K$ is a the density of a Markov kernel for each $x$.
 \item[(A1)\label{a:k}] the kernel $K(x, y)$ is bounded above and below
 \begin{equation*}
  \exists m_K>0 \text{ such that }\qquad 0<  \frac{1}{m_K} \leq  K(x, y)\leq m_K < \infty \qquad \forall (x, y),
@@ -295,6 +295,39 @@ Using \ref{a:k}, the second term is bounded by
 &\leq m_K^2LW_2(\rho, \rho^\prime)\norm{\text{argmax}_{x} K(x, y) - x}{2}\\
 &\leq m_K^2LW_2(\rho, \rho^\prime)\norm{m_K - x}{2}.
 \end{align*}
+
+\subsection{Ergodicity}
+The generator of \eqref{eq:nonlinearSDE} is
+\begin{equation}
+\label{eq:generator}
+Lu(x) = \nabla u(x) \int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho K(y)} +\frac{2\lambda}{2}\Delta u(x) 
+\end{equation}
+
+
+\begin{description}
+\item[(A3)\label{a:gradientkergodicity}] the gradient $\nabla K(x, y)$ and $\mu$ satisfy
+\begin{align*}
+\int \mu(dy)\nabla K(x, y) \cdot x \leq a\norm{x}{2}^2+b
+\end{align*}
+for $a, b< \infty$.
+\end{description}
+Under \ref{a:gradientkergodicity}, the generator \eqref{eq:generator} satisfies condition (CD0) in \cite[page 524]{meyn1993stability} with $V(x) = \norm{x}{2}^2/2$:
+\begin{align*}
+LV(x) &= \sum_{i=1}^n x_i \int\mu\left(dy\right)\frac{\nabla K(x_i,y)}{\rho K(y)} +\lambda\sum_{i=1}^n 1\\
+&= \int\mu\left(dy\right)\frac{\sum_{i=1}^n x_i \nabla K(x_i,y)}{\rho K(y)} +n\lambda\\
+&\leq m_K \int\mu\left(dy\right)\frac{\nabla K(x,y)\cdot x}{\rho (\real^n)} +n\lambda\\
+&\leq m_K \int\mu\left(dy\right)\nabla K(x,y)\cdot x +n\lambda\\
+&\leq m_K (a\norm{x}{2}^2+b)+n\lambda\\
+\end{align*}
+Thus we can apply Theorem 2.1 to show that $X_t$ is non-explosive.
+
+If the gradient is also bounded we can apply \cite[Theorem 2.1]{bhattacharya1978criteria} to get that $X_t$ is strong Feller and irreducible (w.r.t. Lebesgue). 
+Probably we can relax this assumption to the integral
+\begin{align*}
+\int \mu(dy)\nabla K(x, y) \cdot x \leq a\norm{x}{2}^2+b
+\end{align*}
+being locally bounded as suggested in \cite{roberts1996exponential}.
+
 \section{Connections with other methods}
 Minimisation of a functional involving the $\KL$ divergence is a common method to solve Fredholm integral equations of the first kind.
 For example, if we consider the functional
@@ -365,7 +398,48 @@ We set $N=10^{4}$, $\lambda = 10$, $dt = 10^{-3}$. The initial distribution $\rh
   \node[left=of img7, node distance = 0, rotate=90, anchor = center, yshift = -0.7cm] {$\ent(\rho)$};
 \end{tikzpicture}
 }
-\caption{$N=500$, $dt=10^{-3}$, $\lambda\in[0, 100]$, 1000 repetitions for each $\lambda$}
+\caption{$N=500$, $dt=10^{-3}$, $T=1$, $\lambda\in[0, 100]$, 1000 repetitions for each $\lambda$}
+\end{figure}
+
+\begin{figure}
+\centering
+\resizebox{0.9\textwidth}{!}{%
+\begin{tikzpicture}[baseline, every node/.append style={font=\normalsize}]
+\node (img1) {\includegraphics[width=0.40\textwidth]{mean1000}};
+\node[below=of img1, node distance = 0, yshift = 1cm] (label1){$\lambda$};
+  \node[left=of img1, node distance = 0, rotate=90, anchor = center, yshift = -0.7cm] {$\hat{\mu}$};
+\end{tikzpicture}
+\begin{tikzpicture}[baseline, every node/.append style={font=\normalsize}]
+\node[right=of img1] (img2) {\includegraphics[width=0.40\textwidth]{var1000}};
+\node[below=of img2, node distance = 0, yshift = 1cm] {$\lambda$};
+  \node[left=of img2, node distance = 0, rotate=90, anchor = center, yshift = -0.7cm] {$\hat{\sigma}_\rho^2$};
+\end{tikzpicture}
+}
+\resizebox{0.9\textwidth}{!}{%
+\begin{tikzpicture}[baseline, every node/.append style={font=\normalsize}]
+\node[right=of img2] (img3) {\includegraphics[width=0.40\textwidth]{mse1000}};
+\node[below=of img3, node distance = 0, yshift = 1cm] {$\lambda$};
+  \node[left=of img3, node distance = 0, rotate=90, anchor = center, yshift = -0.7cm] {95th - $\mse$};
+\end{tikzpicture}
+\begin{tikzpicture}[baseline, every node/.append style={font=\normalsize}]
+\node (img5) {\includegraphics[width=0.40\textwidth]{mise1000}};
+\node[below=of img5, node distance = 0, yshift = 1cm] {$\lambda$};
+  \node[left=of img5, node distance = 0, rotate=90, anchor = center, yshift = -0.7cm] {$\mise$};
+\end{tikzpicture}
+}
+\resizebox{0.9\textwidth}{!}{%
+\begin{tikzpicture}[baseline, every node/.append style={font=\normalsize}]
+\node[right=of img5] (img6) {\includegraphics[width=0.40\textwidth]{e1000}};
+\node[below=of img6, node distance = 0, yshift = 1cm] {$\lambda$};
+  \node[left=of img6, node distance = 0, rotate=90, anchor = center, yshift = -0.7cm] {$E(\rho)$};
+\end{tikzpicture}
+\begin{tikzpicture}[baseline, every node/.append style={font=\normalsize}]
+\node[right=of img6] (img7) {\includegraphics[width=0.40\textwidth]{entropy1000}};
+\node[below=of img7, node distance = 0, yshift = 1cm] {$\lambda$};
+  \node[left=of img7, node distance = 0, rotate=90, anchor = center, yshift = -0.7cm] {$\ent(\rho)$};
+\end{tikzpicture}
+}
+\caption{$N=1000$, $dt=10^{-3}$, $T=1$, $\lambda\in[0, 100]$, 1000 repetitions for each $\lambda$}
 \end{figure}
 
 \section{Gaussian Mixture 1D}
