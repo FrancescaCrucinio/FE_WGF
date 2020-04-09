@@ -58,31 +58,31 @@ Threads.@threads for i=1:length(lambda)
     diagnosticsWGF[i, :] = mean(drepWGF,dims = 1);
 end
 
-lambda = load("parametersN1000server.jld", "lambda");
-diagnosticsWGF = load("parametersN1000server.jld", "diagnosticsWGF");
+lambda = load("parametersN500resampling.jld", "lambda");
+diagnosticsWGF = load("parametersN500resampling.jld", "diagnosticsWGF");
 
 gr()
-p1 = plot(lambda, diagnosticsWGF[:, 1], lw = 3, legend = false);
+p1 = plot(lambda, diagnosticsWGF[:, 1], lw = 3, legend = false,
+        xlabel="lambda", ylabel="mean");
 hline!([0.5]);
-# title!("Mean, N = $Nparticles, dt = $(1/Niter)")
-p2 = plot(lambda, diagnosticsWGF[:, 2], lw = 3, legend = false);
+p2 = plot(lambda, diagnosticsWGF[:, 2], lw = 3, legend = false,
+        xlabel="lambda", ylabel="variance");
 hline!([0.043^2]);
-# title!("Variance, N = $Nparticles, dt = $(1/Niter)")
-p3 = plot(lambda, diagnosticsWGF[:, 3], lw = 3, legend = false);
-# title!("95th quantile MSE, N = $Nparticles, dt = $(1/Niter)")
-p4 = plot(lambda, diagnosticsWGF[:, 4], lw = 3, legend = false);
-# title!("MISE, N = $Nparticles, dt = $(1/Niter)")
-p5 = plot(lambda, diagnosticsWGF[:, 5], lw = 3, legend = false);
-# title!("KL - entropy, N = $Nparticles, dt = $(1/Niter)")
-p6 = plot(lambda, diagnosticsWGF[:, 6], lw = 3, legend = false);
-# title!("entropy, N = $Nparticles, dt = $(1/Niter)")
+p3 = plot(lambda, diagnosticsWGF[:, 3], lw = 3, legend = false,
+        xlabel="lambda", ylabel="95th MSE");
+p4 = plot(lambda, diagnosticsWGF[:, 4], lw = 3, legend = false,
+        xlabel="lambda", ylabel="MISE");
+p5 = plot(lambda, diagnosticsWGF[:, 5], lw = 3, legend = false,
+        xlabel="lambda", ylabel="E(rho)");
+p6 = plot(lambda, diagnosticsWGF[:, 6], lw = 3, legend = false,
+        xlabel="lambda", ylabel="entropy");
 plot(p1, p2, p3, p4, p5, p6, layout = (2, 3))
 
-savefig(p1, "mean1000.pdf")
-savefig(p2, "var1000.pdf")
-savefig(p3, "mse1000.pdf")
-savefig(p4, "mise1000.pdf")
-savefig(p5, "e1000.pdf")
-savefig(p6, "entropy1000.pdf")
+savefig(p1, "mean500.pdf")
+savefig(p2, "var500.pdf")
+savefig(p3, "mse500.pdf")
+savefig(p4, "mise500.pdf")
+savefig(p5, "e500.pdf")
+savefig(p6, "entropy500.pdf")
 #save("C:/Users/francesca/Dropbox/parameters.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
     # "Nparticles", Nparticles, "Niter", Niter)

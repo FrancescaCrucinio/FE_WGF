@@ -102,7 +102,7 @@ W_2(\mu, \nu) := \left( \inf_{\pi\in\Pi(\mu, \nu)}\int\norm{x - y}{2}\ d\pi(x, y
 \end{align*}
 where $\Pi(\mu, \nu)$ is the set of all possible couplings between $\mu$ and $\nu$.
 
-
+GEODESICALLY CONVEX	
 
 For any proper and lower semicontinuous functional $F$ defined on $\mathcal{P}_2(\real^d)$, $\xi$ belongs to the sub-differential $\partial F(\mu)$ if
 \begin{align*}
@@ -130,7 +130,7 @@ Regarding the integral $- \int\mu\log\rho K$, we have that
 hence $\int\mu\left( -\log\rho K\right)$ is convex in $\rho$ (integrating w.r.t. $\mu$ does not change convexity).
 \end{proof}
 
-The functional $E$ is also continuous.
+The functional $E$ is also continuous in $\left(\mathcal{P}_2(\real^n), W_2\right)$.
 \begin{proof}
 As $W_2$ metrizes weak convergence, take $\rho_n \rightharpoonup \rho$. Then
 \begin{align*}
@@ -160,7 +160,7 @@ To arrive to an expression for $v_t$ we compute the first variation of $E$
 \lim_{\epsilon\rightarrow0}\epsilon^{-1}\left(E(\rho+\epsilon\chi)-E(\rho)\right)=\int\frac{\delta E}{\delta\rho}\left(x\right)\chi\left(dx\right),
 \end{align*}
 where $\chi$ is any signed measure such that $\rho+\epsilon\chi$ is a probability measure, and then we need to show that this is a sub-differential for $E$.
-\textcolor{red}{I don't think we can immediately say that the first variation is a sub-differential because $E$ is not a free energy \citep[Lemma 8-10]{carrillo2006contractions})}
+\textcolor{red}{I don't think we can immediately say that the first variation is a sub-differential because $E$ is not a free energy \citep[Lemma 8-10]{carrillo2006contractions}}
 
 \subsubsection{First variation}
 
@@ -210,7 +210,7 @@ From \citet[Definition 11.1.1]{ambrosio2008gradient} we know that the continuity
 \end{equation}
 where $\nabla\cdot f=\sum_{i}\partial_{i}f_{i}$ is the divergence operator.
 
-Thi is a Fokker-Plank/Kolmogorov forward equation type with corresponding nonlinear ODE \citep{jordan1998variational}
+This is a Fokker-Plank/Kolmogorov forward equation type with corresponding nonlinear ODE \citep{jordan1998variational}
 \begin{equation}
 dX_{t}=-\nabla\frac{\delta E}{\delta\rho_{t}}\left(X_{t}\right)dt,\quad X_{0}\sim\rho_{0}\label{eq:nonlinearODE}
 \end{equation}
@@ -267,7 +267,7 @@ dX_{t}^{i}=\int\mu\left(dy\right)\frac{\nabla K(X_{t},y)}{\rho_{t}^{N}K(y)}dt+\s
 We will also need to further discretize in time these SDEs obviously.
 
 \subsection{Existence and uniqueness}
-To show that the nonlinear SDE \eqref{eq:nonlinearSDE} admits a solution we need to show that the drift is Lipschitz continuous in $(x, \rho)$ \citep{jourdain2007nonlinear}.
+To show that the nonlinear SDE \eqref{eq:nonlinearSDE} admits a unique solution we need to show that the drift is Lipschitz continuous in $(x, \rho)$ \citep{jourdain2007nonlinear}.
 
 We can use the following equivalence: in $\real^n$ the $W_2$ distance is equal to
 \begin{align*}
@@ -351,12 +351,16 @@ We consider the toy Fredholm integral equation
 Figure \ref{fig:at} shows the reconstruction of $\N(x; m, \sigma_{\rho}^2)$ with $m=0.5$, $\sigma_{\rho}^2 = 0.043^2$, $\sigma_K^2 = 0.045^2$.
 We set $N=10^{4}$, $\lambda = 10$, $dt = 10^{-3}$. The initial distribution $\rho_0$ is uniform on $[0, 1]$.
 
-\begin{figure}
-\centering
-\includegraphics[width = 0.8\textwidth]{analitically_tractable}
-\caption{ }
-\label{fig:at}
-\end{figure}
+
+We can use this toy example to get an idea of which values of $\lambda$ are "good".
+Thus, we set $dt=10^{-3}, T=1$ and we compare reconstructions of mean $\mu$, variance $\sigma_\rho^2$, 95th percentile of $\mse$ (to check smoothness), $\mise$, $E(\rho)$ and the entropy $\ent(\rho)$. We use $N=500, 1000$ and 1000 repetitions for each $\lambda$.
+
+%\begin{figure}
+%\centering
+%\includegraphics[width = 0.8\textwidth]{analitically_tractable}
+%\caption{ }
+%\label{fig:at}
+%\end{figure}
 
 \subsection{Simulation Study}
 
