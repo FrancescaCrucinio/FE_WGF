@@ -11,6 +11,7 @@ using Random;
 # using ImageMagick;
 # using TestImages, Colors;
 # using Images;
+using LinearAlgebra;
 using DelimitedFiles;
 using KernelDensity;
 using Interpolations;
@@ -20,12 +21,17 @@ using smcems;
 using wgf;
 using samplers;
 
+# Shepp Logan phantom
+phantom = readdlm("phantom.txt", ',', Float64)
+# data image
 I = readdlm("sinogram.txt", ',', Float64)
-pixels = size(I);
-
-phi = range(0, stop = 2*pi, length = pixels[2]);
-offsets = floor(pixels[1]/2);
-xi = range(-offsets, stop = offsets, length = pixels[1]);
+# number of angles
+nphi = size(I, 2);
+# angles
+phi = range(0, stop = 2*pi, length = nphi);
+# number of offsets
+offsets = floor(size(I, 1)/2);
+xi = range(-offsets, stop = offsets, length = size(I, 1));
 # number of iterations
 Niter = trunc(Int, 1e03);
 # samples from h(y)
@@ -34,15 +40,19 @@ M = 1000;
 Nparticles = 5000;
 # regularisation parameter
 lambda = 25;
-
+# variance of normal describing alignment
 sigma = 0.02;
 
+# WGF
 x, y = wgf_pet(Nparticles, Niter, lambda, I, M, phi, xi, sigma);
 
+# KDE
 KDEyWGF =  KernelDensity.kde((y[end, :], x[end, :]));
-Xbins = range(-1, stop = 1, length = 1000);
-Ybins = range(-1, stop = 1, length = 1000);
+Xbins = range(-1 + 1/pixels[1], stop = 1 - 1/pixels[1], length = pixels[1]);
+Ybins = range(-1 + 1/pixels[2], stop = 1 - 1/pixels[2], length = pixels[2]);
 res = pdf(KDEyWGF, Ybins, Xbins);
 p = heatmap(Xbins, Ybins, res)
 
-savefig(p, "pet.pdf")
+# savefig(p, "pet.pdf")
+
+mise = (norm(res - phantom).^2)/length(res);
