@@ -1,0 +1,2092 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\usepackage{babel}
+\usepackage{amsthm}\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning, shapes, calc, arrows.meta}
+\usepackage{xcolor}
+\usepackage{enumitem}
+
+
+
+% bibliography
+
+
+% itemize
+\renewcommand{\descriptionlabel}[1]{%
+  \hspace\labelsep \upshape\bfseries #1%
+}
+
+% example
+\theoremstyle{definition}
+\newtheorem{example}{Example}\newtheorem{remark}{Remark}
+
+% referencing description
+
+\let\orgdescriptionlabel\descriptionlabel
+\renewcommand*{\descriptionlabel}[1]{%
+  \let\orglabel\label
+  \let\label\@gobble
+  \phantomsection
+  \edef\@currentlabel{#1\unskip}%
+  %\edef\@currentlabelname{#1}%
+  \let\label\orglabel
+  \orgdescriptionlabel{#1}%
+}
+
+
+\DeclareMathOperator{\N}{\mathcal{N}}
+\DeclareMathOperator{\KL}{KL}
+\DeclareMathOperator{\mise}{MISE}
+\DeclareMathOperator{\mse}{MSE}
+\DeclareMathOperator{\ent}{Ent}
+\newcommand{\norm}[2]{\ensuremath{\Vert #1 \Vert_{#2}}}
+\newcommand{\variation}[1]{\ensuremath{\frac{\delta E}{\delta #1}}}
+
+\def\real{\mathbb{R}}
+\def\testfn{\varphi}
+
+
+\title{Solving Fredholm integral equations of the first kind via Wasserstein gradient flow}
+\author{Arnaud -> Adam, Francesca }
+\date{ }
+\end_preamble
+\use_default_options false
+\begin_modules
+theorems-ams
+graphicboxes
+\end_modules
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding utf8
+\fontencoding default
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref true
+\pdf_bookmarks false
+\pdf_bookmarksnumbered false
+\pdf_bookmarksopen false
+\pdf_bookmarksopenlevel 1
+\pdf_breaklinks false
+\pdf_pdfborder false
+\pdf_colorlinks false
+\pdf_backref section
+\pdf_pdfusetitle false
+\pdf_quoted_options "hidelinks"
+\papersize a4paper
+\use_geometry true
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 0
+\use_package esint 1
+\use_package mathdots 0
+\use_package mathtools 0
+\use_package mhchem 0
+\use_package stackrel 0
+\use_package stmaryrd 0
+\use_package undertilde 0
+\cite_engine natbib
+\cite_engine_type authoryear
+\biblio_style plainnat
+\biblio_options round
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+maketitle
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+% images location
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+graphicspath
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\end_inset
+
+Images/
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Fredholm integral equation of first kind
+\end_layout
+
+\begin_layout Standard
+We want to solve the integral equation 
+\begin_inset Formula 
+\[
+\mu(y)=\int\rho\left(x\right)K(x,y)dx,
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\rho$
+\end_inset
+
+ and 
+\begin_inset Formula $\mu$
+\end_inset
+
+ are probability densities on 
+\begin_inset Formula $\real^{n}$
+\end_inset
+
+ and 
+\begin_inset Formula $\real^{m}$
+\end_inset
+
+ and 
+\begin_inset Formula $K$
+\end_inset
+
+ a Markov transition density, i.e.
+ 
+\begin_inset Formula $\mu=\rho K$
+\end_inset
+
+ in operator notation.
+ The solution to this problem is not unique and we propose to regularize
+ the problem using an entropy constraint; i.e.
+ for a given 
+\begin_inset Formula $\lambda>0$
+\end_inset
+
+ we propose to minimize w.r.t.
+ 
+\begin_inset Formula $\rho$
+\end_inset
+
+ 
+\begin_inset Formula 
+\begin{equation}
+E(\rho)=\KL(\mu,\rho K)-\lambda\ent(\rho)\label{eq:minimisation}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\KL(\mu,\rho K)$
+\end_inset
+
+ is the Kullback-Leibler divergence between 
+\begin_inset Formula $\mu$
+\end_inset
+
+ and 
+\begin_inset Formula $\rho K$
+\end_inset
+
+ and 
+\begin_inset Formula $\ent(\rho)=-\int\rho\log\rho$
+\end_inset
+
+ is the entropy of 
+\begin_inset Formula $\rho$
+\end_inset
+
+.
+ This requires solving a minimization problem in the space of probability
+ measures.
+ We are going to follow a Wasserstein gradient flow approach.
+\end_layout
+
+\begin_layout Subsection
+Assumptions
+\end_layout
+
+\begin_layout Description
+(A0)
+\begin_inset CommandInset label
+LatexCommand label
+name "a"
+
+\end_inset
+
+ 
+\begin_inset Formula $\mu,\rho$
+\end_inset
+
+ are probability densities with finite second moment and 
+\begin_inset Formula $K$
+\end_inset
+
+ is a the density of a Markov kernel for each 
+\begin_inset Formula $x$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Description
+(A1)
+\begin_inset CommandInset label
+LatexCommand label
+name "a:k"
+
+\end_inset
+
+ the kernel 
+\begin_inset Formula $K(x,y)$
+\end_inset
+
+ is bounded above and below 
+\begin_inset Formula 
+\[
+\exists m_{K}>0\text{ such that }\qquad0<\frac{1}{m_{K}}\leq K(x,y)\leq m_{K}<\infty\qquad\forall(x,y),
+\]
+
+\end_inset
+
+is convex in 
+\begin_inset Formula $x$
+\end_inset
+
+ uniformly in 
+\begin_inset Formula $y$
+\end_inset
+
+ and is Lipschitz continuous in 
+\begin_inset Formula $x$
+\end_inset
+
+ uniformly in 
+\begin_inset Formula $y$
+\end_inset
+
+ with Lipschitz constant 
+\begin_inset Formula $L$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Description
+(A2)
+\begin_inset CommandInset label
+LatexCommand label
+name "a:gradientk"
+
+\end_inset
+
+ the gradient 
+\begin_inset Formula $\nabla K(x,y)$
+\end_inset
+
+ is Lipschitz continuous in 
+\begin_inset Formula $x$
+\end_inset
+
+ uniformly in 
+\begin_inset Formula $y$
+\end_inset
+
+ with Lipschitz constant 
+\begin_inset Formula $L^{\prime}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "a:k"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ implies that 
+\begin_inset Formula $\mu$
+\end_inset
+
+ is bounded too.
+ 
+\end_layout
+
+\begin_layout Section
+Gradient flow approach
+\end_layout
+
+\begin_layout Subsection
+Notation
+\end_layout
+
+\begin_layout Standard
+Let us denote the set of probability measures with finite second moment
+ on 
+\begin_inset Formula $\real^{d}$
+\end_inset
+
+ by 
+\begin_inset Formula 
+\begin{align*}
+\mathcal{P}_{2}(\real^{d})=\left\lbrace \mu\in\mathcal{P}(\real^{d}):\int\norm{x}{2}^{2}\ d\mu(x)<\infty\right\rbrace 
+\end{align*}
+
+\end_inset
+
+and we define the 2-Wasserstein distance on this set 
+\begin_inset Formula 
+\begin{align*}
+W_{2}(\mu,\nu):=\left(\inf_{\pi\in\Pi(\mu,\nu)}\int\norm{x-y}{2}\ d\pi(x,y)\right)^{1/2}
+\end{align*}
+
+\end_inset
+
+where 
+\begin_inset Formula $\Pi(\mu,\nu)$
+\end_inset
+
+ is the set of all possible couplings between 
+\begin_inset Formula $\mu$
+\end_inset
+
+ and 
+\begin_inset Formula $\nu$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+GEODESICALLY CONVEX
+\end_layout
+
+\begin_layout Standard
+For any proper and lower semicontinuous functional 
+\begin_inset Formula $F$
+\end_inset
+
+ defined on 
+\begin_inset Formula $\mathcal{P}_{2}(\real^{d})$
+\end_inset
+
+, 
+\begin_inset Formula $\xi$
+\end_inset
+
+ belongs to the sub-differential 
+\begin_inset Formula $\partial F(\mu)$
+\end_inset
+
+ if 
+\begin_inset Formula 
+\begin{align*}
+F(\nu)-F(\mu)\geq\int\langle\xi(x),T(x)-x\rangle\ d\mu(x)+o\left(W_{2}(\mu,\nu)\right)
+\end{align*}
+
+\end_inset
+
+with 
+\begin_inset Formula $T$
+\end_inset
+
+ transport map from 
+\begin_inset Formula $\mu$
+\end_inset
+
+ to 
+\begin_inset Formula $\nu$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+Properties of the functional 
+\begin_inset Formula $E$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We consider the functional 
+\begin_inset Formula $E$
+\end_inset
+
+ in 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:minimisation"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ defined on 
+\begin_inset Formula $\mathcal{P}_{2}(\real^{n})$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+It is easy to see that this functional is geodesically convex in 
+\begin_inset Formula $\rho$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Proof
+We have 
+\begin_inset Formula 
+\begin{align*}
+E(\rho)= & \KL(\mu,\rho K)-\lambda\ent(\rho)\\
+=- & \int\mu\log\rho K+\lambda\int\rho\log\rho+\int\mu\log\mu.
+\end{align*}
+
+\end_inset
+
+The integral 
+\begin_inset Formula $\int\mu\log\mu$
+\end_inset
+
+ is constant w.r.t.
+ 
+\begin_inset Formula $\rho$
+\end_inset
+
+ and the negative entropy 
+\begin_inset Formula $\lambda\int\rho\log\rho$
+\end_inset
+
+ is geodesically convex in 
+\begin_inset Formula $\rho$
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "page 130"
+key "santambrogio2017euclidean"
+literal "false"
+
+\end_inset
+
+.
+ Regarding the integral 
+\begin_inset Formula $-\int\mu\log\rho K$
+\end_inset
+
+, we have that 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+\begin_inset Formula $\rho K=\int K(x,y)\ d\rho(x)$
+\end_inset
+
+ is geodesically convex if 
+\begin_inset Formula $K$
+\end_inset
+
+ is convex in 
+\begin_inset Formula $x$
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "page 128"
+key "santambrogio2017euclidean"
+literal "false"
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $-\log s$
+\end_inset
+
+ is a convex function 
+\end_layout
+
+\end_deeper
+\begin_layout Proof
+hence 
+\begin_inset Formula $\int\mu\left(-\log\rho K\right)$
+\end_inset
+
+ is convex in 
+\begin_inset Formula $\rho$
+\end_inset
+
+ (integrating w.r.t.
+ 
+\begin_inset Formula $\mu$
+\end_inset
+
+ does not change convexity).
+ 
+\end_layout
+
+\begin_layout Standard
+The functional 
+\begin_inset Formula $E$
+\end_inset
+
+ is also continuous in 
+\begin_inset Formula $\left(\mathcal{P}_{2}(\real^{n}),W_{2}\right)$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Proof
+As 
+\begin_inset Formula $W_{2}$
+\end_inset
+
+ metrizes weak convergence, take 
+\begin_inset Formula $\rho_{n}\rightharpoonup\rho$
+\end_inset
+
+.
+ Then 
+\begin_inset Formula 
+\begin{align*}
+\vert E(\rho_{n})-E(\rho)\vert & =\left\lvert -\int\mu\log\rho_{n}K+\lambda\int\rho_{n}\log\rho_{n}+\int\mu\log\rho K-\lambda\int\rho\log\rho\right\rvert \\
+ & \leq\left\lvert \int\mu\left[\log\rho K-\log\rho_{n}K\right]\right\rvert +\lambda\left\lvert \int\left[\rho_{n}\log\rho_{n}-\rho\log\rho\right]\right\rvert 
+\end{align*}
+
+\end_inset
+
+if 
+\begin_inset Formula $K$
+\end_inset
+
+ is continuous, since 
+\begin_inset Formula $\rho_{n}\rightharpoonup\rho$
+\end_inset
+
+, we also have that 
+\begin_inset Formula $\rho_{n}K\rightarrow\rho K$
+\end_inset
+
+ and the continuity of the logarithm gives 
+\begin_inset Formula $\log\rho K\rightarrow\log\rho_{n}K$
+\end_inset
+
+.
+ The dominated convergence theorem gives 
+\begin_inset Formula 
+\begin{align*}
+\left\lvert \int\mu\left[\log\rho K-\log\rho_{n}K\right]\right\rvert \rightarrow0.
+\end{align*}
+
+\end_inset
+
+Similarly, continuity of the second term is given by the continuity of the
+ entropy function and the dominated convergence theorem.
+ 
+\end_layout
+
+\begin_layout Subsection
+Gradient flow
+\end_layout
+
+\begin_layout Standard
+Following 
+\begin_inset CommandInset citation
+LatexCommand citet
+after "Definition 11.1.1"
+key "ambrosio2008gradient"
+literal "false"
+
+\end_inset
+
+, we say that 
+\begin_inset Formula $\rho_{t}$
+\end_inset
+
+ is a solution to the gradient flow equation for 
+\begin_inset Formula $E$
+\end_inset
+
+ with the 
+\begin_inset Formula $W_{2}$
+\end_inset
+
+ metric if 
+\begin_inset Formula 
+\[
+v_{t}\in-\partial E(\rho_{t}),
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\partial E(\rho_{t})$
+\end_inset
+
+ is the sub-differential of 
+\begin_inset Formula $E$
+\end_inset
+
+ evaluated at 
+\begin_inset Formula $\rho_{t}$
+\end_inset
+
+, and 
+\begin_inset Formula $v_{t}$
+\end_inset
+
+ is a 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+"
+\end_layout
+
+\end_inset
+
+gradient
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+"
+\end_layout
+
+\end_inset
+
+ for 
+\begin_inset Formula $E$
+\end_inset
+
+ at 
+\begin_inset Formula $\rho_{t}$
+\end_inset
+
+ such that 
+\begin_inset Formula 
+\begin{align*}
+\partial_{t}\rho_{t}=-\nabla\cdot\left(\rho_{t}v_{t}\right)
+\end{align*}
+
+\end_inset
+
+holds.
+\end_layout
+
+\begin_layout Standard
+To arrive to an expression for 
+\begin_inset Formula $v_{t}$
+\end_inset
+
+ we compute the first variation of 
+\begin_inset Formula $E$
+\end_inset
+
+ 
+\begin_inset Formula 
+\begin{align*}
+\lim_{\epsilon\rightarrow0}\epsilon^{-1}\left(E(\rho+\epsilon\chi)-E(\rho)\right)=\int\frac{\delta E}{\delta\rho}\left(x\right)\chi\left(dx\right),
+\end{align*}
+
+\end_inset
+
+where 
+\begin_inset Formula $\chi$
+\end_inset
+
+ is any signed measure such that 
+\begin_inset Formula $\rho+\epsilon\chi$
+\end_inset
+
+ is a probability measure, and then we need to show that this is a sub-different
+ial for 
+\begin_inset Formula $E$
+\end_inset
+
+.
+ 
+\color red
+I don't think we can immediately say that the first variation is a sub-different
+ial because 
+\begin_inset Formula $E$
+\end_inset
+
+ is not a free energy 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "Lemma 8-10"
+key "carrillo2006contractions"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+First variation
+\end_layout
+
+\begin_layout Standard
+We have 
+\begin_inset Formula 
+\begin{align*}
+E(\rho)= & \KL(\mu,\rho K)-\lambda\ent(\rho)\\
+=- & \int\mu\log\rho K+\lambda\int\rho\log\rho+\int\mu\log\mu.
+\end{align*}
+
+\end_inset
+
+It follows directly that 
+\begin_inset Formula 
+\[
+\frac{\delta\ent}{\delta\rho}\left(\rho\right)=-(1+\log\rho).
+\]
+
+\end_inset
+
+and 
+\begin_inset Formula 
+\begin{align*}
+\int\mu\log\left(\left(\rho+\epsilon\chi\right)K\right)-\int\mu\log\left(\rho K\right) & =\int\mu\left\{ \log\left(\rho K\right)+\log\left(1+\frac{\epsilon\chi K}{\rho K}\right)\right\} -\int\mu\log\left(\rho K\right)\\
+ & =\int\mu\log\left(1+\frac{\epsilon\chi K}{\rho K}\right)\\
+ & =\int\mu\left(\frac{\epsilon\chi K}{\rho K}+o\left(\frac{\epsilon\chi K}{\rho K}\right)\right)\\
+ & =\epsilon\int\mu\frac{\chi K}{\rho K}+o\left(\epsilon\int\mu\frac{\chi K}{\rho K}\right).
+\end{align*}
+
+\end_inset
+
+We have 
+\begin_inset Formula 
+\[
+\int\mu\frac{\chi K}{\rho K}=\int\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}d\chi\left(x\right)
+\]
+
+\end_inset
+
+so 
+\begin_inset Formula 
+\[
+\frac{\delta\KL}{\delta\rho}\left(x\right)=-\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}.
+\]
+
+\end_inset
+
+Hence, it follows that 
+\begin_inset Formula 
+\begin{equation}
+\frac{\delta E}{\delta\rho}\left(x\right)=-\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}+\lambda\left(1+\log\rho\left(x\right)\right).\label{eq:derivative}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We know 
+\begin_inset Formula $1+\log\rho\left(x\right)$
+\end_inset
+
+ is a sub-differential for 
+\begin_inset Formula $-\ent(\rho)$
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "Lemma 8"
+key "carrillo2006contractions"
+literal "false"
+
+\end_inset
+
+ and 
+\begin_inset Formula $\int\mu\log\mu$
+\end_inset
+
+ is constant w.r.t 
+\begin_inset Formula $\rho$
+\end_inset
+
+, so we just need to show that 
+\begin_inset Formula $-\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}$
+\end_inset
+
+ is a sub-differential for 
+\begin_inset Formula $\int\mu\log(\rho K)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection
+Existence and uniqueness of the gradient flow
+\end_layout
+
+\begin_layout Standard
+Corollary 11.1.8 in 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "ambrosio2008gradient"
+literal "false"
+
+\end_inset
+
+ give existence of a gradient flow solution of 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:pde"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ since the first variation 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:derivative"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ is single-valued 
+\color red
+if we can prove that it's a sub-differential
+\color inherit
+.
+\end_layout
+
+\begin_layout Standard
+Uniqueness is given by Theorem 11.1.4 in 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "ambrosio2008gradient"
+literal "false"
+
+\end_inset
+
+ since the functional 
+\begin_inset Formula $E$
+\end_inset
+
+ is geodesically convex in 
+\begin_inset Formula $\rho$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+PDE
+\end_layout
+
+\begin_layout Standard
+From 
+\begin_inset CommandInset citation
+LatexCommand citet
+after "Definition 11.1.1"
+key "ambrosio2008gradient"
+literal "false"
+
+\end_inset
+
+ we know that the continuity-equation must hold 
+\begin_inset Formula 
+\begin{equation}
+\partial_{t}\rho_{t}=\nabla\cdot\left(\rho_{t}\nabla\frac{\delta E}{\delta\rho_{t}}\right),\label{eq:pde}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\nabla\cdot f=\sum_{i}\partial_{i}f_{i}$
+\end_inset
+
+ is the divergence operator.
+\end_layout
+
+\begin_layout Standard
+This is a Fokker-Plank/Kolmogorov forward equation type with corresponding
+ nonlinear ODE 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "jordan1998variational"
+literal "false"
+
+\end_inset
+
+ 
+\begin_inset Formula 
+\begin{equation}
+dX_{t}=-\nabla\frac{\delta E}{\delta\rho_{t}}\left(X_{t}\right)dt,\quad X_{0}\sim\rho_{0}\label{eq:nonlinearODE}
+\end{equation}
+
+\end_inset
+
+such that 
+\begin_inset Formula $Law(X_{t})=\rho_{t}$
+\end_inset
+
+.
+ The terminology nonlinear ODE is here used to indicate that the drift depends
+ not only on 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ but on its distribution too.
+\end_layout
+
+\begin_layout Standard
+Then, by construction (see 
+\begin_inset CommandInset citation
+LatexCommand citet
+after "page 14"
+key "arbel2019maximum"
+literal "false"
+
+\end_inset
+
+), one has the the infinitesimal reduction of 
+\begin_inset Formula $E$
+\end_inset
+
+ along 
+\begin_inset Formula $\rho_{t}$
+\end_inset
+
+ is 
+\begin_inset Formula 
+\begin{align*}
+\frac{dE\left(\rho_{t}\right)}{dt}=-\int\left\Vert \nabla\frac{\delta E}{\delta\rho_{t}}\left(x\right)\right\Vert ^{2}\rho_{t}\left(dx\right).
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Practically, what we would like to do is to simulate 
+\begin_inset Formula $N$
+\end_inset
+
+ particles 
+\begin_inset Formula $(X_{t}^{1},...,X_{t}^{N})$
+\end_inset
+
+ such that, at initialization, we sample iid particles 
+\begin_inset Formula $X_{0}^{i}\sim\rho_{0}$
+\end_inset
+
+ and then implement numerically the 
+\begin_inset Formula $N$
+\end_inset
+
+ nonlinear ODEs 
+\begin_inset Formula 
+\[
+dX_{t}^{i}=\int\mu\left(dy\right)\frac{\nabla K(X_{t}^{i},y)}{\rho_{t}^{N}K(y)}dt-\lambda\nabla\log\left(\rho_{t}^{N}*H_{\epsilon}\left(X_{t}^{i}\right)\right)dt,\quad\rho_{t}^{N}=\frac{1}{N}\sum_{i=1}^{N}\delta_{X_{t}^{i}}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Approximating the first term on the r.h.s.
+ is fine as practically 
+\begin_inset Formula $\mu\left(dy\right)$
+\end_inset
+
+ is a discrete measure but approximating 
+\begin_inset Formula $\nabla\log\rho_{t}\left(x\right)$
+\end_inset
+
+ from the empirical measure 
+\begin_inset Formula $\rho_{t}^{N}$
+\end_inset
+
+ is difficult and would require say convolution by some kernel 
+\begin_inset Formula $H_{\epsilon}$
+\end_inset
+
+.
+ This is ugly and would be most likely highly inefficient.
+ In the next section, we show how to address this issue.
+\end_layout
+
+\begin_layout Standard
+Also, standard existence/uniqueness theorems do not apply because the drift
+ 
+\begin_inset Formula $-\nabla\frac{\delta E}{\delta\rho_{t}}\left(X_{t}\right)$
+\end_inset
+
+ is not Lipschitz continuous.
+\end_layout
+
+\begin_layout Section
+Nonlinear SDE approach and numerical implementation
+\end_layout
+
+\begin_layout Standard
+We can now compute the gradient of this functional derivative equation w.r.t.
+ 
+\begin_inset Formula $x$
+\end_inset
+
+ 
+\begin_inset Formula 
+\begin{align*}
+\nabla\frac{\delta E}{\delta\rho}\left(x\right) & =\nabla\left[-\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}+\lambda(1+\log\rho\left(x\right))\right]\\
+ & =-\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho K(y)}+\lambda\nabla\log\rho\left(x\right).
+\end{align*}
+
+\end_inset
+
+Swapping integral and gradient is not a problem because 
+\begin_inset Formula $\nabla$
+\end_inset
+
+ is over 
+\begin_inset Formula $x$
+\end_inset
+
+ and the integral is over 
+\begin_inset Formula $y$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Hence 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:pde"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ is equivalent to 
+\begin_inset Formula 
+\begin{align*}
+\partial_{t}\rho_{t}= & \nabla\cdot\left(\rho_{t}\nabla\variation{\rho_{t}}\right)\\
+= & -\nabla\cdot\left(\rho_{t}\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho_{t}K(y)}\right)+\lambda\nabla\cdot\left(\rho_{t}\nabla\log\rho_{t}\right).
+\end{align*}
+
+\end_inset
+
+However, we have 
+\begin_inset Formula 
+\[
+\nabla\cdot\left(\rho_{t}\nabla\log\rho_{t}\right)=\nabla\cdot\nabla\rho_{t}=\triangle\rho_{t},
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\triangle f=\sum_{i}\partial_{i}^{2}f_{i}$
+\end_inset
+
+ is the Laplacian.
+ So we can consider the following non-linear SDE (McKean-Vlasov) 
+\begin_inset Formula 
+\begin{equation}
+dX_{t}=\int\mu\left(dy\right)\frac{\nabla K(X_{t},y)}{\rho_{t}K(y)}dt+\sqrt{2\lambda}dW_{t},\quad X_{0}\sim\rho_{0},\label{eq:nonlinearSDE}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $W_{t}$
+\end_inset
+
+ is a standard 
+\begin_inset Formula $n-$
+\end_inset
+
+dimensional Brownian motion.
+ The SDE 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:nonlinearSDE"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ has the same marginal distributions as the nonlinear ODE 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:nonlinearODE"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ (Itô's Lemma).
+ So to solve the minimization problem of interest, we will simulate in practice
+ 
+\begin_inset Formula $N$
+\end_inset
+
+ particles 
+\begin_inset Formula $(X_{t}^{1},...,X_{t}^{N})$
+\end_inset
+
+ such that, at initialization, we sample iid particles 
+\begin_inset Formula $X_{0}^{i}\sim\rho_{0}$
+\end_inset
+
+ and then they evolve according to the non-linear (McKean-Vlasov) SDE 
+\begin_inset Formula 
+\[
+dX_{t}^{i}=\int\mu\left(dy\right)\frac{\nabla K(X_{t},y)}{\rho_{t}^{N}K(y)}dt+\sqrt{2\lambda}dW_{t}^{i},\quad\rho_{t}^{N}=\frac{1}{N}\sum_{i=1}^{N}\delta_{X_{t}^{i}}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We will also need to further discretize in time these SDEs obviously.
+\end_layout
+
+\begin_layout Subsection
+Existence and uniqueness
+\end_layout
+
+\begin_layout Standard
+To show that the nonlinear SDE 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:nonlinearSDE"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ admits a unique solution we need to show that the drift is Lipschitz continuous
+ in 
+\begin_inset Formula $(x,\rho)$
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "jourdain2007nonlinear"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+We can use the following equivalence: in 
+\begin_inset Formula $\real^{n}$
+\end_inset
+
+ the 
+\begin_inset Formula $W_{2}$
+\end_inset
+
+ distance is equal to 
+\begin_inset Formula 
+\begin{align*}
+W_{2}(\mu,\nu)=\sup\left\lvert \int\testfn\ d(\mu-\nu)\right\rvert 
+\end{align*}
+
+\end_inset
+
+where 
+\begin_inset Formula $\testfn$
+\end_inset
+
+ is 1-Lipschitz continuous 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "page 112"
+key "santambrogio2017euclidean"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Take 
+\begin_inset Formula $x,x^{\prime}\in\real^{n}$
+\end_inset
+
+ and 
+\begin_inset Formula $\rho,\rho^{\prime}\in\mathcal{P}_{2}(\real^{n})$
+\end_inset
+
+ and consider 
+\begin_inset Formula 
+\begin{align*}
+\norm{\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho K(y)}-\int\mu\left(dy\right)\frac{\nabla K(x^{\prime},y)}{\rho^{\prime}K(y)}}{2} & \leq\norm{\int\mu\left(dy\right)\left[\frac{\nabla K(x,y)}{\rho K(y)}-\frac{\nabla K(x^{\prime},y)}{\rho^{\prime}K(y)}\right]}{2}\\
+ & \leq\norm{\int\mu\left(dy\right)\left[\frac{\nabla K(x,y)-\nabla K(x^{\prime},y)}{\rho K(y)}\right]}{2}\\
+ & +\norm{\int\mu\left(dy\right)\frac{\nabla K(x^{\prime},y)}{\rho^{\prime}K(y)\rho K(y)}\left[\rho^{\prime}K(y)-\rho K(y)\right]}{2}\\
+\end{align*}
+
+\end_inset
+
+The first term is bounded under 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "a:gradientk"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ 
+\begin_inset Formula 
+\begin{align*}
+\norm{\int\mu\left(dy\right)\left[\frac{\nabla K(x,y)-\nabla K(x^{\prime},y)}{\rho K(y)}\right]}{2}\leq L^{\prime}\norm{x^{\prime}-x}{2}\norm{\int\frac{\mu\left(dy\right)}{\rho^{\prime}K(y)}}{2}\\
+\leq m_{K}L^{\prime}\norm{x^{\prime}-x}{2}
+\end{align*}
+
+\end_inset
+
+and the last inequality follows from 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "a:k"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+ Using 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "a:k"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, the second term is bounded by 
+\begin_inset Formula 
+\begin{align*}
+\norm{\int\mu\left(dy\right)\frac{\nabla K(x^{\prime},y)}{\rho^{\prime}K(y)\rho K(y)}\left[\rho^{\prime}K(y)-\rho K(y)\right]}{2} & \leq LW_{2}(\rho,\rho^{\prime})\norm{\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho^{\prime}K(y)\rho K(y)}}{2}\\
+ & \leq m_{K}^{2}LW_{2}(\rho,\rho^{\prime})\norm{\int\mu\left(dy\right)\nabla K(x,y)}{2}\\
+ & \leq m_{K}^{2}LW_{2}(\rho,\rho^{\prime})\norm{\text{argmax}_{x}K(x,y)-x}{2}\\
+ & \leq m_{K}^{2}LW_{2}(\rho,\rho^{\prime})\norm{m_{K}-x}{2}.
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Ergodicity
+\end_layout
+
+\begin_layout Standard
+The generator of 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:nonlinearSDE"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ is 
+\begin_inset Formula 
+\begin{equation}
+Lu(x)=\nabla u(x)\int\mu\left(dy\right)\frac{\nabla K(x,y)}{\rho K(y)}+\frac{2\lambda}{2}\Delta u(x)\label{eq:generator}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+(A3)
+\begin_inset CommandInset label
+LatexCommand label
+name "a:gradientkergodicity"
+
+\end_inset
+
+ the gradient 
+\begin_inset Formula $\nabla K(x,y)$
+\end_inset
+
+ and 
+\begin_inset Formula $\mu$
+\end_inset
+
+ satisfy 
+\begin_inset Formula 
+\begin{align*}
+\int\mu(dy)\nabla K(x,y)\cdot x\leq a\norm{x}{2}^{2}+b
+\end{align*}
+
+\end_inset
+
+for 
+\begin_inset Formula $a,b<\infty$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Under 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "a:gradientkergodicity"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, the generator 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:generator"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ satisfies condition (CD0) in 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "page 524"
+key "meyn1993stability"
+literal "false"
+
+\end_inset
+
+ with 
+\begin_inset Formula $V(x)=\norm{x}{2}^{2}/2$
+\end_inset
+
+: 
+\begin_inset Formula 
+\begin{align*}
+LV(x) & =\sum_{i=1}^{n}x_{i}\int\mu\left(dy\right)\frac{\nabla K(x_{i},y)}{\rho K(y)}+\lambda\sum_{i=1}^{n}1\\
+ & =\int\mu\left(dy\right)\frac{\sum_{i=1}^{n}x_{i}\nabla K(x_{i},y)}{\rho K(y)}+n\lambda\\
+ & \leq m_{K}\int\mu\left(dy\right)\frac{\nabla K(x,y)\cdot x}{\rho(\real^{n})}+n\lambda\\
+ & \leq m_{K}\int\mu\left(dy\right)\nabla K(x,y)\cdot x+n\lambda\\
+ & \leq m_{K}(a\norm{x}{2}^{2}+b)+n\lambda\\
+\end{align*}
+
+\end_inset
+
+Thus we can apply Theorem 2.1 to show that 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ is non-explosive.
+\end_layout
+
+\begin_layout Standard
+If the gradient is also bounded we can apply 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "Theorem 2.1"
+key "bhattacharya1978criteria"
+literal "false"
+
+\end_inset
+
+ to get that 
+\begin_inset Formula $X_{t}$
+\end_inset
+
+ is strong Feller and irreducible (w.r.t.
+ Lebesgue).
+ Probably we can relax this assumption to the integral 
+\begin_inset Formula 
+\begin{align*}
+\int\mu(dy)\nabla K(x,y)\cdot x\leq a\norm{x}{2}^{2}+b
+\end{align*}
+
+\end_inset
+
+being locally bounded as suggested in 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "roberts1996exponential"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+Connections with other methods
+\end_layout
+
+\begin_layout Standard
+Minimisation of a functional involving the 
+\begin_inset Formula $\KL$
+\end_inset
+
+ divergence is a common method to solve Fredholm integral equations of the
+ first kind.
+ For example, if we consider the functional 
+\begin_inset Formula 
+\begin{align*}
+L(\rho)=\KL(\mu,\rho K)+\int\rho
+\end{align*}
+
+\end_inset
+
+the corresponding first variation is 
+\begin_inset Formula 
+\begin{align*}
+\frac{\delta L}{\delta\rho}=\int\mu\frac{K}{\rho K}-1.
+\end{align*}
+
+\end_inset
+
+Setting the first variation to 0 and multiplying by 
+\begin_inset Formula $\rho$
+\end_inset
+
+ leads to the EM iteration 
+\begin_inset Formula 
+\begin{align*}
+\rho\int\mu\frac{K}{\rho K}-\rho=0
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Toy Example
+\end_layout
+
+\begin_layout Standard
+We consider the toy Fredholm integral equation 
+\begin_inset Formula 
+\[
+\N(y;m,\sigma_{\rho}^{2}+\sigma_{K}^{2})=\int\N(x;m,\sigma_{\rho}^{2})\N(y;x,\sigma_{K}^{2})\ dx,\qquad y\in\mathbb{R}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We can use this toy example to get an idea of which values of 
+\begin_inset Formula $\lambda$
+\end_inset
+
+ are 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+"
+\end_layout
+
+\end_inset
+
+good
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+"
+\end_layout
+
+\end_inset
+
+.
+ Thus, we set 
+\begin_inset Formula $dt=10^{-3},T=1$
+\end_inset
+
+ and we compare reconstructions of mean 
+\begin_inset Formula $\mu$
+\end_inset
+
+, variance 
+\begin_inset Formula $\sigma_{\rho}^{2}$
+\end_inset
+
+, 95th percentile of 
+\begin_inset Formula $\mse$
+\end_inset
+
+ (to check smoothness), 
+\begin_inset Formula $\mise$
+\end_inset
+
+, 
+\begin_inset Formula $E(\rho)$
+\end_inset
+
+ and the entropy 
+\begin_inset Formula $\ent(\rho)$
+\end_inset
+
+.
+ We use 
+\begin_inset Formula $N=500,1000$
+\end_inset
+
+ and 1000 repetitions for each 
+\begin_inset Formula $\lambda$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename Images/mean500.pdf
+	width 40text%
+	groupId N500
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename Images/var500.pdf
+	width 40text%
+	groupId N500
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename Images/mse500.pdf
+	width 40text%
+	groupId N500
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename Images/mise500.pdf
+	width 40text%
+	groupId N500
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename Images/e500.pdf
+	width 40text%
+	groupId N500
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename Images/entropy500.pdf
+	width 40text%
+	groupId N500
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset Formula $N=500,dt=10^{-3},T=1,\lambda\in[0,100]$
+\end_inset
+
+, 1000 repetitions for each 
+\begin_inset Formula $\lambda$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:at"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ shows the reconstruction of 
+\begin_inset Formula $\N(x;m,\sigma_{\rho}^{2})$
+\end_inset
+
+ with 
+\begin_inset Formula $m=0.5$
+\end_inset
+
+, 
+\begin_inset Formula $\sigma_{\rho}^{2}=0.043^{2}$
+\end_inset
+
+, 
+\begin_inset Formula $\sigma_{K}^{2}=0.045^{2}$
+\end_inset
+
+.
+ We set 
+\begin_inset Formula $N=10^{4}$
+\end_inset
+
+, 
+\begin_inset Formula $\lambda=10$
+\end_inset
+
+, 
+\begin_inset Formula $dt=10^{-3}$
+\end_inset
+
+.
+ The initial distribution 
+\begin_inset Formula $\rho_{0}$
+\end_inset
+
+ is uniform on 
+\begin_inset Formula $[0,1]$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename Images/at.pdf
+	width 75text%
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:at"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset Formula $N=1000,dt=10^{-3},T=1,\lambda=25$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Gaussian Mixture 1D
+\end_layout
+
+\begin_layout Standard
+This is the indirect density estimation example with
+\begin_inset Formula 
+\begin{align*}
+f(x) & =\frac{1}{3}\N(0.3,0.015^{2})+\frac{2}{3}\N(0.5,0.043^{2}),\\
+ & g(y\mid x)=\N(x,0.045^{2}),\\
+ & h(y)=\frac{1}{3}\N(0.3,0.045^{2}+0.015^{2})+\frac{2}{3}\N(0.5,0.045^{2}+0.043^{2}).
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:mixture"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ shows the reconstruction of 
+\begin_inset Formula $\N(x;m,\sigma_{\rho}^{2})$
+\end_inset
+
+ with 
+\begin_inset Formula $m=0.5$
+\end_inset
+
+, 
+\begin_inset Formula $\sigma_{\rho}^{2}=0.043^{2}$
+\end_inset
+
+, 
+\begin_inset Formula $\sigma_{K}^{2}=0.045^{2}$
+\end_inset
+
+.
+ We set 
+\begin_inset Formula $N=10^{4}$
+\end_inset
+
+, 
+\begin_inset Formula $\lambda=10$
+\end_inset
+
+, 
+\begin_inset Formula $dt=10^{-3}$
+\end_inset
+
+.
+ The initial distribution 
+\begin_inset Formula $\rho_{0}$
+\end_inset
+
+ is uniform on 
+\begin_inset Formula $[0,1]$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename Images/mixture.pdf
+	width 75text%
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:mixture"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset Formula $N=1000,dt=10^{-3},T=1,\lambda=25$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+PET
+\end_layout
+
+\begin_layout Standard
+In this case we have the sinogram data as input data 
+\begin_inset Formula $h(\phi,\xi)$
+\end_inset
+
+ and the kernel 
+\begin_inset Formula $K(\phi,\xi\mid x,y)=\N(x\cos\phi+y\sin\phi-\xi;0,\sigma^{2})$
+\end_inset
+
+ for 
+\begin_inset Formula $\sigma^{2}$
+\end_inset
+
+ small.
+ 
+\begin_inset Formula $\xi$
+\end_inset
+
+ gives the displacement from the centre and 
+\begin_inset Formula $\phi$
+\end_inset
+
+ the angle.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename Images/pet.pdf
+	width 50text%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset Formula $N=5000,dt=10^{-3},T=1,\lambda=25$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "wgf_biblio"
+options "abbrvnat"
+
+\end_inset
+
+ 
+\end_layout
+
+\end_body
+\end_document
