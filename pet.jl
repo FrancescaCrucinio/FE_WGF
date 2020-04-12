@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -20,8 +20,8 @@ using smcems;
 using wgf;
 using samplers;
 
-I = readdlm("sinogram.txt", ',', Float64)
-pixels = size(I);
+sinogram = readdlm("sinogram.txt", ',', Float64)
+pixels = size(sinogram);
 
 phi = range(0, stop = 2*pi, length = pixels[2]);
 offsets = floor(pixels[1]/2);
@@ -31,18 +31,18 @@ Niter = trunc(Int, 1e03);
 # samples from h(y)
 M = 1000;
 # number of particles
-Nparticles = 5000;
+Nparticles = 500;
 # regularisation parameter
 lambda = 25;
 
 sigma = 0.02;
 
-x, y = wgf_pet(Nparticles, Niter, lambda, I, M, phi, xi, sigma);
+x, y = wgf_pet(Nparticles, Niter, lambda, sinogram, M, phi, xi, sigma);
 
 KDEyWGF =  KernelDensity.kde((y[end, :], x[end, :]));
 Xbins = range(-1, stop = 1, length = 1000);
 Ybins = range(-1, stop = 1, length = 1000);
-res = pdf(KDEyWGF, Ybins, Xbins);
+res = pdf(KDEyWGF, Xbins, Ybins);
 p = heatmap(Xbins, Ybins, res)
 
-savefig(p, "pet.pdf")
+# savefig(p, "pet.pdf")

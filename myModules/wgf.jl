@@ -173,13 +173,13 @@ INPUTS
 'N' number of particles
 'Niter' number of time steps
 'lambda' regularisation parameter
-'I' data image (Radon transform)
+'noisyI' data image (Radon transform)
 'M' number of samples from h(y) to be drawn at each iteration
 'phi' degrees at which projections are taken
 'xi' offset of projections
 'sigma' standard deviation for Normal describing alignment
 =#
-function wgf_pet(N, Niter, lambda, I, M, phi, xi, sigma)
+function wgf_pet(N, Niter, lambda, noisyI, M, phi, xi, sigma)
     # time step
     dt = 1/Niter;
     # normalise xi
@@ -194,7 +194,7 @@ function wgf_pet(N, Niter, lambda, I, M, phi, xi, sigma)
 
     for n=1:(Niter-1)
         # get sample from (y)
-        hSample = histogram2D_sampler(I, phi, xi, M);
+        hSample = histogram2D_sampler(noisyI, phi, xi, M);
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M
