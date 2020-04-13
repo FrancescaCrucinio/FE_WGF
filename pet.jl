@@ -22,9 +22,10 @@ using wgf;
 using samplers;
 
 # Shepp Logan phantom
-phantom = readdlm("phantom.txt", ',', Float64)
+phantom = readdlm("phantom.txt", ',', Float64);
+pixels = size(phantom);
 # data image
-I = readdlm("sinogram.txt", ',', Float64)
+I = readdlm("sinogram.txt", ',', Float64);
 # number of angles
 nphi = size(I, 2);
 # angles
@@ -35,9 +36,9 @@ xi = range(-offsets, stop = offsets, length = size(I, 1));
 # number of iterations
 Niter = trunc(Int, 1e03);
 # samples from h(y)
-M = 1000;
+M = 10000;
 # number of particles
-Nparticles = 5000;
+Nparticles = 10000;
 # regularisation parameter
 lambda = 25;
 # variance of normal describing alignment
@@ -55,4 +56,4 @@ p = heatmap(Xbins, Ybins, res)
 
 # savefig(p, "pet.pdf")
 
-mise = (norm(res - phantom).^2)/length(res);
+mise = (norm(res - phantom).^2)/length(res)
