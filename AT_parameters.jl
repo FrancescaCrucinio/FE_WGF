@@ -58,8 +58,8 @@ Threads.@threads for i=1:length(lambda)
     diagnosticsWGF[i, :] = mean(drepWGF,dims = 1);
 end
 
-lambda = load("parametersN500resampling.jld", "lambda");
-diagnosticsWGF = load("parametersN500resampling.jld", "diagnosticsWGF");
+lambda = load("parametersN1000resampling.jld", "lambda");
+diagnosticsWGF = load("parametersN1000resampling.jld", "diagnosticsWGF");
 
 gr()
 p1 = plot(lambda, diagnosticsWGF[:, 1], lw = 3, legend = false,
@@ -78,11 +78,11 @@ p6 = plot(lambda, diagnosticsWGF[:, 6], lw = 3, legend = false,
         xlabel="lambda", ylabel="entropy");
 plot(p1, p2, p3, p4, p5, p6, layout = (2, 3))
 
-savefig(p1, "mean500.pdf")
-savefig(p2, "var500.pdf")
-savefig(p3, "mse500.pdf")
-savefig(p4, "mise500.pdf")
-savefig(p5, "e500.pdf")
-savefig(p6, "entropy500.pdf")
+savefig(p1, "mean1000.pdf")
+savefig(p2, "var1000.pdf")
+savefig(p3, "mse1000.pdf")
+savefig(p4, "mise1000.pdf")
+savefig(p5, "e1000.pdf")
+savefig(p6, "entropy1000.pdf")
 #save("C:/Users/francesca/Dropbox/parameters.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
     # "Nparticles", Nparticles, "Niter", Niter)

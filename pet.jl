@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -25,14 +25,15 @@ using samplers;
 phantom = readdlm("phantom.txt", ',', Float64);
 pixels = size(phantom);
 # data image
-I = readdlm("sinogram.txt", ',', Float64);
+sinogram = readdlm("sinogram.txt", ',', Float64)
 # number of angles
-nphi = size(I, 2);
+nphi = size(sinogram, 2);
 # angles
 phi = range(0, stop = 2*pi, length = nphi);
 # number of offsets
 offsets = floor(size(I, 1)/2);
-xi = range(-offsets, stop = offsets, length = size(I, 1));
+xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
+
 # number of iterations
 Niter = trunc(Int, 1e03);
 # samples from h(y)
@@ -45,9 +46,10 @@ lambda = 25;
 sigma = 0.02;
 
 # WGF
-x, y = wgf_pet(Nparticles, Niter, lambda, I, M, phi, xi, sigma);
+x, y = wgf_pet(Nparticles, Niter, lambda, sinogram, M, phi, xi, sigma);
 
 # KDE
+# swap x and y for KDE function (scatter plot shows that x, y are correct)
 KDEyWGF =  KernelDensity.kde((y[end, :], x[end, :]));
 Xbins = range(-1 + 1/pixels[1], stop = 1 - 1/pixels[1], length = pixels[1]);
 Ybins = range(-1 + 1/pixels[2], stop = 1 - 1/pixels[2], length = pixels[2]);

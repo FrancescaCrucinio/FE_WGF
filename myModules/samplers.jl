@@ -34,18 +34,18 @@ end
 # OUTPUTS
 # 1 - sample of size M
 # INPUTS
-# 'I' 2D histogram (or image)
+# 'Image' 2D histogram (or image)
 # 'x' values on x coordinate
 # 'y' values on y coordinate
 # 'M' number of samples
-function histogram2D_sampler(I, x, y, M)
+function histogram2D_sampler(Image, x, y, M)
     # dimensions of matrix
-    r = size(I, 1);
-    c = size(I, 2);
+    r = size(Image, 1);
+    c = size(Image, 2);
     # cartesian product of indices
     indices = collect(Iterators.product(1:r, 1:c));
     # vector of weights
-    w = I[:];
+    w = Image[:];
     # walker sampler
     samples_indices = indices[walker_sampler(w, M)];
     # flatten array
