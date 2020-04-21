@@ -10,7 +10,7 @@ using KernelDensity;
 using Interpolations;
 using LinearAlgebra;
 
-include("drift_exact_mvn.jl")
+include("drift_exact_mvn_mean0.jl")
 
 # set seed
 Random.seed!(1234);
@@ -31,7 +31,7 @@ h(x) = pdf.(MvNormal(mu, sigmaH), x);
 g(x, y) = pdf.(MvNormal(x, sigmaG), y);
 
 # samples from h(y)
-M = 1000;
+M = 100000;
 hSample = rand(MvNormal(mu, sigmaH), M);
 # grid
 N = 100;
@@ -71,16 +71,17 @@ end
 p1 = heatmap(x, y, driftX);
 p2 = heatmap(x, y, driftY);
 plot(p1, p2, layout = (2, 1))
+title!("M = $M")
 
-fplot = zeros(N, N);
-for i=1:N
-    for j=1:N
-        fplot[N-i+1, j] = f([x[i]; y[j]]);
-    end
-end
-heatmap(x, y, fplot)
+# fplot = zeros(N, N);
+# for i=1:N
+#     for j=1:N
+#         fplot[N-i+1, j] = f([x[i]; y[j]]);
+#     end
+# end
+# heatmap(x, y, fplot)
 ### exact drift
-# drift1, drift2 = drift_exact_mvn(mu, sigma0, sigmaG, sigmaH, x, y);
-# p3 = heatmap(x, y, drift1);
-# p4 = heatmap(x, y, drift2);
-# plot(p3, p4, layout = (2, 1))
+drift1, drift2 = drift_exact_mvn_mean0(sigma0, sigmaG, sigmaH, x, y);
+p3 = heatmap(x, y, drift1);
+p4 = heatmap(x, y, drift2);
+plot(p3, p4, layout = (2, 1))
