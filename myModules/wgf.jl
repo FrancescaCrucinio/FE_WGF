@@ -6,7 +6,6 @@ using samplers;
 
 export wgf_AT_approximated
 export wgf_gaussian_mixture
-export wgf_deblurring
 export wgf_pet
 export wgf_mvnormal
 
@@ -50,13 +49,6 @@ function wgf_AT_approximated(N, Niter, lambda, x0, M)
     end
     return x, drift
 end
-
-# function exact_minimizer(sigmaG, sigmaH, lambda)
-#     variance  = (sigmaH - sigmaG .+ 2*lambda*sigmaG +
-#                 sqrt.(sigmaG^2 + sigmaH^2 .- 2*sigmaG*sigmaH.*(1 .- 2*lambda)))./
-#                 (2*(1 .- lambda));
-#     return variance
-# end
 
 #=
  WGF for gaussian mixture
@@ -270,7 +262,7 @@ function wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
                 (hSample[1, :] .- x[n, i])/sqrt(sigmaG[1, 1]));
             prec = sigmaG[2, 2] * sigmaG[1, 1] *
                 prec./(sigmaG[2, 2] * sigmaG[1, 1] - sigmaG[1, 2]^2);
-            gradientX = -prec./sqrt(sigmaG[1, 1]);
+            gradientX = prec./sqrt(sigmaG[1, 1]);
             gradientY = prec./sqrt(sigmaG[2, 2]);
             driftX[i] = mean(gradientX./hN);
             driftY[i] = mean(gradientY./hN);
