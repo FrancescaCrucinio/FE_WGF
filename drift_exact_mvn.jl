@@ -37,7 +37,7 @@ function drift_exact_mvn(mu, sigma0, sigmaG, sigmaH, x, y)
                 (C*mu[1]+D*x[i]-A*mu[2]-B*y[j])/(alpha2 * sqrt(sigmaG[1, 1])) +
                 (1/sqrt(sigmaG[2, 2]) - (A+B)/(alpha2* sqrt(sigmaG[1, 1]))) *
                 (E*mu[2]+F*y[j]+G*mu[1]+H*x[i])/beta2;
-            common_term[N-i+1, j] = exp(x[i]*y[j] *
+            common_term[N-i+1, j] = meanpart * first * exp(x[i]*y[j] *
             (rhoG/((1-rhoG^2) * sqrt(sigmaG[1, 1] * sigmaG[2, 2])) - B*D/alpha2) +
             0.5*y[j]^2 * (-1/((1-rhoG^2) * sigmaG[2, 2]) + B^2/alpha2) +
             y[j] * (A*B*mu[2] - B*C*mu[1])/alpha2) *

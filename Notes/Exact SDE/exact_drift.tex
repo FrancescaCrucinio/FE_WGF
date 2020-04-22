@@ -80,6 +80,13 @@ X_1 = X_0 -\frac{(\sigma_K^2 + \sigma_0^2)(\sigma_K^2 + \sigma_0^2 - \sigma_{\nu
 \end{align*}
 But what is the distribution of $X_1$?
 
+\section{Non-explosion condition}
+\begin{align*}
+\int \nu(dy)\nabla K(x, y)&= \int \N(y; \mu, \sigma_{\nu}^2)\frac{y - x}{\sigma_K^2}\N(y; x, \sigma_K^2)\ dy\\
+&= \frac{(\mu -1)\sigma_K^2+(x-1)\sigma_\nu^2}{\sigma_K^2(\sigma_K^2 + \sigma_\nu^2)^2}\N(x; \mu, \sigma_K^2+\sigma_\nu^2)
+\end{align*}
+
+
 \section{KL}
 For this example we can also compute the value of
 \begin{align*}
