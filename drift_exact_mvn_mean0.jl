@@ -21,19 +21,31 @@ function drift_exact_mvn_mean0(sigma0, sigmaG, sigmaH, x, y)
     D = B*A/alpha2 + C;
     E = A*C/alpha2 + 1/((1-rhoG^2)sigmaG[2, 2]);
 
-    common_term = zeros(N, N);
+    drift1 = zeros(N, N);
+    drift2 = zeros(N, N);
     for i=1:N
         first = exp(0.5*x[i]^2*(-B+B/alpha2));
         for j=1:N
-            meanpart = x[i] * (1/sqrt(sigmaG[1, 1]) -
+            meanpartX = x[i] * (1/sqrt(sigmaG[1, 1]) -
                 B/(alpha2 * sqrt(sigmaG[1, 1])) +
-                D/(beta2 * sqrt(sigmaG[2, 2])) -
+                D*rhoG/(beta2 * sqrt(sigmaG[2, 2])) -
                 A*D/(alpha2 * beta2 * sqrt(sigmaG[1, 1]))) +
                 y[j] * (-1/sqrt(sigmaG[2, 2]) -
                 C/(alpha2 * sqrt(sigmaG[1, 1])) +
-                E/(beta2 * sqrt(sigmaG[2, 2])) -
+                E*rhoG/(beta2 * sqrt(sigmaG[2, 2])) -
                 A*E/(alpha2 * beta2 * sqrt(sigmaG[1, 1])));
-            common_term[N-i+1, j] = meanpart * first*
+                meanpartY = x[i] * (rhoG/sqrt(sigmaG[1, 1]) -
+                    rhoG*B/(alpha2 * sqrt(sigmaG[1, 1])) +
+                    D*rhoG/(beta2 * sqrt(sigmaG[2, 2])) -
+                    A*D*rhoG/(alpha2 * beta2 * sqrt(sigmaG[1, 1]))) +
+                    y[j] * (-1/sqrt(sigmaG[2, 2]) -
+                    C*rhoG/(alpha2 * sqrt(sigmaG[1, 1])) +
+                    E*rhoG/(beta2 * sqrt(sigmaG[2, 2])) -
+                    A*E*rhoG/(alpha2 * beta2 * sqrt(sigmaG[1, 1])));
+            drift1[j, i] = meanpartX * first*
+                exp(x[i]*y[j] * (-C+B*C/alpha2) +
+                0.5*y[j]^2 * (-1/((1-rhoG^2) * sigmaG[2, 2]) + C^2/alpha2));
+            drift2[j, i] = meanpartY * first*
                 exp(x[i]*y[j] * (-C+B*C/alpha2) +
                 0.5*y[j]^2 * (-1/((1-rhoG^2) * sigmaG[2, 2]) + C^2/alpha2));
         end
@@ -43,9 +55,7 @@ function drift_exact_mvn_mean0(sigma0, sigmaG, sigmaH, x, y)
         sigmaG[1, 1] * sigmaG[2, 2])  * (1-rhoG^2)^(3/2) *
         sqrt(alpha2 * beta2));
 
-    common_term = common_term * constant;
-
-    drift1 = -common_term/sqrt(sigmaG[1, 1]);
-    drift2 = common_term/sqrt(sigmaG[2, 2]);
+    drift1 = drift1 * constant/sqrt(sigmaG[1, 1]);
+    drift2 = drift2 * constant/sqrt(sigmaG[2, 2]); 
     return drift1, drift2
 end

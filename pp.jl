@@ -18,10 +18,11 @@ Random.seed!(1234);
 # variances and means
 mu = [0, 0];
 
-sigmaF = [0.15 0; 0 0.43];
+sigmaF = [0.1 0; 0 0.1];
 sigmaG = [0.45 0.5; 0.5 0.9];
 sigmaH = sigmaF + sigmaG;
 sigma0 = 0.1*Matrix{Float64}(I, 2, 2);
+rhoG =  sigmaG[1, 2]/sqrt(sigmaG[1, 1] * sigmaG[2, 2]);
 
 ifelse(isposdef(sigmaF) & isposdef(sigmaG), "matrices are positive definite",
         "change covariance matrices!")
@@ -30,14 +31,32 @@ f(x) = pdf(MvNormal(mu, sigmaF), x);
 h(x) = pdf.(MvNormal(mu, sigmaH), x);
 g(x, y) = pdf.(MvNormal(x, sigmaG), y);
 fg(y) = pdf(MvNormal(mu, sigma0+sigmaG), y);
-# samples from h(y)
-M = 10000;
-hSample = rand(MvNormal(mu, sigmaH), M);
 # grid
 N = 100;
-x = range(-2, 2, length = N);
-y = range(-2, 2, length = N);
+x = range(-1, 1, length = N);
+y = range(-1, 1, length = N);
+# function
+fplot = zeros(N, N);
+for i=1:N
+    for j=1:N
+        fplot[j, i] = f([x[i]; y[j]]);
+    end
+end
+heatmap(x, y, fplot)
 
+# exact drift field
+angles = range(0, stop = 2pi, length = N);
+drift1, drift2 = drift_exact_mvn_mean0(sigma0, sigmaG, sigmaH, cos.(angles), sin.(angles));
+quiver(cos.(angles), sin.(angles), quiver=(diag(drift1, 0), diag(drift2, 0)))
+
+# exact drift
+drift1, drift2 = drift_exact_mvn_mean0(sigma0, sigmaG, sigmaH, x, y);
+p3 = heatmap(x, y, drift1);
+p4 = heatmap(x, y, drift2);
+
+# samples from h(y)
+M = 1000;
+hSample = rand(MvNormal(mu, sigmaH), M);
 ### approximate drift
 x0 = rand(MvNormal(mu, sigma0), 1000);
 # compute h^N_{n}
@@ -52,6 +71,7 @@ for j=1:M
 end
 plot(sort!(hN, dims = 1), sort!(den_exact, dims = 1))
 
+# approximate drift field
 # gradient and drift
 driftX = zeros(N, N);
 driftY = zeros(N, N);
@@ -59,34 +79,19 @@ for i=1:N
     for j=1:N
         # precompute common quantities for gradient
         # define Gaussian pdf
-        psi(t) = pdf(MvNormal([x[i]; y[j]], sigmaG), t);
+        psi(t) = pdf(MvNormal([cos(angles[i]); sin(angles[j])], sigmaG), t);
         prec =  mapslices(psi, hSample', dims = 2)/(1 - rhoG^2);
-        gradientX = prec .* ((hSample[1, :] .- x[i])/sigmaG[1, 1] -
-            rhoG*(hSample[2, :] .- y[j])/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
-        gradientY = prec .* ((hSample[2, :] .- y[j])/sigmaG[2, 2] -
-            rhoG*(hSample[1, :] .- x[i])/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
+        gradientX = prec .* ((hSample[1, :] .- cos(angles[i]))/sigmaG[1, 1] -
+            rhoG*(hSample[2, :] .- sin(angles[j]))/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
+        gradientY = prec .* ((hSample[2, :] .- sin(angles[j]))/sigmaG[2, 2] -
+            rhoG*(hSample[1, :] .- cos(angles[i]))/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
         driftX[j, i] = mean(gradientX./hN);
         driftY[j, i] = mean(gradientY./hN);
     end
 end
+quiver(cos.(angles), sin.(angles), quiver=(diag(driftX, 0), diag(driftY, 0)))
 
-p1 = heatmap(x, y, driftX);
-p2 = heatmap(x, y, driftY);
-
-
-### exact drift
 drift1, drift2 = drift_exact_mvn_mean0(sigma0, sigmaG, sigmaH, x, y);
 p3 = heatmap(x, y, drift1);
 p4 = heatmap(x, y, drift2);
 plot(p3, p4, p1, p2, layout = (2, 2))
-title!("M = $M")
-
-
-# function
-fplot = zeros(N, N);
-for i=1:N
-    for j=1:N
-        fplot[j, i] = f([x[i]; y[j]]);
-    end
-end
-heatmap(x, y, fplot)

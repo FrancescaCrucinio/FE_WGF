@@ -21,16 +21,16 @@ using samplers;
 Random.seed!(1234);
 
 # variances and means
-mu = [0.5, 0.5];
+mu = [0, 0];
 
-sigmaF = [0.15 -0.0645; -0.0645 0.43];
+sigmaF = [0.15 0; 0 0.43];
 sigmaG = [0.45 0.5; 0.5 0.9];
 sigmaH = sigmaF + sigmaG;
 
 ifelse(isposdef(sigmaF) & isposdef(sigmaG), "matrices are positive definite",
         "change covariance matrices!")
 # data for anaytically tractable example
-f(x) = pdf.(MvNormal(mu, sigmaF), x);
+f(x) = pdf(MvNormal(mu, sigmaF), x);
 h(x) = pdf.(MvNormal(mu, sigmaH), x);
 g(x, y) = pdf.(MvNormal(x, sigmaG), y);
 
@@ -38,10 +38,8 @@ g(x, y) = pdf.(MvNormal(x, sigmaG), y);
 Niter = trunc(Int, 1e03);
 # samples from h(y)
 M = 1000;
-# values at which evaluate KDE
-KDEx = range(0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 100;
+Nparticles = 1000;
 # regularisation parameter
 lambda = 100;
 
@@ -49,7 +47,7 @@ lambda = 100;
 x0 = 6*rand(2, Nparticles) .- 3;
 # run WGF
 x, y = wgf_mvnormal(Nparticles, Niter, lambda, x0, M, mu, sigmaH, sigmaG);
-p1 = scatter(x[Niter, :], y[Niter, :])
+p1 = scatter(x[Niter, :], y[Niter, :]);
 
 
 # sample = rand(MvNormal(mu, sigmaF), 100000);
@@ -59,8 +57,17 @@ p1 = scatter(x[Niter, :], y[Niter, :])
 # plot(p1, p2, p3, layout =(1, 3))
 #
 #
-# KDEyWGF =  KernelDensity.kde((x[end, :], y[end, :]));
-# Xbins = range(-0.5, stop = 1.5, length = 1000);
-# Ybins = range(-1, stop = 2, length = 2000);
-# res = pdf(KDEyWGF, Ybins, Xbins);
-# heatmap(Xbins, Ybins, res)
+KDEyWGF =  KernelDensity.kde((x[end, :], y[end, :]));
+Xbins = range(-2, stop = 2, length = 1000);
+Ybins = range(-2, stop = 2, length = 1000);
+res = pdf(KDEyWGF, Ybins, Xbins);
+p1 = heatmap(Xbins, Ybins, res);
+
+fplot = zeros(1000, 1000);
+for i=1:1000
+    for j=1:1000
+        fplot[j, i] = f([Xbins[i]; Ybins[j]]);
+    end
+end
+p2 = heatmap(Xbins, Ybins, fplot);
+plot(p1, p2, layout=(2, 1))

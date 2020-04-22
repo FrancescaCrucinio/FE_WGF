@@ -246,6 +246,8 @@ function wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
     # initial distribution is given as input:
     x[1, :] = x0[1, :];
     y[1, :] = x0[2, :];
+    # correlation for g
+    rhoG =  sigmaG[1, 2]/sqrt(sigmaG[1, 1] * sigmaG[2, 2]);
 
     for n=1:(Niter-1)
         # get samples from h(y)
@@ -265,13 +267,11 @@ function wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
             # precompute common quantities for gradient
             # define Gaussian pdf
             psi(t) = pdf(MvNormal([x[n, i]; y[n, i]], sigmaG), t);
-            prec = mapslices(psi, hSample', dims = 2) .*
-                ((hSample[2, :] .- y[n, i])/sqrt(sigmaG[2, 2]) -
-                (hSample[1, :] .- x[n, i])/sqrt(sigmaG[1, 1]));
-            prec = sigmaG[2, 2] * sigmaG[1, 1] *
-                prec./(sigmaG[2, 2] * sigmaG[1, 1] - sigmaG[1, 2]^2);
-            gradientX = -prec./sqrt(sigmaG[1, 1]);
-            gradientY = prec./sqrt(sigmaG[2, 2]);
+            prec = mapslices(psi, hSample', dims = 2)/(1 - rhoG^2);
+            gradientX = prec .* ((hSample[1, :] .- x[n, i])/sigmaG[1, 1] -
+                rhoG*(hSample[2, :] .- y[n, i])/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
+            gradientY = prec .* ((hSample[2, :] .- y[n, i])/sigmaG[2, 2] -
+                rhoG*(hSample[1, :] .- x[n, i])/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
             driftX[i] = mean(gradientX./hN);
             driftY[i] = mean(gradientY./hN);
         end
