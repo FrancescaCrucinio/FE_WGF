@@ -80,7 +80,7 @@ for i=1:N
         # precompute common quantities for gradient
         # define Gaussian pdf
         psi(t) = pdf(MvNormal([cos(angles[i]); sin(angles[j])], sigmaG), t);
-        prec =  mapslices(psi, hSample', dims = 2)/(1 - rhoG^2);
+        prec =  mapslices(psi, hSample, dims = 1)/(1 - rhoG^2);
         gradientX = prec .* ((hSample[1, :] .- cos(angles[i]))/sigmaG[1, 1] -
             rhoG*(hSample[2, :] .- sin(angles[j]))/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
         gradientY = prec .* ((hSample[2, :] .- sin(angles[j]))/sigmaG[2, 2] -

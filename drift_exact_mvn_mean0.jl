@@ -45,7 +45,7 @@ function drift_exact_mvn_mean0(sigma0, sigmaG, sigmaH, x, y)
             drift1[j, i] = meanpartX * first*
                 exp(x[i]*y[j] * (-C+B*C/alpha2) +
                 0.5*y[j]^2 * (-1/((1-rhoG^2) * sigmaG[2, 2]) + C^2/alpha2));
-            drift2[j, i] = meanpartY * first*
+            drift2[i, j] = meanpartY * first*
                 exp(x[i]*y[j] * (-C+B*C/alpha2) +
                 0.5*y[j]^2 * (-1/((1-rhoG^2) * sigmaG[2, 2]) + C^2/alpha2));
         end
@@ -56,6 +56,6 @@ function drift_exact_mvn_mean0(sigma0, sigmaG, sigmaH, x, y)
         sqrt(alpha2 * beta2));
 
     drift1 = drift1 * constant/sqrt(sigmaG[1, 1]);
-    drift2 = drift2 * constant/sqrt(sigmaG[2, 2]); 
+    drift2 = drift2 * constant/sqrt(sigmaG[2, 2]);
     return drift1, drift2
 end
