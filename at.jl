@@ -11,7 +11,7 @@ using JLD;
 # custom packages
 using diagnostics;
 using smcems;
-using wgf;
+using wgfserver;
 using samplers;
 
 # set seed
@@ -28,7 +28,7 @@ g(x, y) = pdf.(Normal(x, sqrt(sigmaG)), y);
 # dt and final time
 dt = 1e-03;
 T = 1;
-
+Niter = trunc(Int, 1/dt);
 # samples from h(y)
 M = 1000;
 # values at which evaluate KDE
@@ -49,4 +49,4 @@ stats = diagnosticsF(f, KDEx, KDEyWGF);
 p = StatsPlots.plot(f, 0, 1, lw = 3, label = "True f")
 StatsPlots.plot!(KDEx, KDEyWGF, lw = 3, label = "WGF")
 
-savefig(p, "at.pdf")
+# savefig(p, "at.pdf")

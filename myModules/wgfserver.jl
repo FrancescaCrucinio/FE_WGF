@@ -4,6 +4,7 @@ using Distributions;
 using Statistics;
 
 export wgf_AT_approximated
+export wgf_AT_approximated_milstein
 export wgf_gaussian_mixture
 
 #=
@@ -46,13 +47,6 @@ function wgf_AT_approximated(N, Niter, lambda, x0, M)
     end
     return x, drift
 end
-
-# function exact_minimizer(sigmaG, sigmaH, lambda)
-#     variance  = (sigmaH - sigmaG .+ 2*lambda*sigmaG +
-#                 sqrt.(sigmaG^2 + sigmaH^2 .- 2*sigmaG*sigmaH.*(1 .- 2*lambda)))./
-#                 (2*(1 .- lambda));
-#     return variance
-# end
 
 #=
  WGF for gaussian mixture
