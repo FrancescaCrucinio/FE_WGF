@@ -23,7 +23,7 @@ Random.seed!(1234);
 # variances and means
 mu = [0, 0];
 
-sigmaF = [0.15 0; 0 0.43];
+sigmaF = [0.1 0; 0 0.1];
 sigmaG = [0.45 0.5; 0.5 0.9];
 sigmaH = sigmaF + sigmaG;
 
@@ -37,9 +37,9 @@ g(x, y) = pdf.(MvNormal(x, sigmaG), y);
 # number of iterations
 Niter = trunc(Int, 1e03);
 # samples from h(y)
-M = 1000;
+M = 5000;
 # number of particles
-Nparticles = 1000;
+Nparticles = 5000;
 # regularisation parameter
 lambda = 25;
 
