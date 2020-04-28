@@ -4,10 +4,11 @@ using Distributions;
 using Statistics;
 using samplers;
 
-export wgf_AT_approximated
+export wgf_AT
 export wgf_gaussian_mixture
 export wgf_pet
 export wgf_mvnormal
+export AT_exact_minimiser
 
 #=
  WGF for analytically tractable example (approximated drift)
@@ -21,7 +22,7 @@ INPUTS
 'x0' user selected initial distribution
 'M' number of samples from h(y) to be drawn at each iteration
 =#
-function wgf_AT_approximated(N, Niter, lambda, x0, M)
+function wgf_AT(N, Niter, lambda, x0, M)
     # time step
     dt = 1/Niter;
     # initialise a matrix x storing the particles
@@ -45,7 +46,7 @@ function wgf_AT_approximated(N, Niter, lambda, x0, M)
             drift[n, i] = mean(gradient./hN);
         end
         # update locations
-        x[n+1, :] = x[n, :] .+ drift[n, :]*dt .+ sqrt(2*lambda)*dt*randn(N, 1);
+        x[n+1, :] = x[n, :] .+ drift[n, :]*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
     end
     return x, drift
 end
@@ -87,7 +88,7 @@ function wgf_gaussian_mixture(N, dt, T, lambda, x0, M)
             drift[n, i] = mean(gradient./hN);
         end
         # update locations
-        x[n+1, :] = x[n, :] .+ drift[n, :]*dt .+ sqrt(2*lambda)*dt*randn(N, 1);
+        x[n+1, :] = x[n, :] .+ drift[n, :]*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
     end
     return x, drift
 end
@@ -209,8 +210,8 @@ function wgf_pet(N, Niter, lambda, noisyI, M, phi, xi, sigma)
             driftY[i] = mean(gradientY./hN);
         end
         # update locations
-        x[n+1, :] = x[n, :] .+ driftX*dt .+ sqrt(2*lambda)*dt*randn(N, 1);
-        y[n+1, :] = y[n, :] .+ driftY*dt .+ sqrt(2*lambda)*dt*randn(N, 1);
+        x[n+1, :] = x[n, :] .+ driftX*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
+        y[n+1, :] = y[n, :] .+ driftY*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
     end
     return x, y
 end
@@ -268,9 +269,27 @@ function wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
             driftY[i] = mean(gradientY./hN);
         end
         # update locations
-        x[n+1, :] = x[n, :] .+ driftX*dt .+ sqrt(2*lambda)*dt*randn(N, 1);
-        y[n+1, :] = y[n, :] .+ driftY*dt .+ sqrt(2*lambda)*dt*randn(N, 1);
+        x[n+1, :] = x[n, :] .+ driftX*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
+        y[n+1, :] = y[n, :] .+ driftY*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
     end
     return x, y
+end
+
+#= Exact minimiser for analytically tractable example
+OUTPUTS
+1 - variance
+2 - KL divergence
+INPUTS
+'sigmaG' variance of kernel g
+'sigmaH' variance of data function h
+'lambda' regularisation parameter
+=#
+function AT_exact_minimiser(sigmaG, sigmaH, lambda)
+    variance  = (sigmaH - sigmaG .+ 2*lambda*sigmaG .+
+                sqrt.(sigmaG^2 + sigmaH^2 .- 2*sigmaG*sigmaH*(1 .- 2*lambda)))./
+                (2*(1 .- lambda));
+    KL = 0.5*log.((sigmaG .+ variance)/sigmaH) .+ sigmaH./(sigmaG .+ variance) .- 0.5 .-
+        0.5*lambda .* (1 .+ log.(2*pi*variance));
+    return variance, KL
 end
 end

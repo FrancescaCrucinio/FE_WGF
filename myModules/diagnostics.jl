@@ -28,7 +28,7 @@ function diagnosticsH(h, g, KDEx, KDEy, refY)
     trueH = h.(refY);
     # logarithm of true h for KL divergence
     trueHlog = log.(trueH);
-    trueHlog[isnan.(trueHlog)] .= 0;
+    trueHlog[isinf.(trueHlog)] .= 0;
     hatH = zeros(1, length(refY));
     # convolution with approximated f
     # this gives the approximated value
@@ -39,7 +39,7 @@ function diagnosticsH(h, g, KDEx, KDEy, refY)
     mise = var(trueH .- hatH, corrected = false);
     # compute log of hatH for Kl divergence
     hatHlog = log.(hatH);
-    hatHlog[isnan.(hatHlog)] .= 0;
+    hatHlog[isinf.(hatHlog)] .= 0;
     kl = sum(trueH.*(trueHlog .- hatHlog));
 
     return mise, kl
@@ -67,7 +67,9 @@ function diagnosticsF(f, x, y)
     # compute MISE for f
     difference = (trueF .- y).^2;
     mise = mean(difference);
-    ent = entropy(y)./length(y);
+    hatFlog = log.(y);
+    hatFlog[isinf.(hatFlog)] .= 0;
+    ent = -mean(y.*hatFlog);
     return m, v, difference, mise, ent
 end
 
