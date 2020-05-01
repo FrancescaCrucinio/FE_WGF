@@ -32,21 +32,19 @@ Niter = trunc(Int, 1/dt);
 M = 1000;
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
-# reference values for KL divergence
-refY = range(0, stop = 1, length = 1000);
 # number of particles
 Nparticles = 1000;
 # regularisation parameter
-lambda = range(0, stop = 1, length = 3);
+lambda = [0; range(0.01, stop = 0.99, length = 9); 1];
 
 # repeat WGF
-Nrep = 10;
+Nrep = 1000;
 varWGF = zeros(length(lambda), Nrep);
 klWGF = zeros(length(lambda), Nrep);
 entWGF = zeros(length(lambda), Nrep);
 eWGF = zeros(length(lambda), Nrep);
-for i=1:length(lambda)
-    for j=1:Nrep
+Threads.@threads for i=1:length(lambda)
+    @simd for j=1:Nrep
         # initial distribution
         x0 = rand(1, Nparticles);
         ### WGF
@@ -57,8 +55,7 @@ for i=1:length(lambda)
         KDEyWGFeval = pdf(KDEyWGF, KDEx);
         KDEyWGFeval[KDEyWGFeval .< 0] .= 0;
         # KL and variance
-        _, varWGF[i, j], _, _, klWGF[i, j], entWGF[i, j] = diagnosticsALL(f, h, g, KDEx, KDEyWGFeval, refY);
-        eWGF[i, j] = klWGF[i, j] +lambda[i]*entWGF[i, j];
+        _, varWGF[i, j], _, = diagnosticsF(f, KDEx, KDEyWGFeval);
         println("$i, $j")
     end
 end
@@ -67,4 +64,7 @@ end
 varExact, _ = AT_exact_minimiser(sigmaG, sigmaH, lambda);
 
 StatsPlots.plot(lambda, varExact, lw = 3, label = "Exact");
-StatsPlots.plot!(lambda, mean(varWGF, dims = 2), lw = 3, label = "WGF");
+StatsPlots.plot!(lambda, mean(varWGF, dims = 2), lw = 3, label = "WGF")
+
+save("AT_WGF_exact.jld", "lambda", lambda, "varWGF", varWGF,
+    "varExact", varExact);
