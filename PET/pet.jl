@@ -1,47 +1,42 @@
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
-using KernelEstimator;
 using Random;
-# using ImageMagick;
-# using TestImages, Colors;
-# using Images;
 using LinearAlgebra;
 using DelimitedFiles;
 using KernelDensity;
 using Interpolations;
 # custom packages
 using diagnostics;
-using smcems;
 using wgf;
 using samplers;
 
 # Shepp Logan phantom
-phantom = readdlm("phantom.txt", ',', Float64);
+phantom = readdlm("PET/phantom.txt", ',', Float64);
 pixels = size(phantom);
 # data image
-sinogram = readdlm("sinogram.txt", ',', Float64)
+sinogram = readdlm("PET/sinogram.txt", ',', Float64)
 # number of angles
 nphi = size(sinogram, 2);
 # angles
 phi = range(0, stop = 2*pi, length = nphi);
 # number of offsets
-offsets = floor(size(I, 1)/2);
+offsets = floor(size(sinogram, 1)/2);
 xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # number of iterations
 Niter = trunc(Int, 1e03);
 # samples from h(y)
-M = 10000;
+M = 5000;
 # number of particles
-Nparticles = 10000;
+Nparticles = 5000;
 # regularisation parameter
-lambda = 25;
+lambda = 0.1;
 # variance of normal describing alignment
 sigma = 0.02;
 
