@@ -10,7 +10,7 @@ using Random;
 using JLD;
 # custom packages
 using diagnostics;
-using wgf;
+using wgfserver;
 
 # Plot AT example and exact ExactMinimiser
 
@@ -36,7 +36,7 @@ KDEx = range(0, stop = 1, length = 1000);
 # number of particles
 Nparticles = 1000;
 # regularisation parameter
-lambda = 0.1;
+lambda = 0.025;
 
 
 x0 = rand(1, Nparticles);
@@ -55,3 +55,5 @@ ExactMinimiser(x) = pdf.(Normal(0.5, sqrt(variance)), x);
 p = StatsPlots.plot(f, 0, 1, lw = 3, label = "True f")
 StatsPlots.plot!(ExactMinimiser, 0, 1, lw = 3, label = "Exact minimiser")
 StatsPlots.plot!(KDEx, KDEyWGFeval, lw = 3, label = "WGF")
+
+# savefig(p, "at.pdf")

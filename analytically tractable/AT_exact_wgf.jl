@@ -32,39 +32,46 @@ Niter = trunc(Int, 1/dt);
 M = 1000;
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
+# reference values for KL divergence
+refY = range(0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 1000;
+Nparticles = [100, 500, 1000, 5000, 10000];
+numNparticles = length(Nparticles);
 # regularisation parameter
-lambda = [0; range(0.01, stop = 0.99, length = 9); 1];
+lambda = [0; range(0.01, stop = 0.99, length = 99); 1];
+numlambda = length(lambda);
 
 # repeat WGF
 Nrep = 1000;
-varWGF = zeros(length(lambda), Nrep);
-klWGF = zeros(length(lambda), Nrep);
-entWGF = zeros(length(lambda), Nrep);
-eWGF = zeros(length(lambda), Nrep);
-Threads.@threads for i=1:length(lambda)
-    @simd for j=1:Nrep
-        # initial distribution
-        x0 = rand(1, Nparticles);
-        ### WGF
-        x, _ =  wgf_AT(Nparticles, Niter, lambda[i], x0, M);
-        # KDE
-        KDEyWGF =  KernelDensity.kde(x[end, :]);
-        # evaluate KDE at reference points
-        KDEyWGFeval = pdf(KDEyWGF, KDEx);
-        KDEyWGFeval[KDEyWGFeval .< 0] .= 0;
-        # KL and variance
-        _, varWGF[i, j], _, = diagnosticsF(f, KDEx, KDEyWGFeval);
-        println("$i, $j")
+varWGF = zeros(numlambda, numNparticles);
+eWGF = zeros(numlambda, numNparticles);
+Threads.@threads for i=1:numlambda
+    for k=1:numNparticles
+    varWGFrep = zeros(1, Nrep);
+    eWGFrep = zeros(1, Nrep);
+        @simd for j=1:Nrep
+            # initial distribution
+            x0 = rand(1, Nparticles[k]);
+            ### WGF
+            x, _ =  wgf_AT(Nparticles[k], Niter, lambda[i], x0, M);
+            # KDE
+            KDEyWGF =  KernelDensity.kde(x[end, :]);
+            # evaluate KDE at reference points
+            KDEyWGFeval = pdf(KDEyWGF, KDEx);
+            KDEyWGFeval[KDEyWGFeval .< 0] .= 0;
+            # KL and variance
+            _, varWGFrep[j], _, _, kl, ent =
+                diagnosticsALL(f, h, g, KDEx, KDEyWGFeval, refY);
+            eWGFrep[j] = kl-lambda[i]*ent;
+            println("$k, $i, $j")
+        end
+        varWGF[i, k] = mean(varWGFrep);
+        eWGF[i, k] = mean(eWGFrep);
     end
 end
 
 ### exact minimiser
-varExact, _ = AT_exact_minimiser(sigmaG, sigmaH, lambda);
-
-StatsPlots.plot(lambda, varExact, lw = 3, label = "Exact");
-StatsPlots.plot!(lambda, mean(varWGF, dims = 2), lw = 3, label = "WGF")
+varExact, eExact = AT_exact_minimiser(sigmaG, sigmaH, lambda);
 
 save("AT_WGF_exact.jld", "lambda", lambda, "varWGF", varWGF,
-    "varExact", varExact);
+     "varExact", varExact, "eWGF", eWGF, "eExact", eExact);

@@ -5,7 +5,7 @@ using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
-using KernelEstimator;
+using KernelDensity;
 using Random;
 using JLD;
 # custom packages
@@ -32,19 +32,20 @@ M = 1000;
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 1000;
+Nparticles = 10000;
 # regularisation parameter
-lambda = 25;
+lambda = 0.025;
 
 
 x0 = rand(1, Nparticles);
 # run WGF
-x, drift =  wgf_gaussian_mixture(Nparticles, dt, T, lambda, x0, M);
+x, _ =  wgf_gaussian_mixture(Nparticles, dt, T, lambda, x0, M);
 
-KDEyWGF = kerneldensity(x[end, :], xeval = KDEx);
+# KDE
+KDEyWGF = pdf(KernelDensity.kde(x[end, :]), KDEx);
 stats = diagnosticsF(f, KDEx, KDEyWGF);
 
 p = StatsPlots.plot(f, 0, 1, lw = 3, label = "True f")
 StatsPlots.plot!(KDEx, KDEyWGF, lw = 3, label = "WGF")
 
-savefig(p, "mixture.pdf")
+# savefig(p, "mixture.pdf")

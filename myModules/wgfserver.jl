@@ -3,8 +3,8 @@ module wgfserver;
 using Distributions;
 using Statistics;
 
-export wgf_AT_approximated
-export wgf_AT_approximated_15
+export wgf_AT
+export wgf_AT_15
 export wgf_gaussian_mixture
 
 #=
@@ -19,7 +19,7 @@ INPUTS
 'x0' user selected initial distribution
 'M' number of samples from h(y) to be drawn at each iteration
 =#
-function wgf_AT_approximated(N, Niter, lambda, x0, M)
+function wgf_AT(N, Niter, lambda, x0, M)
     # time step
     dt = 1/Niter;
     # initialise a matrix x storing the particles
@@ -101,7 +101,7 @@ INPUTS
 'x0' user selected initial distribution
 'M' number of samples from h(y) to be drawn at each iteration
 =#
-function wgf_AT_approximated_15(N, Niter, lambda, x0, M)
+function wgf_AT_15(N, Niter, lambda, x0, M)
     # time step
     dt = 1/Niter;
     # initialise a matrix x storing the particles
@@ -126,8 +126,8 @@ function wgf_AT_approximated_15(N, Niter, lambda, x0, M)
             prec = pdf.(Normal.(x[n, i], 0.045), y)/(0.045^2);
             drift1[i] = mean((prec .* (y .- x[n, i]) )./hN);
             drift2[i] = mean((prec .* ((y .- x[n, i]).^2/(0.045^2) .- 1))./hN);
-            drift3[i] = mean((prec .* ((y .- x[n, i]).^3/(0.045^4) .-
-                (y .- x[n, i] .-1)/(0.045^2)))./hN);
+            drift3[i] = mean((prec .* (y .- x[n, i])/(0.045^2) .*
+                ((y .- x[n, i]).^2/(0.045^2) .- 3))./hN);
         end
         # update locations
         # BM
