@@ -37,11 +37,11 @@ g(x, y) = pdf.(MvNormal(x, sigmaG), y);
 # number of iterations
 Niter = trunc(Int, 1e03);
 # samples from h(y)
-M = 5000;
+M = 1000;
 # number of particles
 Nparticles = 5000;
 # regularisation parameter
-lambda = 25;
+lambda = 0.025;
 
 # initial distribution
 x0 = 6*rand(2, Nparticles) .- 3;
