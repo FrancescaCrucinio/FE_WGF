@@ -86,6 +86,12 @@ But what is the distribution of $X_1$?
 &= \frac{(\mu -1)\sigma_K^2+(x-1)\sigma_\nu^2}{\sigma_K^2(\sigma_K^2 + \sigma_\nu^2)^2}\N(x; \mu, \sigma_K^2+\sigma_\nu^2)
 \end{align*}
 
+\section{Ergodicity condition}
+$\pi$ invariant measure (Gaussian)
+\begin{align*}
+\int \nu(dy)\frac{\Delta K(x, y)}{ \pi K(y)}&= \int \frac{\N(y; \mu, \sigma_{\nu}^2)}{\N(y; \mu, \sigma_K^2 + \sigma_\pi^2)}\left(\frac{(y - x)^2}{\sigma_K^2}-1\right)\frac{\N(y; x, \sigma_K^2)}{\sigma_K^2}\ dy\\
+&=  \frac{(\sigma_K^2 + \sigma_\pi^2)}{\sigma_K^2\sqrt{(\beta + \gamma)^{3/2}}}\exp\left(- \frac{\beta\gamma\left(x-\mu\right)^2}{2\sigma_K^2\sigma_{\nu}^2(\sigma_K^2 + \sigma_0^2)(\beta + \gamma)}\right)\left( \sigma_K^2\sigma_\nu^2(\sigma_K^2+\sigma_\pi^2)(\beta+\gamma)+\beta^2(x-\mu)^2\right)
+\end{align*}
 
 \section{KL}
 For this example we can also compute the value of
