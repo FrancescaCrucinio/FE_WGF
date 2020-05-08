@@ -4,58 +4,52 @@ using Statistics;
 using StatsBase;
 using IterTools;
 
-export Ysample_gaussian_mixture
-export histogram2D_sampler
+struct histogram_object
+       weights
+       edges
+   end
 
-# Sample y from the gaussian mixture model
+export histogram_sampler
+export histogram_object
+export image2histogram
+
+# Build histogram from image
 # OUTPUTS
-# 1 - sample from h
+# 1 - histogram object as given by StatsBase.fit(Histogram, data)
 # INPUTS
-# 'M' number of samples
-function Ysample_gaussian_mixture(M)
-    #Mixture
-    yl = rand(M,1) .> 1/3;
-    # mean
-    ym = 0.3 .+ 0.2 * yl;
-    # variance
-    yv = zeros(size(ym));
-    for i=1:length(yl)
-        if(yl[i])
-    	  yv[i] = 0.043^2 + 0.045^2;
-        else
-    	  yv[i] = 0.015^2 + 0.045^2;
-        end
-    end
-    # traslated standard normal
-    y = ym .+ sqrt.(yv).*randn(M,1);
-    y = y[:];
+# 'image' image or discretised function
+# 'support' matrix containing the bounds of the support of the function (or image)
+# each row gives the interval on one dimension
+function image2histogram(image, support)
+    # number of dimensions
+    D = ndims(image);
+    # build histogram object
+    h = histogram_object(image, tuple([range(support[i, 1], stop = support[i, 2], length = size(image, i)+1) for i=1:D]...));
 end
-
-# Sample from 2D histogram
+# Sample from histogram
 # OUTPUTS
 # 1 - sample of size M
 # INPUTS
-# 'Image' 2D histogram (or image)
-# 'x' values on x coordinate
-# 'y' values on y coordinate
+# 'h' histogram object obtained from StatsBase.fit(Histogram, data)
 # 'M' number of samples
-function histogram2D_sampler(Image, x, y, M)
-    # dimensions of matrix
-    r = size(Image, 1);
-    c = size(Image, 2);
+function histogram_sampler(h, M)
+    # dimensions of histogram
+    D = ndims(h.weights);
+    # centres of bins
+    bin_centres = reduce(vcat,[[h.edges[i][1:(end-1)] .+ (h.edges[i][2] - h.edges[i][1])/2] for i=1:D]);
+    # iterators for bin centres
+    bin_centres_iter = [1:size(h.weights, i) for i in 1:D];
     # cartesian product of indices
-    indices = collect(Iterators.product(1:r, 1:c));
+    indices = [collect(x) for x in Iterators.product(bin_centres_iter...)];
     # vector of weights
-    w = Image[:];
+    w = h.weights[:];
     # walker sampler
-    samples_indices = indices[walker_sampler(w, M)];
-    # flatten array
-    samples_indices = collect(Iterators.flatten(samples_indices));
+    samples_indices = reduce(hcat, indices[walker_sampler(w, M)]);
     # odd entries are rows and even entries are columns
-    samples = [x[samples_indices[2:2:end]] y[samples_indices[1:2:end]]];
-
+    samples = reduce(hcat, [bin_centres[i][samples_indices[i, :]]  for i in 1:D]);
     return samples
 end
+
 # Walker's sampler for discrete probabilities
 # OUTPUTS
 # 1 - sampled indices of w
@@ -74,6 +68,7 @@ function walker_sampler(w, M)
     out = trunc.(Int, out);
     return out
 end
+
 # Probability and aliasing matrix for Walker's sampler
 # OUTPUTS
 # 1 - probability matrix
