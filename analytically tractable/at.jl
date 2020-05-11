@@ -10,7 +10,7 @@ using Random;
 using JLD;
 # custom packages
 using diagnostics;
-using wgfserver;
+using wgf;
 
 # Plot AT example and exact ExactMinimiser
 
@@ -34,7 +34,7 @@ M = 1000;
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 1000;
+Nparticles = 10000;
 # regularisation parameter
 lambda = 0.025;
 
@@ -43,10 +43,15 @@ x0 = rand(1, Nparticles);
 ### WGF
 x, _ =  wgf_AT(Nparticles, Niter, lambda, x0, M);
 # KDE
-KDEyWGF =  KernelDensity.kde(x[end, :]);
+KDEyWGF1 =  KernelDensity.kde(x[end, :]);
 # evaluate KDE at reference points
-KDEyWGFeval = pdf(KDEyWGF, KDEx);
+KDEyWGFeval1 = pdf(KDEyWGF1, KDEx);
+KDEyWGFeval1[KDEyWGFeval1 .< 0] .= 0;
 
+KDEyWGF2 =  KernelDensity.kde(x[end, :], bandwidth=dt);
+# evaluate KDE at reference points
+KDEyWGFeval2 = pdf(KDEyWGF2, KDEx);
+KDEyWGFeval2[KDEyWGFeval2 .< 0] .= 0;
 ### exact minimiser
 variance, _  = AT_exact_minimiser(sigmaG, sigmaH, lambda);
 ExactMinimiser(x) = pdf.(Normal(0.5, sqrt(variance)), x);
@@ -54,6 +59,9 @@ ExactMinimiser(x) = pdf.(Normal(0.5, sqrt(variance)), x);
 # plot
 p = StatsPlots.plot(f, 0, 1, lw = 3, label = "True f")
 StatsPlots.plot!(ExactMinimiser, 0, 1, lw = 3, label = "Exact minimiser")
-StatsPlots.plot!(KDEx, KDEyWGFeval, lw = 3, label = "WGF")
+StatsPlots.plot!(KDEx, KDEyWGFeval1, lw = 3, label = "WGF")
+StatsPlots.plot!(KDEx, KDEyWGFeval2, lw = 3, label = "WGF")
 
 # savefig(p, "at.pdf")
+diagnosticsF(f, KDEx, KDEyWGFeval1)
+diagnosticsF(f, KDEx, KDEyWGFeval2)
