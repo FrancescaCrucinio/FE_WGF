@@ -5,14 +5,14 @@ using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
-using KernelDensity;
+using KernelEstimator;
 using Random;
 using JLD;
 # custom packages
 using diagnostics;
 using wgf;
 
-# Plot AT example and exact ExactMinimiser
+# Plot AT example and exact minimiser
 
 # set seed
 Random.seed!(1234);
@@ -32,26 +32,22 @@ Niter = trunc(Int, 1/dt);
 # samples from h(y)
 M = 1000;
 # values at which evaluate KDE
-KDEx = range(0, stop = 1, length = 1000);
+KDEx = range(-0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 10000;
+Nparticles = 1000;
 # regularisation parameter
 lambda = 0.025;
 
 
-x0 = rand(1, Nparticles);
+x0 = 0.0*ones(1, Nparticles);
 ### WGF
 x, _ =  wgf_AT(Nparticles, Niter, lambda, x0, M);
 # KDE
-KDEyWGF1 =  KernelDensity.kde(x[end, :]);
-# evaluate KDE at reference points
-KDEyWGFeval1 = pdf(KDEyWGF1, KDEx);
-KDEyWGFeval1[KDEyWGFeval1 .< 0] .= 0;
+# optimal bandwidth Gaussian
+KDEyWGF1 =  KernelEstimator.kerneldensity(x[end,:], xeval=KDEx, h=bwnormal(x[end,:]));
+# bw = dt
+KDEyWGF2 =  KernelEstimator.kerneldensity(x[end,:], xeval=KDEx, h=dt);
 
-KDEyWGF2 =  KernelDensity.kde(x[end, :], bandwidth=dt);
-# evaluate KDE at reference points
-KDEyWGFeval2 = pdf(KDEyWGF2, KDEx);
-KDEyWGFeval2[KDEyWGFeval2 .< 0] .= 0;
 ### exact minimiser
 variance, _  = AT_exact_minimiser(sigmaG, sigmaH, lambda);
 ExactMinimiser(x) = pdf.(Normal(0.5, sqrt(variance)), x);
@@ -59,8 +55,8 @@ ExactMinimiser(x) = pdf.(Normal(0.5, sqrt(variance)), x);
 # plot
 p = StatsPlots.plot(f, 0, 1, lw = 3, label = "True f")
 StatsPlots.plot!(ExactMinimiser, 0, 1, lw = 3, label = "Exact minimiser")
-StatsPlots.plot!(KDEx, KDEyWGFeval1, lw = 3, label = "WGF")
-StatsPlots.plot!(KDEx, KDEyWGFeval2, lw = 3, label = "WGF")
+StatsPlots.plot!(KDEx, KDEyWGF1, lw = 3, label = "WGF")
+#StatsPlots.plot!(KDEx, KDEyWGF2, lw = 3, label = "WGF")
 
 # savefig(p, "at.pdf")
 diagnosticsF(f, KDEx, KDEyWGFeval1)
