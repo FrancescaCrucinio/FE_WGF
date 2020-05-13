@@ -3,15 +3,12 @@ module wgf;
 using Distributions;
 using Statistics;
 using samplers;
-using diagnostics;
-using KernelEstimator;
 
 export wgf_AT
 export wgf_gaussian_mixture
 export wgf_pet
 export wgf_mvnormal
 export AT_exact_minimiser
-export wgf_AT_E
 
 #=
  WGF for analytically tractable example
@@ -231,53 +228,4 @@ function AT_exact_minimiser(sigmaG, sigmaH, lambda)
     return variance, KL
 end
 
-#=
- WGF for analytically tractable example + value of E
-OUTPUTS
-1 - particle locations
-2 - E
-INPUTS
-'N' number of particles
-'Niter' number of time steps
-'lambda' regularisation parameter
-'x0' user selected initial distribution
-'M' number of samples from h(y) to be drawn at each iteration
-'KDEx' values at which evaluate KDE
-'refY' values at which evaluate KDE
-'f' true f (function handle)
-'h' true h (function handle)
-'g' mixing kernel (function handle)
-=#
-function wgf_AT_E(N, Niter, lambda, x0, M, KDEx, refY, f, h, g)
-    # time step
-    dt = 1/Niter;
-    # initialise a matrix x storing the particles
-    x = zeros(Niter, N);
-    # initial distribution is given as input:
-    x[1, :] = x0;
-    # initialise a matrix storing the value of E
-    E = zeros(Niter-1, 1);
-    for n=1:(Niter-1)
-        # get samples from h(y)
-        y = rand(Normal(0.5, sqrt(0.043^2 + 0.045^2)), M);
-        # Compute h^N_{n}
-        hN = zeros(M, 1);
-        for j=1:M
-            hN[j] = mean(pdf.(Normal.(x[n, :], 0.045), y[j]));
-        end
-        # gradient and drift
-        drift = zeros(N, 1);
-        for i=1:N
-            gradient = pdf.(Normal.(x[n, i], 0.045), y) .* (y .- x[n, i])/(0.045^2);
-            drift[i] = mean(gradient./hN);
-        end
-        # update locations
-        x[n+1, :] = x[n, :] .+ drift*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
-        # KDE
-        KDEyWGF =  KernelEstimator.kerneldensity(x[n+1,:], xeval=KDEx, h=bwnormal(x[n+1,:]));
-        _, _, _, _, kl, ent = diagnosticsALL(f, h, g, KDEx, KDEyWGF, refY);
-        E[n+1] = kl-lambda*ent;
-    end
-    return x, E
-end
 end

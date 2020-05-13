@@ -39,7 +39,7 @@ Nparticles = 1000;
 lambda = 0.025;
 
 
-x0 = 0.0*ones(1, Nparticles);
+x0 = 0.5 .+ sqrt(sigmaF)*randn(1, Nparticles);
 ### WGF
 x, _ =  wgf_AT(Nparticles, Niter, lambda, x0, M);
 # KDE
@@ -59,5 +59,5 @@ StatsPlots.plot!(KDEx, KDEyWGF1, lw = 3, label = "WGF")
 #StatsPlots.plot!(KDEx, KDEyWGF2, lw = 3, label = "WGF")
 
 # savefig(p, "at.pdf")
-diagnosticsF(f, KDEx, KDEyWGFeval1)
-diagnosticsF(f, KDEx, KDEyWGFeval2)
+diagnosticsF(f, KDEx, KDEyWGF1)
+diagnosticsF(f, KDEx, KDEyWGF2)
