@@ -6,11 +6,12 @@ using Distributions;
 using Statistics;
 using StatsBase;
 using Random;
+using LaTeXStrings;
 # custom packages
 using wgf;
 
 # Plot exact minimiser for AT example
-
+pyplot()
 # set seed
 Random.seed!(1234);
 
@@ -23,7 +24,9 @@ sigmaH = sigmaF + sigmaG;
 
 sigma, E = AT_exact_minimiser(sigmaG, sigmaH, α);
 
-p1 = plot(α, sigma, lw = 3);
+p1 = plot(α, sigma, lw = 3, legend = false,
+        xlabel=L"$\alpha$", ylabel=L"$\sigma^2_\alpha$");
 savefig(p1, "at_exact_variance.pdf")
-p2 = plot(α, E, lw = 3);
+p2 = plot(α, E, lw = 3, legend = false,
+        xlabel=L"$\alpha$", ylabel=L"$E(\rho_\alpha)$");
 savefig(p2, "at_exact_E.pdf")
