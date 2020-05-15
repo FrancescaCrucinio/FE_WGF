@@ -17,14 +17,15 @@ OUTPUTS
 2 - drift evolution
 INPUTS
 'N' number of particles
-'Niter' number of time steps
+'dt' discretisation step
+'T' final time
 'lambda' regularisation parameter
 'x0' user selected initial distribution
 'M' number of samples from h(y) to be drawn at each iteration
 =#
-function wgf_AT(N, Niter, lambda, x0, M)
-    # time step
-    dt = 1/Niter;
+function wgf_AT(N, dt, T, lambda, x0, M)
+    # number of iterations
+    Niter = 1000;
     # initialise a matrix x storing the particles
     x = zeros(Niter, N);
     # initial distribution is given as input:

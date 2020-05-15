@@ -87,19 +87,34 @@ Threads.@threads for i=1:size(x0, 1)
     misef[:, i] = mean(misefrep, dims = 2);
     E[:, i] = mean(Erep, dims = 2);
 end
+# save data
+JLD.save("initial_d.jld", "x0", x0, "times", times,
+    "m", m, "v", v, "q", q, "misef", misef, "E", E);
+# load data
+d = load("initial_d.jld");
+m = d["m"];
+v = d["v"];
+q = d["q"];
+misef = d["misef"];
+E = d["E"];
 
 # plot
 times = range(0, stop = 1, length = Niter);
-p1 = StatsPlots.plot(times[2:end], m, lw = 3, label = [L"$\delta_0$", L"$\delta_{0.5}$"
-    L"$\delta_1$", L"U$[0, 1]$", L"$N(0.5, \sigma^2_\rho)$",
-    L"$N(0.5, \sigma^2_\rho+\varepsilon)$"],
-    xlabel=L"$t$", ylabel=L"\hat{m}_t$");
-p2 = StatsPlots.plot(1:Niter-1, v, lw = 3);
-p3 = StatsPlots.plot(100:Niter-1, q[100:end, :], lw = 3);
-p4 = StatsPlots.plot(100:Niter-1, misef[100:end, :], lw = 3);
-p5 = StatsPlots.plot(1:Niter-1, E, lw = 3);
+labels = [L"$\delta_0$" L"$\delta_{0.5}$" L"$\delta_1$" L"U$[0, 1]$" L"$N(m, \sigma^2_\rho)$" L"$N(m, \sigma^2_\rho+\varepsilon)$"];
+p1 = StatsPlots.plot(times[2:end], m, lw = 3, label = labels, xlabel=L"$t$",
+    ylabel=L"$\hat{m}_t$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
+p2 = StatsPlots.plot(times[2:end], v, lw = 3, label = labels, xlabel=L"$t$",
+    ylabel=L"$\hat{v}_t$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
+p3 = StatsPlots.plot(times[101:end], q[100:end, :], lw = 3, label = labels, xlabel=L"$t$",
+    ylabel=L"$MSE_{95}$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
+p4 = StatsPlots.plot(times[101:end], misef[100:end, :], lw = 3, label = labels, xlabel=L"$t$",
+    ylabel=L"MISE", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
+p5 = StatsPlots.plot(times[2:end], E, lw = 3, label = labels, xlabel=L"$t$",
+    ylabel=L"$E(\rho_t)$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
 p6 = StatsPlots.plot();
 plot(p2, p3, p4, p5, layout = (2, 2))
 
-JLD.save("initial_d.jld", "x0", x0, "times", times,
-    "m", m, "v", v, "q", q, "misef", misef, "E", E)
+savefig(p2, "initial_distribution_variance.pdf")
+savefig(p3, "initial_distribution_mse.pdf")
+savefig(p4, "initial_distribution_mise.pdf")
+savefig(p5, "initial_distribution_E.pdf")
