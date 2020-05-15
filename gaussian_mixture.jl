@@ -5,15 +5,15 @@ using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
-using KernelDensity;
+using KernelEstimator;
 using Random;
 using JLD;
+using LaTeXStrings;
 # custom packages
 using diagnostics;
-using smcems;
 using wgf;
-using samplers;
 
+pyplot()
 # set seed
 Random.seed!(1234);
 
@@ -32,20 +32,21 @@ M = 1000;
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 10000;
+Nparticles = 5000;
 # regularisation parameter
-lambda = 0.025;
+lambda = 0.005;
 
 
-x0 = rand(1, Nparticles);
+x0 = 0.5*ones(1, Nparticles);
 # run WGF
 x, _ =  wgf_gaussian_mixture(Nparticles, dt, T, lambda, x0, M);
 
 # KDE
-KDEyWGF = pdf(KernelDensity.kde(x[end, :]), KDEx);
+KDEyWGF = KernelEstimator.kerneldensity(x[end,:], xeval=KDEx, h=bwnormal(x[end,:]));
 stats = diagnosticsF(f, KDEx, KDEyWGF);
 
-p = StatsPlots.plot(f, 0, 1, lw = 3, label = "True f")
+p = StatsPlots.plot(f, 0, 1, lw = 3, label = "True f",
+    xlabel=L"$x$", ylabel=L"$f(x)$");
 StatsPlots.plot!(KDEx, KDEyWGF, lw = 3, label = "WGF")
 
-# savefig(p, "mixture.pdf")
+savefig(p, "mixture.pdf")
