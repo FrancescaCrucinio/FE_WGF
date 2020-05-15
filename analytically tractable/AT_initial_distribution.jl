@@ -9,12 +9,13 @@ using StatsBase;
 using KernelEstimator;
 using Random;
 using JLD;
+using LaTeXStrings;
 # custom packages
 using diagnostics;
 using wgf;
 
 # Compare initial distributions
-
+pyplot()
 # set seed
 Random.seed!(1234);
 
@@ -29,7 +30,7 @@ g(x, y) = pdf.(Normal(x, sqrt(sigmaG)), y);
 # dt and final time
 dt = 1e-03;
 T = 1;
-Niter = trunc(Int, 1/dt);
+Niter = trunc(Int, T/dt);
 # samples from h(y)
 M = 1000;
 # values at which evaluate KDE
@@ -44,7 +45,8 @@ lambda = 0.025;
 # initial distributions
 x0 = [0.0*ones(1, Nparticles); 0.5*ones(1, Nparticles);
     1*ones(1, Nparticles); rand(1, Nparticles);
-    0.5 .+ sqrt(sigmaF)*randn(1, Nparticles)];
+    0.5 .+ sqrt(sigmaF)*randn(1, Nparticles);
+    0.5 .+ sqrt(sigmaF+0.01)*randn(1, Nparticles)];
 
 E = zeros(Niter-1, size(x0, 1));
 m = zeros(Niter-1, size(x0, 1));
@@ -56,27 +58,48 @@ misef = zeros(Niter-1, size(x0, 1));
 phi(t) = KernelEstimator.kerneldensity(t, xeval=KDEx, h=bwnormal(t));
 # function computing diagnostics
 psi(t) = diagnosticsALL(f, h, g, KDEx, t, refY);
+# number of repetitions
+Nrep = 10;
 Threads.@threads for i=1:size(x0, 1)
-    ### WGF
-    x, _ = wgf_AT(Nparticles, Niter, lambda, x0[i, :], M);
-    # KDE
-    KDEyWGF = mapslices(phi, x[2:end, :], dims = 2);
-    diagnosticsWGF = mapslices(psi, KDEyWGF, dims = 2);
-    # turn into matrix
-    diagnosticsWGF = reduce(hcat, getindex.(diagnosticsWGF,j) for j in eachindex(diagnosticsWGF[1]));
-    m[:, i] = diagnosticsWGF[:, 1];
-    v[:, i] = diagnosticsWGF[:, 2];
-    q[:, i] = diagnosticsWGF[:, 3];
-    misef[:, i] = diagnosticsWGF[:, 4];
-    E[:, i] = diagnosticsWGF[:, 5]-lambda*diagnosticsWGF[:, 6];
-    println("$i finished")
+    mrep = zeros(Niter-1, Nrep);
+    vrep = zeros(Niter-1, Nrep);
+    qrep = zeros(Niter-1, Nrep);
+    misefrep = zeros(Niter-1, Nrep);
+    Erep = zeros(Niter-1, Nrep);
+    @simd for k=1:Nrep
+        ### WGF
+        x, _ = wgf_AT(Nparticles, dt, T, lambda, x0[i, :], M);
+        # KDE
+        KDEyWGF = mapslices(phi, x[2:end, :], dims = 2);
+        diagnosticsWGF = mapslices(psi, KDEyWGF, dims = 2);
+        # turn into matrix
+        diagnosticsWGF = reduce(hcat, getindex.(diagnosticsWGF,j) for j in eachindex(diagnosticsWGF[1]));
+        mrep[:, k] = diagnosticsWGF[:, 1];
+        vrep[:, k] = diagnosticsWGF[:, 2];
+        qrep[:, k] = diagnosticsWGF[:, 3];
+        misefrep[:, k] = diagnosticsWGF[:, 4];
+        Erep[:, k] = diagnosticsWGF[:, 5]-lambda*diagnosticsWGF[:, 6];
+        println("$i, $k")
+    end
+    m[:, i] = mean(mrep, dims = 2);
+    v[:, i] = mean(vrep, dims = 2);
+    q[:, i] = mean(qrep, dims = 2);
+    misef[:, i] = mean(misefrep, dims = 2);
+    E[:, i] = mean(Erep, dims = 2);
 end
 
 # plot
-p1 = StatsPlots.plot(1:Niter-1, E, lw = 3)
-p2 = StatsPlots.plot(1:Niter-1, m, lw = 3)
-p3 = StatsPlots.plot(1:Niter-1, v, lw = 3)
-p4 = StatsPlots.plot(1:Niter-1, q, lw = 3)
-p5 = StatsPlots.plot(1:Niter-1, misef, lw = 3)
-p6 = StatsPlots.plot()
-plot(p1, p2, p3, p4, p5, p6, layout = (3, 2))
+times = range(0, stop = 1, length = Niter);
+p1 = StatsPlots.plot(times[2:end], m, lw = 3, label = [L"$\delta_0$", L"$\delta_{0.5}$"
+    L"$\delta_1$", L"U$[0, 1]$", L"$N(0.5, \sigma^2_\rho)$",
+    L"$N(0.5, \sigma^2_\rho+\varepsilon)$"],
+    xlabel=L"$t$", ylabel=L"\hat{m}_t$");
+p2 = StatsPlots.plot(1:Niter-1, v, lw = 3);
+p3 = StatsPlots.plot(100:Niter-1, q[100:end, :], lw = 3);
+p4 = StatsPlots.plot(100:Niter-1, misef[100:end, :], lw = 3);
+p5 = StatsPlots.plot(1:Niter-1, E, lw = 3);
+p6 = StatsPlots.plot();
+plot(p2, p3, p4, p5, layout = (2, 2))
+
+JLD.save("initial_d.jld", "x0", x0, "times", times,
+    "m", m, "v", v, "q", q, "misef", misef, "E", E)
