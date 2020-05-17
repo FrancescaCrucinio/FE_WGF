@@ -89,30 +89,29 @@ end
 # save data
 JLD.save("initial_d.jld", "x0", x0, "m", m, "v", v, "q", q, "misef", misef, "E", E);
 # load data
-# d = load("initial_d.jld");
-# m = d["m"];
-# v = d["v"];
-# q = d["q"];
-# misef = d["misef"];
-# E = d["E"];
+d = load("initial_d.jld");
+m = d["m"];
+v = d["v"];
+q = d["q"];
+misef = d["misef"];
+E = d["E"];
 
 # plot
-# times = range(0, stop = 1, length = Niter);
-# labels = [L"$\delta_0$" L"$\delta_{0.5}$" L"$\delta_1$" L"U$[0, 1]$" L"$N(m, \sigma^2_\rho)$" L"$N(m, \sigma^2_\rho+\varepsilon)$"];
-# p1 = StatsPlots.plot(times[2:end], m, lw = 3, label = labels, xlabel=L"Iteration",
-#     ylabel=L"$\hat{m}_t$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
-# p2 = StatsPlots.plot(times[2:end], v, lw = 3, label = labels, xlabel=L"Iteration",
-#     ylabel=L"$\hat{v}_t$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
-# p3 = StatsPlots.plot(times[2:end], q, lw = 3, label = labels, xlabel=L"Iteration",
-#     ylabel=L"$MSE_{95}$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
-# p4 = StatsPlots.plot(times[2:end], misef, lw = 3, label = labels, xlabel=L"Iteration",
-#     ylabel=L"MISE", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
-# p5 = StatsPlots.plot(times[2:end], E, lw = 3, label = labels, xlabel=L"Iteration",
-#     ylabel=L"$E(\rho_t)$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
-# p6 = StatsPlots.plot();
-# plot(p2, p3, p4, p5, layout = (2, 2))
+labels = [L"$\delta_0$" L"$\delta_{0.5}$" L"$\delta_1$" L"U$[0, 1]$" L"$N(m, \sigma^2_\rho)$" L"$N(m, \sigma^2_\rho+\varepsilon)$"];
+p1 = StatsPlots.plot(2:Niter, m, lw = 3, label = labels, xlabel=L"Iteration",
+    ylabel=L"$\hat{m}_t$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
+p2 = StatsPlots.plot(2:Niter, v, lw = 3, label = labels, xlabel=L"Iteration",
+    ylabel=L"$\hat{v}_t$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
+p3 = StatsPlots.plot(2:Niter, q, lw = 3, label = labels, xlabel=L"Iteration",
+    ylabel=L"$MSE_{95}$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
+p4 = StatsPlots.plot(2:Niter, misef, lw = 3, label = labels, xlabel=L"Iteration",
+    ylabel=L"MISE", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
+p5 = StatsPlots.plot(2:Niter, E, lw = 3, label = labels, xlabel=L"Iteration",
+    ylabel=L"$E(\rho_t)$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
+p6 = StatsPlots.plot();
+plot(p1, p2, p3, p4, p5, p6, layout = (3, 2))
 
-# savefig(p2, "initial_distribution_variance.pdf")
-# savefig(p3, "initial_distribution_mse.pdf")
-# savefig(p4, "initial_distribution_mise.pdf")
-# savefig(p5, "initial_distribution_E.pdf")
+savefig(p2, "initial_distribution_variance.pdf")
+savefig(p3, "initial_distribution_mse.pdf")
+savefig(p4, "initial_distribution_mise.pdf")
+savefig(p5, "initial_distribution_E.pdf")

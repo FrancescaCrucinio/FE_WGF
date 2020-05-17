@@ -31,7 +31,7 @@ xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # dt and number of iterations
 dt = 1e-03;
-Niter = 100;
+Niter = 200;
 # samples from h(y)
 M = 5000;
 # number of particles
