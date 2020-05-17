@@ -18,14 +18,12 @@ OUTPUTS
 INPUTS
 'N' number of particles
 'dt' discretisation step
-'T' final time
+'Niter' number of iterations
 'lambda' regularisation parameter
 'x0' user selected initial distribution
 'M' number of samples from h(y) to be drawn at each iteration
 =#
-function wgf_AT(N, dt, T, lambda, x0, M)
-    # number of iterations
-    Niter = 1000;
+function wgf_AT(N, dt, Niter, lambda, x0, M)
     # initialise a matrix x storing the particles
     x = zeros(Niter, N);
     # initial distribution is given as input:
