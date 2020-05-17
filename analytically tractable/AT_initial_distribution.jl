@@ -26,10 +26,9 @@ f(x) = pdf.(Normal(0.5, sqrt(sigmaF)), x);
 h(x) = pdf.(Normal(0.5, sqrt(sigmaH)), x);
 g(x, y) = pdf.(Normal(x, sqrt(sigmaG)), y);
 
-# dt and final time
+# dt and number of iterations
 dt = 1e-03;
-T = 1;
-Niter = trunc(Int, 1/dt);
+Niter = 100;
 # samples from h(y)
 M = 1000;
 # values at which evaluate KDE
@@ -58,7 +57,7 @@ phi(t) = KernelEstimator.kerneldensity(t, xeval=KDEx, h=bwnormal(t));
 psi(t) = diagnosticsALL(f, h, g, KDEx, t, refY);
 Threads.@threads for i=1:size(x0, 1)
     ### WGF
-    x, _ = wgf_AT(Nparticles, Niter, lambda, x0[i, :], M);
+    x, _ = wgf_AT(Nparticles, dt, Niter, lambda, x0[i, :], M);
     # KDE
     KDEyWGF = mapslices(phi, x[2:end, :], dims = 2);
     diagnosticsWGF = mapslices(psi, KDEyWGF, dims = 2);
@@ -73,30 +72,30 @@ Threads.@threads for i=1:size(x0, 1)
 end
 
 # load data
-d = load("initial_d.jld");
-m = d["m"];
-v = d["v"];
-q = d["q"];
-misef = d["misef"];
-E = d["E"];
+# d = load("initial_d.jld");
+# m = d["m"];
+# v = d["v"];
+# q = d["q"];
+# misef = d["misef"];
+# E = d["E"];
 
 # plot
 times = range(0, stop = 1, length = Niter);
 labels = [L"$\delta_0$" L"$\delta_{0.5}$" L"$\delta_1$" L"U$[0, 1]$" L"$N(m, \sigma^2_\rho)$" L"$N(m, \sigma^2_\rho+\varepsilon)$"];
-p1 = StatsPlots.plot(times[2:end], m, lw = 3, label = labels, xlabel=L"$t$",
+p1 = StatsPlots.plot(times[2:end], m, lw = 3, label = labels, xlabel=L"Iteration",
     ylabel=L"$\hat{m}_t$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
-p2 = StatsPlots.plot(times[2:end], v, lw = 3, label = labels, xlabel=L"$t$",
+p2 = StatsPlots.plot(times[2:end], v, lw = 3, label = labels, xlabel=L"Iteration",
     ylabel=L"$\hat{v}_t$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
-p3 = StatsPlots.plot(times[101:end], q[100:end, :], lw = 3, label = labels, xlabel=L"$t$",
+p3 = StatsPlots.plot(times[2:end], q, lw = 3, label = labels, xlabel=L"Iteration",
     ylabel=L"$MSE_{95}$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
-p4 = StatsPlots.plot(times[101:end], misef[100:end, :], lw = 3, label = labels, xlabel=L"$t$",
+p4 = StatsPlots.plot(times[2:end], misef, lw = 3, label = labels, xlabel=L"Iteration",
     ylabel=L"MISE", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
-p5 = StatsPlots.plot(times[2:end], E, lw = 3, label = labels, xlabel=L"$t$",
+p5 = StatsPlots.plot(times[2:end], E, lw = 3, label = labels, xlabel=L"Iteration",
     ylabel=L"$E(\rho_t)$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);
 p6 = StatsPlots.plot();
 plot(p2, p3, p4, p5, layout = (2, 2))
 
-savefig(p2, "initial_distribution_variance.pdf")
-savefig(p3, "initial_distribution_mse.pdf")
-savefig(p4, "initial_distribution_mise.pdf")
-savefig(p5, "initial_distribution_E.pdf")
+# savefig(p2, "initial_distribution_variance.pdf")
+# savefig(p3, "initial_distribution_mse.pdf")
+# savefig(p4, "initial_distribution_mise.pdf")
+# savefig(p5, "initial_distribution_E.pdf")

@@ -26,9 +26,9 @@ f(x) = pdf.(Normal(0.5, sqrt(sigmaF)), x);
 h(x) = pdf.(Normal(0.5, sqrt(sigmaH)), x);
 g(x, y) = pdf.(Normal(x, sqrt(sigmaG)), y);
 
-# dt and final time
+# dt and number of iterations
 dt = 1e-03;
-T = 1;
+Niter = 100;
 # samples from h(y)
 M = 1000;
 # values at which evaluate KDE
@@ -41,7 +41,7 @@ lambda = 0.025;
 x0 = 0.5*ones(1, Nparticles);
 # x0 = rand(1, Nparticles);
 ### WGF
-x, _ =  wgf_AT(Nparticles, dt, T, lambda, x0, M);
+x, _ =  wgf_AT(Nparticles, dt, Niter, lambda, x0, M);
 # KDE
 # optimal bandwidth Gaussian
 KDEyWGF1 =  KernelEstimator.kerneldensity(x[end,:], xeval=KDEx, h=bwnormal(x[end,:]));
