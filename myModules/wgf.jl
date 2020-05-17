@@ -58,14 +58,12 @@ OUTPUTS
 INPUTS
 'N' number of particles
 'dt' discretisation step
-'T' final time
+'Niter' number of iterations
 'lambda' regularisation parameter
 'x0' user selected initial distribution
 'M' number of samples from h(y) to be drawn at each iteration
 =#
-function wgf_gaussian_mixture(N, dt, T, lambda, x0, M)
-    # number of iterations
-    Niter = trunc(Int, T/dt);
+function wgf_gaussian_mixture(N, dt, Niter, lambda, x0, M)
     # initialise a matrix x storing the particles
     x = zeros(Niter, N);
     # initial distribution is given as input:
@@ -98,7 +96,8 @@ OUTPUTS
 1 - particle locations (2D)
 INPUTS
 'N' number of particles
-'Niter' number of time steps
+'dt' discretisation step
+'Niter' number of iterations
 'lambda' regularisation parameter
 'noisyI' data image (Radon transform)
 'M' number of samples from h(y) to be drawn at each iteration
@@ -106,9 +105,7 @@ INPUTS
 'xi' offset of projections
 'sigma' standard deviation for Normal describing alignment
 =#
-function wgf_pet(N, Niter, lambda, noisyI, M, phi, xi, sigma)
-    # time step
-    dt = 1/Niter;
+function wgf_pet(N, dt, Niter, lambda, noisyI, M, phi, xi, sigma)
     # normalise xi
     xi = xi./maximum(xi);
     # initialise two matrices x, y storing the particles

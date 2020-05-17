@@ -29,8 +29,9 @@ phi = range(0, stop = 2*pi, length = nphi);
 offsets = floor(size(sinogram, 1)/2);
 xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
-# number of iterations
-Niter = trunc(Int, 1e03);
+# dt and number of iterations
+dt = 1e-03;
+Niter = 100;
 # samples from h(y)
 M = 5000;
 # number of particles
@@ -41,7 +42,7 @@ lambda = 0.1;
 sigma = 0.02;
 
 # WGF
-x, y = wgf_pet(Nparticles, Niter, lambda, sinogram, M, phi, xi, sigma);
+x, y = wgf_pet(Nparticles, dt, Niter, lambda, sinogram, M, phi, xi, sigma);
 
 # KDE
 # swap x and y for KDE function (scatter plot shows that x, y are correct)

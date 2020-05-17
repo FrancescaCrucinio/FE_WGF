@@ -15,7 +15,7 @@ using diagnostics;
 using wgf;
 
 # Compare initial distributions
-pyplot()
+# pyplot()
 # set seed
 Random.seed!(1234);
 

@@ -23,9 +23,9 @@ h(x) = 2*pdf.(Normal(0.3, sqrt(0.043^2 + 0.045^2)), x)/3 +
         pdf.(Normal(0.5, sqrt(0.015^2 + 0.045^2)), x)/3;
 g(x, y) = pdf.(Normal(x, 0.045, y));
 
-# dt and final time
+# dt and number of iterations
 dt = 1e-03;
-T = 1;
+Niter = 100;
 
 # samples from h(y)
 M = 1000;
@@ -39,7 +39,7 @@ lambda = 0.005;
 
 x0 = 0.5*ones(1, Nparticles);
 # run WGF
-x, _ =  wgf_gaussian_mixture(Nparticles, dt, T, lambda, x0, M);
+x, _ =  wgf_gaussian_mixture(Nparticles, dt, Niter, lambda, x0, M);
 
 # KDE
 KDEyWGF = KernelEstimator.kerneldensity(x[end,:], xeval=KDEx, h=bwnormal(x[end,:]));
