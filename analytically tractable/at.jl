@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -60,6 +60,6 @@ StatsPlots.plot!(ExactMinimiser, 0, 1, lw = 3, label = "Exact minimiser")
 StatsPlots.plot!(KDEx, KDEyWGF1, lw = 3, label = "WGF")
 # StatsPlots.plot!(KDEx, KDEyWGF2, lw = 3, label = "WGF")
 
-# savefig(p, "at.pdf")
+savefig(p, "at.pdf")
 diagnosticsF(f, KDEx, KDEyWGF1)
 diagnosticsF(f, KDEx, KDEyWGF2)
