@@ -100,7 +100,8 @@ OUTPUTS
 1 - particle locations (2D)
 INPUTS
 'N' number of particles
-'Niter' number of time steps
+'dt' discretisation step
+'T' final time
 'lambda' regularisation parameter
 'noisyI' data image (Radon transform)
 'M' number of samples from h(y) to be drawn at each iteration
@@ -108,9 +109,9 @@ INPUTS
 'xi' offset of projections
 'sigma' standard deviation for Normal describing alignment
 =#
-function wgf_pet(N, Niter, lambda, noisyI, M, phi, xi, sigma)
-    # time step
-    dt = 1/Niter;
+function wgf_pet(N, dt, T, lambda, noisyI, M, phi, xi, sigma)
+    # number of iterations
+    Niter = trunc(Int, T/dt);
     # normalise xi
     xi = xi./maximum(xi);
     # initialise two matrices x, y storing the particles
