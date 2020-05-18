@@ -87,7 +87,7 @@ Threads.@threads for i=1:size(x0, 1)
     E[:, i] = mean(Erep, dims = 2);
 end
 # save data
-JLD.save("initial_d.jld", "x0", x0, "m", m, "v", v, "q", q, "misef", misef, "E", E);
+JLD.save("analitically tractable/initial_d.jld", "x0", x0, "m", m, "v", v, "q", q, "misef", misef, "E", E);
 # load data
 d = load("initial_d.jld");
 m = d["m"];
