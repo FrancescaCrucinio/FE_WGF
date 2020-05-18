@@ -9,7 +9,7 @@ using Statistics;
 using StatsBase;
 using KernelEstimator;
 using Random;
-using JLD2;
+using JLD;
 # custom packages
 using diagnostics;
 using smcems;
@@ -33,7 +33,7 @@ Niter = 100;
 # samples from h(y)
 M = 1000;
 # number of particles
-Nparticles = 500;
+Nparticles = 1000;
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # other parameters
@@ -84,6 +84,10 @@ Threads.@threads for i=1:length(Nparticles)
     diagnosticsWGF[i, :] = mean(drepWGF,dims = 1);
 end
 
+
+save("parameters.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
+    "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
+     "Nparticles", Nparticles, "Niter", Niter);
 # p1 = plot(Nparticles, [tSMC, tWGF], lw = 3, xlabel="N", ylabel="Runtime",
 #         label = ["SMC" "WGF"], legend=:topleft);
 # p2 = plot(Nparticles, [diagnosticsSMC[:, 1], diagnosticsWGF[:, 1]],
