@@ -2,6 +2,8 @@ module wgf;
 
 using Distributions;
 using Statistics;
+using LinearAlgebra;
+
 using samplers;
 
 export wgf_AT
@@ -154,6 +156,7 @@ OUTPUTS
 1 - particle locations (2D)
 INPUTS
 'N' number of particles
+'dt' discretisation step
 'Niter' number of time steps
 'lambda' regularisation parameter
 'x0' user selected initial distribution
@@ -162,9 +165,7 @@ INPUTS
 'sigmaH' covariance matrix of data distribution
 'sigmaG' covariance matrix of mixing kernel
 =#
-function wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
-    # time step
-    dt = 1/Niter;
+function wgf_mvnormal(N, dt, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
     # initialise two matrices x, y storing the particles
     x = zeros(Niter, N);
     y = zeros(Niter, N);
@@ -180,19 +181,14 @@ function wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M
-            # define Gaussian pdf
-            phi(t) = pdf(MvNormal(hSample[:, j], sigmaG), t);
-            # apply it to c, y
-            hN[j] = mean(mapslices(phi, [x[n, :] y[n, :]], dims = 2));
+            hN[j] = mean(pdf(MvNormal(hSample[:, j], sigmaG), transpose([x[n, :] y[n, :]])));
         end
         # gradient and drift
         driftX = zeros(N, 1);
         driftY = zeros(N, 1);
         for i=1:N
             # precompute common quantities for gradient
-            # define Gaussian pdf
-            psi(t) = pdf(MvNormal([x[n, i]; y[n, i]], sigmaG), t);
-            prec = mapslices(psi, hSample', dims = 2)/(1 - rhoG^2);
+            prec =pdf(MvNormal([x[n, i]; y[n, i]], sigmaG), hSample)/(1 - rhoG^2);
             gradientX = prec .* ((hSample[1, :] .- x[n, i])/sigmaG[1, 1] -
                 rhoG*(hSample[2, :] .- y[n, i])/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
             gradientY = prec .* ((hSample[2, :] .- y[n, i])/sigmaG[2, 2] -

@@ -10,7 +10,7 @@ using KernelDensity;
 using Interpolations;
 using LinearAlgebra;
 
-include("drift_exact_mvn_mean0.jl")
+include("mvn/drift_exact_mvn_mean0.jl")
 
 # set seed
 Random.seed!(1234);
@@ -51,28 +51,24 @@ quiver(cos.(angles), sin.(angles), quiver=(diag(drift1, 0), diag(drift2, 0)))
 
 # exact drift
 drift1, drift2 = drift_exact_mvn_mean0(sigma0, sigmaG, sigmaH, x, y);
-p3 = heatmap(x, y, drift1);
-p4 = heatmap(x, y, drift2);
+p1 = heatmap(x, y, drift1);
+p2 = heatmap(x, y, drift2);
 
 # samples from h(y)
-M = 1000;
+M = 10000;
 hSample = rand(MvNormal(mu, sigmaH), M);
 ### approximate drift
-x0 = rand(MvNormal(mu, sigma0), 1000);
+x0 = rand(MvNormal(mu, sigma0), 10000);
 # compute h^N_{n}
 hN = zeros(M, 1);
 den_exact = zeros(M, 1);
 for j=1:M
-    # define Gaussian pdf
-    phi(t) = pdf(MvNormal(hSample[:, j], sigmaG), t);
-    # apply it to c, y
-    hN[j] = mean(mapslices(phi, x0, dims = 1));
+    hN[j] = mean(pdf(MvNormal(hSample[:, j], sigmaG), x0));
     den_exact[j] = fg(hSample[:, j]);
 end
 plot(sort!(hN, dims = 1), sort!(den_exact, dims = 1))
 
 # approximate drift field
-# gradient and drift
 driftX = zeros(N, N);
 driftY = zeros(N, N);
 for i=1:N
@@ -91,7 +87,21 @@ for i=1:N
 end
 quiver(cos.(angles), sin.(angles), quiver=(diag(driftX, 0), diag(driftY, 0)))
 
-drift1, drift2 = drift_exact_mvn_mean0(sigma0, sigmaG, sigmaH, x, y);
-p3 = heatmap(x, y, drift1);
-p4 = heatmap(x, y, drift2);
-plot(p3, p4, p1, p2, layout = (2, 2))
+# approximate drift
+driftX = zeros(N, N);
+driftY = zeros(N, N);
+for i=1:N
+    for j=1:N
+        # precompute common quantities for gradient
+        # define Gaussian pdf
+        prec = pdf(MvNormal([x[i]; y[j]], sigmaG), hSample)/(1 - rhoG^2);
+        gradientX = prec .* ((hSample[1, :] .- x[i])/sigmaG[1, 1] -
+            rhoG*(hSample[2, :] .- y[j])/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
+        gradientY = prec .* ((hSample[2, :] .- y[j])/sigmaG[2, 2] -
+            rhoG*(hSample[1, :] .- x[i])/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
+        driftX[j, i] = mean(gradientX./hN);
+        driftY[j, i] = mean(gradientY./hN);
+    end
+end
+p3 = heatmap(x, y, driftX);
+p4 = heatmap(x, y, driftY);
