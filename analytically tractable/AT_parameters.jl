@@ -8,6 +8,7 @@ using StatsBase;
 using KernelEstimator;
 using Random;
 using JLD;
+using LaTeXStrings;
 # custom packages
 using diagnostics;
 using wgf;
@@ -75,6 +76,10 @@ p5 = plot(lambda, diagnosticsWGF[:, 5], lw = 3, legend = false,
         xlabel="lambda", ylabel="E(rho)");
 p6 = plot(lambda, diagnosticsWGF[:, 6], lw = 3, legend = false,
         xlabel="lambda", ylabel="entropy");
+
+p7 = plot(lambda, diagnosticsWGF[:, 7], lw = 3, legend = false,
+        xlabel="lambda", ylabel="kl");
+
 plot(p1, p2, p3, p4, p5, p6, layout = (2, 3))
 
 # savefig(p1, "mean1000.pdf")

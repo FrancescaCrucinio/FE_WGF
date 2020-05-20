@@ -2,6 +2,8 @@ module wgf;
 
 using Distributions;
 using Statistics;
+using LinearAlgebra;
+
 using samplers;
 
 export wgf_AT
@@ -9,6 +11,7 @@ export wgf_gaussian_mixture
 export wgf_pet
 export wgf_mvnormal
 export AT_exact_minimiser
+export wgf_2D_analytic
 
 #=
  WGF for analytically tractable example
@@ -153,6 +156,7 @@ OUTPUTS
 1 - particle locations (2D)
 INPUTS
 'N' number of particles
+'dt' discretisation step
 'Niter' number of time steps
 'lambda' regularisation parameter
 'x0' user selected initial distribution
@@ -161,9 +165,7 @@ INPUTS
 'sigmaH' covariance matrix of data distribution
 'sigmaG' covariance matrix of mixing kernel
 =#
-function wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
-    # time step
-    dt = 1/Niter;
+function wgf_mvnormal(N, dt, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
     # initialise two matrices x, y storing the particles
     x = zeros(Niter, N);
     y = zeros(Niter, N);
@@ -179,19 +181,14 @@ function wgf_mvnormal(N, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M
-            # define Gaussian pdf
-            phi(t) = pdf(MvNormal(hSample[:, j], sigmaG), t);
-            # apply it to c, y
-            hN[j] = mean(mapslices(phi, [x[n, :] y[n, :]], dims = 2));
+            hN[j] = mean(pdf(MvNormal(hSample[:, j], sigmaG), transpose([x[n, :] y[n, :]])));
         end
         # gradient and drift
         driftX = zeros(N, 1);
         driftY = zeros(N, 1);
         for i=1:N
             # precompute common quantities for gradient
-            # define Gaussian pdf
-            psi(t) = pdf(MvNormal([x[n, i]; y[n, i]], sigmaG), t);
-            prec = mapslices(psi, hSample', dims = 2)/(1 - rhoG^2);
+            prec =pdf(MvNormal([x[n, i]; y[n, i]], sigmaG), hSample)/(1 - rhoG^2);
             gradientX = prec .* ((hSample[1, :] .- x[n, i])/sigmaG[1, 1] -
                 rhoG*(hSample[2, :] .- y[n, i])/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
             gradientY = prec .* ((hSample[2, :] .- y[n, i])/sigmaG[2, 2] -
@@ -219,9 +216,63 @@ function AT_exact_minimiser(sigmaG, sigmaH, lambda)
     variance  = (sigmaH - sigmaG .+ 2*lambda*sigmaG .+
                 sqrt.(sigmaG^2 + sigmaH^2 .- 2*sigmaG*sigmaH*(1 .- 2*lambda)))./
                 (2*(1 .- lambda));
-    KL = 0.5*log.((sigmaG .+ variance)/sigmaH) .+ sigmaH./(sigmaG .+ variance) .- 0.5 .-
+    KL = 0.5*log.((sigmaG .+ variance)/sigmaH) .+ 0.5*sigmaH./(sigmaG .+ variance) .- 0.5 .-
         0.5*lambda .* (1 .+ log.(2*pi*variance));
     return variance, KL
 end
 
+#=
+ WGF for multivariate normal
+OUTPUTS
+1 - particle locations (2D)
+INPUTS
+'N' number of particles
+'dt' discretisation step
+'Niter' number of time steps
+'lambda' regularisation parameter
+'x0' user selected initial distribution
+'M' number of samples from h(y) to be drawn at each iteration
+=#
+function wgf_2D_analytic(N, dt, Niter, lambda, x0, M)
+    # kernel g
+    g(x, y) = ((y[1] .- x[1]).^2 .+ (y[2] .- x[2]).^2)./
+        (x[1].^2 .+ x[2].^2 .- x[1] .- x[2] .+ 2/3);
+    # initialise two matrices x, y storing the particles
+    x = zeros(Niter, N);
+    y = zeros(Niter, N);
+    # initial distribution is given as input:
+    x[1, :] = x0[1, :];
+    y[1, :] = x0[2, :];
+
+    for n=1:(Niter-1)
+        # get samples from h(y)
+        hSample = rejection_sampling_2D_analytic(M);
+        # Compute h^N_{n}
+        hN = zeros(M, 1);
+        for j=1:M
+            # define Gaussian pdf
+            phi(t) = g(t, hSample[j, :]);
+            # apply it to c, y
+            hN[j] = mean(mapslices(phi, [x[n, :] y[n, :]], dims = 1));
+        end
+        # gradient and drift
+        driftX = zeros(N, 1);
+        driftY = zeros(N, 1);
+        for i=1:N
+            # precompute common quantities for gradient
+            # denominators
+            prec = x[n, i]^2 + y[n,i]^2 - x[n, i] - y[n,i] + 2/3;
+            gradientX = -2*(hSample[:, 1] .- x[n, i])/prec -
+            (2*x[n, i] - 1)*((hSample[:, 1] .- x[n, i]).^2 + (hSample[:, 2] .- y[n, i]).^2)/prec^2;
+            gradientY = -2*(hSample[:, 2] .- y[n, i])/prec -
+            (2*y[n, i] - 1)*((hSample[:, 1] .- x[n, i]).^2 + (hSample[:, 2] .- y[n, i]).^2)/prec^2;
+            driftX[i] = mean(gradientX./hN);
+            driftY[i] = mean(gradientY./hN);
+        end
+        # update locations
+        x[n+1, :] = x[n, :] .+ driftX*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
+        y[n+1, :] = y[n, :] .+ driftY*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
+    end
+    return x, y
+end
 end

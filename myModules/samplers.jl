@@ -3,9 +3,11 @@ module samplers
 using Statistics;
 using StatsBase;
 using IterTools;
+using QuadGK;
 
 export Ysample_gaussian_mixture
 export histogram2D_sampler
+export rejection_sampling_2D_analytic
 
 # Sample y from the gaussian mixture model
 # OUTPUTS
@@ -101,6 +103,33 @@ function walker_matrix(w)
         end
     end
     return w, alias_m
+end
+# Rejection sampling for 2D analytic example
+# OUTPUTS
+# 1 - sample from h
+# INPUTS
+# 'M' number of samples
+function rejection_sampling_2D_analytic(M)
+    # integral sine function
+    Si(x) = quadgk(t -> sin(t)/t, 0, x)[1];
+    # h
+    h(y) = ((y[1].^2 .+ y[2].^2)*Si(1) .- 2*(1-cos(1))*(y[1] .+ y[2]) + 2*sin(1) - 2*cos(1))/
+        (Si(1)*2/3-2+2*sin(1));
+    # constant for acceptance probability
+    C = 2.1;
+
+    hSample = zeros(M, 2);
+    j = 0;
+    while(j < M)
+        # sample uniform in [0, pi]^2
+        uSample = rand(2, 1);
+        # accept/reject
+        if (C * rand(1)[1] < h(uSample))
+            hSample[j+1, :] =  uSample;
+            j = j + 1;
+        end
+    end
+    return hSample
 end
 
 end

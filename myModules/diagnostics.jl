@@ -2,6 +2,7 @@ module diagnostics
 
 using Statistics;
 using StatsBase;
+using Distances;
 
 export diagnosticsH
 export diagnosticsF
@@ -26,9 +27,7 @@ function diagnosticsH(h, g, KDEx, KDEy, refY)
     delta = refY[2] - refY[1];
     # exact value
     trueH = h.(refY);
-    # logarithm of true h for KL divergence
-    trueHlog = log.(trueH);
-    trueHlog[isinf.(trueHlog)] .= 0;
+    # approximated value
     hatH = zeros(1, length(refY));
     # convolution with approximated f
     # this gives the approximated value
@@ -37,10 +36,8 @@ function diagnosticsH(h, g, KDEx, KDEy, refY)
     end
     # mise
     mise = var(trueH .- hatH, corrected = false);
-    # compute log of hatH for Kl divergence
-    hatHlog = log.(hatH);
-    hatHlog[isinf.(hatHlog)] .= 0;
-    kl = sum(trueH.*(trueHlog .- hatHlog));
+    # KL divergence
+    kl = kl_divergence(trueH, hatH);
 
     return mise, kl
 end
@@ -67,9 +64,11 @@ function diagnosticsF(f, x, y)
     # compute MISE for f
     difference = (trueF .- y).^2;
     mise = mean(difference);
-    hatFlog = log.(y);
-    hatFlog[isinf.(hatFlog)] .= 0;
-    ent = -mean(y.*hatFlog);
+    # entropy
+    function remove_non_finite(x)
+	       return isfinite(x) ? x : zero(x)
+    end
+    ent = -mean(remove_non_finite.(y .* log.(y)));
     return m, v, difference, mise, ent
 end
 

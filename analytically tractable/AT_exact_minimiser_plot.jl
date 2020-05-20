@@ -20,7 +20,7 @@ sigmaG = 0.045^2;
 sigmaF = 0.043^2;
 sigmaH = sigmaF + sigmaG;
 
-α = range(0, stop = 0.95, length = 1000);
+α = range(0, stop = 0.99, length = 1000);
 
 sigma, E = AT_exact_minimiser(sigmaG, sigmaH, α);
 
