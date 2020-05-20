@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using StatsPlots;
 using Distributions;
@@ -45,7 +45,6 @@ Threads.@threads for i=1:length(lambda)
     # mise, mean and variance
     drepWGF = zeros(Nrep, 7);
     @simd for j=1:Nrep
-        println("$i, $j")
         # initial distribution
         x0 = rand(1)*ones(1, Nparticles);
         # run WGF
@@ -53,6 +52,7 @@ Threads.@threads for i=1:length(lambda)
         KDEyWGF = KernelEstimator.kerneldensity(x[end,:], xeval=KDEx, h=bwnormal(x[end,:]));
         m, v, mse95, mise, kl, ent = diagnosticsALL(f, h, g, KDEx, KDEyWGF, refY);
         drepWGF[j, :] = [m, v, mse95 , mise, kl - lambda[i]*ent, ent, kl];
+        println("$i, $j")
     end
     diagnosticsWGF[i, :] = mean(drepWGF,dims = 1);
 end
@@ -61,21 +61,21 @@ end
 # diagnosticsWGF = load("parametersN1000resampling.jld", "diagnosticsWGF");
 
 # pyplot()
-# p1 = plot(lambda, diagnosticsWGF[:, 1], lw = 3, legend = false,
-#         xlabel="lambda", ylabel="mean");
-# hline!([0.5]);
-# p2 = plot(lambda, diagnosticsWGF[:, 2], lw = 3, legend = false,
-#         xlabel="lambda", ylabel="variance");
-# hline!([0.043^2]);
-# p3 = plot(lambda, diagnosticsWGF[:, 3], lw = 3, legend = false,
-#         xlabel="lambda", ylabel="95th MSE");
-# p4 = plot(lambda, diagnosticsWGF[:, 4], lw = 3, legend = false,
-#         xlabel="lambda", ylabel="MISE");
-# p5 = plot(lambda, diagnosticsWGF[:, 5], lw = 3, legend = false,
-#         xlabel="lambda", ylabel="E(rho)");
-# p6 = plot(lambda, diagnosticsWGF[:, 6], lw = 3, legend = false,
-#         xlabel="lambda", ylabel="entropy");
-# plot(p1, p2, p3, p4, p5, p6, layout = (2, 3))
+p1 = plot(lambda, diagnosticsWGF[:, 1], lw = 3, legend = false,
+        xlabel="lambda", ylabel="mean");
+hline!([0.5]);
+p2 = plot(lambda, diagnosticsWGF[:, 2], lw = 3, legend = false,
+        xlabel="lambda", ylabel="variance");
+hline!([0.043^2]);
+p3 = plot(lambda, diagnosticsWGF[:, 3], lw = 3, legend = false,
+        xlabel="lambda", ylabel="95th MSE");
+p4 = plot(lambda, diagnosticsWGF[:, 4], lw = 3, legend = false,
+        xlabel="lambda", ylabel="MISE");
+p5 = plot(lambda, diagnosticsWGF[:, 5], lw = 3, legend = false,
+        xlabel="lambda", ylabel="E(rho)");
+p6 = plot(lambda, diagnosticsWGF[:, 6], lw = 3, legend = false,
+        xlabel="lambda", ylabel="entropy");
+plot(p1, p2, p3, p4, p5, p6, layout = (2, 3))
 
 # savefig(p1, "mean1000.pdf")
 # savefig(p2, "var1000.pdf")
@@ -83,5 +83,5 @@ end
 # savefig(p4, "mise1000.pdf")
 # savefig(p5, "e1000.pdf")
 # savefig(p6, "entropy1000.pdf")
-#save("C:/Users/francesca/Dropbox/parameters.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
-    # "Nparticles", Nparticles, "Niter", Niter)
+save("parameters1000.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
+    "Nparticles", Nparticles, "Niter", Niter)
