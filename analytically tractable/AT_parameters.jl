@@ -36,9 +36,9 @@ KDEx = range(0, stop = 1, length = 1000);
 # number of particles
 Nparticles = 1000;
 # regularisation parameters
-lambda = range(0.001, stop = 1, length = 100);
+lambda = range(0.001, stop = 1, length = 10);
 # number of repetitions
-Nrep = 1000;
+Nrep = 1;
 
 # diagnostics
 diagnosticsWGF = zeros(length(lambda), 7);
@@ -88,5 +88,5 @@ plot(p1, p2, p3, p4, p5, p6, layout = (2, 3))
 # savefig(p4, "mise1000.pdf")
 # savefig(p5, "e1000.pdf")
 # savefig(p6, "entropy1000.pdf")
-save("parameters1000.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
-    "Nparticles", Nparticles, "Niter", Niter)
+#save("parameters1000.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
+#    "Nparticles", Nparticles, "Niter", Niter)

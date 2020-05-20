@@ -29,7 +29,7 @@ g(x, y) = pdf.(Normal(x, sqrt(sigmaG)), y);
 
 # dt and number of iterations
 dt = 1e-03;
-Niter = 100;
+Niter = 1000;
 # samples from h(y)
 M = 1000;
 # values at which evaluate KDE
@@ -59,7 +59,7 @@ phi(t) = KernelEstimator.kerneldensity(t, xeval=KDEx, h=bwnormal(t));
 # function computing diagnostics
 psi(t) = diagnosticsALL(f, h, g, KDEx, t, refY);
 # number of repetitions
-Nrep = 10;
+Nrep = 1;
 Threads.@threads for i=1:size(x0, 1)
     mrep = zeros(Niter-1, Nrep);
     vrep = zeros(Niter-1, Nrep);
@@ -94,7 +94,7 @@ Threads.@threads for i=1:size(x0, 1)
     E[:, i] = mean(Erep, dims = 2);
 end
 # save data
-JLD.save("initial_d100iter.jld", "x0", x0, "m", m, "v", v, "q", q, "misef", misef,
+JLD.save("initial_d1000iter.jld", "x0", x0, "m", m, "v", v, "q", q, "misef", misef,
     "KL", KL, "ent", ent, "E", E);
 # load data
 # d = load("initial_d.jld");
@@ -125,4 +125,4 @@ JLD.save("initial_d100iter.jld", "x0", x0, "m", m, "v", v, "q", q, "misef", mise
 # savefig(p5, "initial_distribution_E.pdf")
 
 
-StatsPlots.plot(2:Niter, KL, lw = 3)
+StatsPlots.plot(10:Niter-1, KL[10:end, :], lw = 3)
