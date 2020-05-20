@@ -94,7 +94,8 @@ Threads.@threads for i=1:size(x0, 1)
     E[:, i] = mean(Erep, dims = 2);
 end
 # save data
-JLD.save("analitically tractable/initial_d1000iter.jld", "x0", x0, "m", m, "v", v, "q", q, "misef", misef, "E", E);
+JLD.save("initial_d100iter.jld", "x0", x0, "m", m, "v", v, "q", q, "misef", misef,
+    "KL", KL, "ent", ent, "E", E);
 # load data
 # d = load("initial_d.jld");
 # m = d["m"];
@@ -122,3 +123,6 @@ JLD.save("analitically tractable/initial_d1000iter.jld", "x0", x0, "m", m, "v", 
 # savefig(p3, "initial_distribution_mse.pdf")
 # savefig(p4, "initial_distribution_mise.pdf")
 # savefig(p5, "initial_distribution_E.pdf")
+
+
+StatsPlots.plot(2:Niter, KL, lw = 3)
