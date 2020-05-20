@@ -216,7 +216,7 @@ function AT_exact_minimiser(sigmaG, sigmaH, lambda)
     variance  = (sigmaH - sigmaG .+ 2*lambda*sigmaG .+
                 sqrt.(sigmaG^2 + sigmaH^2 .- 2*sigmaG*sigmaH*(1 .- 2*lambda)))./
                 (2*(1 .- lambda));
-    KL = 0.5*log.((sigmaG .+ variance)/sigmaH) .+ sigmaH./(sigmaG .+ variance) .- 0.5 .-
+    KL = 0.5*log.((sigmaG .+ variance)/sigmaH) .+ 0.5*sigmaH./(sigmaG .+ variance) .- 0.5 .-
         0.5*lambda .* (1 .+ log.(2*pi*variance));
     return variance, KL
 end
