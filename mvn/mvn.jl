@@ -35,31 +35,20 @@ h(x) = pdf.(MvNormal(mu, sigmaH), x);
 g(x, y) = pdf.(MvNormal(x, sigmaG), y);
 
 # dt and number of iterations
-dt = 1e-02;
-Niter = 100;
+dt = 1e-01;
+Niter = 1000;
 # samples from h(y)
 M = 10000;
 # number of particles
-Nparticles = 10000;
+Nparticles = 1000;
 # regularisation parameter
-lambda = 0.025;
+lambda = 0.05;
 
 # initial distribution
-# x0 = rand(MvNormal(mu, 3*Matrix{Float64}(I, 2, 2)), Nparticles);
-# f0(x) = pdf(MvNormal(mu, 3*Matrix{Float64}(I, 2, 2)), x);
-x0 = 2*rand(2, Nparticles)-1;
+x0 = 2*rand(2, Nparticles) .- 1;
 # run WGF
 x, y = wgf_mvnormal(Nparticles, dt, Niter, lambda, x0, M, mu, sigmaH, sigmaG);
-p1 = scatter(x[Niter, :], y[Niter, :]);
-
-
-# sample = rand(MvNormal(mu, sigmaF), 100000);
-# p2 = scatter(sample[1, :], sample[2, :])
-# sampleH = rand(MvNormal(mu, sigmaH), 100000);
-# p3 = scatter(sampleH[1, :], sampleH[2, :])
-# plot(p1, p2, p3, layout =(1, 3))
-#
-#
+# KDE
 KDEyWGF =  KernelDensity.kde((x[end, :], y[end, :]));
 Xbins = range(-1, stop = 1, length = 1000);
 Ybins = range(-1, stop = 1, length = 1000);
@@ -74,11 +63,3 @@ for i=1:1000
 end
 p2 = heatmap(Xbins, Ybins, fplot);
 plot(p1, p2, layout=(2, 1))
-
-f0plot = zeros(1000, 1000);
-for i=1:1000
-    for j=1:1000
-        f0plot[j, i] = f0([Xbins[i]; Ybins[j]]);
-    end
-end
-heatmap(Xbins, Ybins, f0plot)

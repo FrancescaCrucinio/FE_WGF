@@ -21,7 +21,7 @@ mu = [0, 0];
 sigmaF = [0.1 0; 0 0.1];
 sigmaG = [0.45 0.5; 0.5 0.9];
 sigmaH = sigmaF + sigmaG;
-sigma0 = 0.1*Matrix{Float64}(I, 2, 2);
+sigma0 = Matrix{Float64}(I, 2, 2);
 rhoG =  sigmaG[1, 2]/sqrt(sigmaG[1, 1] * sigmaG[2, 2]);
 
 ifelse(isposdef(sigmaF) & isposdef(sigmaG), "matrices are positive definite",
@@ -32,71 +32,39 @@ h(x) = pdf.(MvNormal(mu, sigmaH), x);
 g(x, y) = pdf.(MvNormal(x, sigmaG), y);
 fg(y) = pdf(MvNormal(mu, sigma0+sigmaG), y);
 # samples from h(y)
-M = 50000;
+M = 100000;
+Nparticles = 100000;
 hSample = rand(MvNormal(mu, sigmaH), M);
 # grid
 N = 100;
 x = range(-1, 1, length = N);
 y = range(-1, 1, length = N);
 
-### function
-fplot = zeros(N, N);
-for i=1:N
-    for j=1:N
-        fplot[j, i] = f([x[i]; y[j]]);
-    end
-end
-p1 = heatmap(x, y, fplot);
-
-### exact drift field
-angles = range(0, stop = 2pi, length = N);
-drift1, drift2 = drift_exact_mvn_mean0(sigma0, sigmaG, sigmaH, cos.(angles), sin.(angles));
-p2 = quiver(cos.(angles), sin.(angles), quiver=(diag(drift1, 0), diag(drift2, 0)));
-
-### exact drift
-drift1, drift2 = drift_exact_mvn_mean0(sigma0, sigmaG, sigmaH, x, y);
-p3 = heatmap(x, y, drift1);
-p4 = heatmap(x, y, drift2);
-
 ### approximate drift
-x0 = rand(MvNormal(mu, sigma0), 1000);
+x0 = rand(MvNormal(mu, sigma0), Nparticles);
 # compute h^N_{n}
 hN = zeros(M, 1);
 den_exact = zeros(M, 1);
 for j=1:M
-    # define Gaussian pdf
-    phi(t) = pdf(MvNormal(hSample[:, j], sigmaG), t);
-    # apply it to c, y
-    hN[j] = mean(mapslices(phi, x0, dims = 1));
+    hN[j] = mean(pdf(MvNormal(hSample[:, j], sigmaG), x0));
     den_exact[j] = fg(hSample[:, j]);
 end
-p5 = plot(sort!(hN, dims = 1), sort!(den_exact, dims = 1));
+plot(sort!(hN, dims = 1), sort!(den_exact, dims = 1))
 
 driftX = zeros(N, N);
 driftY = zeros(N, N);
-prec = zeros(N, N);
 Threads.@threads for i=1:N
     @simd for j=1:N
         # precompute common quantities for gradient
-        # define Gaussian pdf
-        # psi(t) = pdf(MvNormal([x[i]; y[j]], sigmaG), t);
-        # prec[j, i] =  mean(mapslices(psi, hSample', dims = 2)./hN) * (1 - rhoG^2);
-        prec2 = zeros(M, 1);
-        gradientX = zeros(M, 1);
-        gradientY = zeros(M, 1);
-        for k=1:M
-            prec2[k] = pdf(MvNormal([x[i]; y[j]], sigmaG), hSample[:, k])/(1 - rhoG^2);
-            gradientX[k] = prec2[k] * ((hSample[1, k] - x[i])/sigmaG[1, 1] -
-                rhoG*(hSample[2, k] - y[j])/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
-            gradientY[k] = prec2[k] * ((hSample[2, k] - y[j])/sigmaG[2, 2] -
-                rhoG*(hSample[1, k] - x[i])/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
-        end
+        prec = pdf(MvNormal([x[i]; y[j]], sigmaG), hSample)/(1 - rhoG^2);
+        gradientX = prec .* ((hSample[1, :] .- x[i])/sigmaG[1, 1] -
+            rhoG*(hSample[2, :] .- y[j])/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
+        gradientY = prec .* ((hSample[2, :] .- y[j])/sigmaG[2, 2] -
+            rhoG*(hSample[1, :] .- x[i])/sqrt(sigmaG[1, 1]*sigmaG[2, 2]));
         driftX[j, i] = mean(gradientX./hN);
-        driftY[i, j] = mean(gradientY./hN);
+        driftY[j, i] = mean(gradientY./hN);
     end
 end
-p6 = heatmap(x, y, prec);
-p7 = heatmap(x, y, driftX);
-p8 = heatmap(x, y, driftY);
-
-plot(p3, p4, p7, p8, layout=(2, 2))
+p3 = heatmap(x, y, driftX);
+title!("N=$Nparticles, M=$M")
+p4 = heatmap(x, y, driftY);
