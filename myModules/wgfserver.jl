@@ -7,30 +7,29 @@ export wgf_AT
 export wgf_gaussian_mixture
 
 #=
- WGF for analytically tractable example (approximated drift)
+ WGF for analytically tractable example
 OUTPUTS
 1 - particle locations
 2 - drift evolution
 INPUTS
 'N' number of particles
-'Niter' number of time steps
+'dt' discretisation step
+'Niter' number of iterations
 'lambda' regularisation parameter
 'x0' user selected initial distribution
 'M' number of samples from h(y) to be drawn at each iteration
 =#
-function wgf_AT(N, Niter, lambda, x0, M)
-    # time step
-    dt = 1/Niter;
+function wgf_AT(N, dt, Niter, lambda, x0, M)
     # initialise a matrix x storing the particles
     x = zeros(Niter, N);
     # initial distribution is given as input:
     x[1, :] = x0;
     # initialise a matrix drift storing the drift
     drift = zeros(Niter-1, N);
-    # get samples from h(y)
-    y = rand(Normal(0.5, sqrt(0.043^2 + 0.045^2)), M);
 
     for n=1:(Niter-1)
+        # get samples from h(y)
+        y = rand(Normal(0.5, sqrt(0.043^2 + 0.045^2)), M);
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M
@@ -54,24 +53,23 @@ OUTPUTS
 2 - drift evolution
 INPUTS
 'N' number of particles
-'Niter' number of time steps
+'dt' discretisation step
+'Niter' number of iterations
 'lambda' regularisation parameter
 'x0' user selected initial distribution
 'M' number of samples from h(y) to be drawn at each iteration
 =#
-function wgf_gaussian_mixture(N, Niter, lambda, x0, M)
-    # time step
-    dt = 1/Niter;
+function wgf_gaussian_mixture(N, dt, Niter, lambda, x0, M)
     # initialise a matrix x storing the particles
     x = zeros(Niter, N);
     # initial distribution is given as input:
     x[1, :] = x0;
     # initialise a matrix drift storing the drift
     drift = zeros(Niter-1, N);
-    # get samples from h(y)
-    y = Ysample_gaussian_mixture(M);
 
     for n=1:(Niter-1)
+        # get samples from h(y)
+        y = Ysample_gaussian_mixture(M);
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M
