@@ -35,19 +35,20 @@ h(x) = pdf.(MvNormal(mu, sigmaH), x);
 g(x, y) = pdf.(MvNormal(x, sigmaG), y);
 
 # dt and number of iterations
-dt = 1e-01;
-Niter = 1000;
+dt = 1e-02;
+Niter = 1500;
 # samples from h(y)
-M = 10000;
+M = 5000;
 # number of particles
-Nparticles = 1000;
+Nparticles = 5000;
 # regularisation parameter
-lambda = 0.05;
+lambda = 0.005;
 
 # initial distribution
 x0 = 2*rand(2, Nparticles) .- 1;
 # run WGF
 x, y = wgf_mvnormal(Nparticles, dt, Niter, lambda, x0, M, mu, sigmaH, sigmaG);
+p3 = scatter(x[end, :], y[end, :]);
 # KDE
 KDEyWGF =  KernelDensity.kde((x[end, :], y[end, :]));
 Xbins = range(-1, stop = 1, length = 1000);
@@ -62,4 +63,5 @@ for i=1:1000
     end
 end
 p2 = heatmap(Xbins, Ybins, fplot);
-plot(p1, p2, layout=(2, 1))
+p = plot(p1, p2, layout=(2, 1));
+savefig(p, "mvn.pdf");
