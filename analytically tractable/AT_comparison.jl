@@ -69,14 +69,14 @@ Threads.@threads for i=1:length(Nparticles)
             KDEySMC = weightedKDE(xSMC[end, :], W[end, :], bw, KDEx);
         end
         mSMC, vSMC, _, miseSMC, _ = diagnosticsF(f, KDEx, KDEySMC);
-        drepSMC[j, :] = [mSMC, vSMC, miseSMC];
+        drepSMC[j, :] = [mSMC vSMC miseSMC];
         # run WGF
         trepWGF[j] = @elapsed begin
             xWGF, drift = wgf_AT(Nparticles[i], dt, Niter, lambda, x0, M);
             KDEyWGF =  KernelEstimator.kerneldensity(xWGF[end,:], xeval=KDEx, h=bwnormal(xWGF[end,:]));
         end
         mWGF, vWGF, _, miseWGF, _ = diagnosticsF(f, KDEx, KDEyWGF);
-        drepWGF[j, :] = [mWGF, vWGF, miseWGF];
+        drepWGF[j, :] = [mWGF vWGF miseWGF];
     end
     tSMC[i] = mean(trepSMC);
     tWGF[i] = mean(trepWGF);
@@ -85,20 +85,20 @@ Threads.@threads for i=1:length(Nparticles)
 end
 
 
-save("parameters.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
-    "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
-     "Nparticles", Nparticles, "Niter", Niter);
-# p1 = plot(Nparticles, [tSMC, tWGF], lw = 3, xlabel="N", ylabel="Runtime",
-#         label = ["SMC" "WGF"], legend=:topleft);
-# p2 = plot(Nparticles, [diagnosticsSMC[:, 1], diagnosticsWGF[:, 1]],
-#     lw = 3, xlabel="N", ylabel="mean", legend = false);
-# hline!([0.5]);
-# p3 = plot(Nparticles, [diagnosticsSMC[:, 2], diagnosticsWGF[:, 2]],
-#     lw = 3, legend = false, xlabel="N", ylabel="variance");
-# hline!([0.043^2]);
-# p4 = plot(Nparticles, [diagnosticsSMC[:, 3], diagnosticsWGF[:, 3]],
-#     lw = 3, legend = false, xlabel="N", ylabel="MISE");
-# plot(p1, p2, p3, p4, layout = (2, 2))
+# save("parameters.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
+#     "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
+#      "Nparticles", Nparticles, "Niter", Niter);
+p1 = plot(Nparticles, [tSMC, tWGF], lw = 3, xlabel="N", ylabel="Runtime",
+        label = ["SMC" "WGF"], legend=:topleft);
+p2 = plot(Nparticles, [diagnosticsSMC[:, 1], diagnosticsWGF[:, 1]],
+    lw = 3, xlabel="N", ylabel="mean", legend = false);
+hline!([0.5]);
+p3 = plot(Nparticles, [diagnosticsSMC[:, 2], diagnosticsWGF[:, 2]],
+    lw = 3, legend = false, xlabel="N", ylabel="variance");
+hline!([0.043^2]);
+p4 = plot(Nparticles, [diagnosticsSMC[:, 3], diagnosticsWGF[:, 3]],
+    lw = 3, legend = false, xlabel="N", ylabel="MISE");
+plot(p1, p2, p3, p4, layout = (2, 2))
 #
 # savefig(p1, "comparison_runtime.pdf")
 # savefig(p2, "comparison_mean.pdf")
