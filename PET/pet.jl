@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -14,10 +14,15 @@ using Interpolations;
 # custom packages
 using diagnostics;
 using wgf;
-using samplers;
 
+# entropy function
+function remove_non_finite(x)
+       return isfinite(x) ? x : zero(x)
+end
 # Shepp Logan phantom
 phantom = readdlm("PET/phantom.txt", ',', Float64);
+# entropy
+phantom_ent = -mean(remove_non_finite.(phantom .* log.(phantom)));
 pixels = size(phantom);
 # data image
 sinogram = readdlm("PET/sinogram.txt", ',', Float64)
@@ -31,7 +36,7 @@ xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # dt and number of iterations
 dt = 1e-03;
-Niter = 200;
+Niter = 1000;
 # samples from h(y)
 M = 5000;
 # number of particles
