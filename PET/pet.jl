@@ -58,9 +58,14 @@ x, y = wgf_pet(Nparticles, dt, Niter, lambda, sinogram, M, phi, xi, sigma);
 KDEyWGF =  KernelDensity.kde((y[end, :], x[end, :]));
 Xbins = range(-1 + 1/pixels[1], stop = 1 - 1/pixels[1], length = pixels[1]);
 Ybins = range(-1 + 1/pixels[2], stop = 1 - 1/pixels[2], length = pixels[2]);
-res = pdf(KDEyWGF, Ybins, Xbins);
-p = heatmap(Xbins, Ybins, res)
+petWGF = pdf(KDEyWGF, Ybins, Xbins);
+# entropy
+petWGF_ent = -mean(remove_non_finite.(petWGF .* log.(petWGF)));
+
+p = heatmap(Xbins, Ybins, petWGF)
+
 
 # savefig(p, "pet.pdf")
 
-mise = (norm(res - phantom).^2)/length(res)
+miseWGF = (norm(petWGF - phantom).^2)/length(petWGF);
+miseSMCEMS = (norm(petSMCEMS - phantom).^2)/length(petSMCEMS);
