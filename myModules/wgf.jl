@@ -180,13 +180,13 @@ function wgf_mvnormal(N, dt, Niter, lambda, x0, M, mu, sigmaH, sigmaG)
         hSample = rand(MvNormal(mu, sigmaH), M);
         # Compute h^N_{n}
         hN = zeros(M, 1);
-        for j=1:M
+        Threads.@threads for j=1:M
             hN[j] = mean(pdf(MvNormal(hSample[:, j], sigmaG), transpose([x[n, :] y[n, :]])));
         end
         # gradient and drift
         driftX = zeros(N, 1);
         driftY = zeros(N, 1);
-        for i=1:N
+        Threads.@threads for i=1:N
             # precompute common quantities for gradient
             prec =pdf(MvNormal([x[n, i]; y[n, i]], sigmaG), hSample)/(1 - rhoG^2);
             gradientX = prec .* ((hSample[1, :] .- x[n, i])/sigmaG[1, 1] -
