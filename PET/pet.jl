@@ -24,6 +24,10 @@ phantom = readdlm("PET/phantom.txt", ',', Float64);
 # entropy
 phantom_ent = -mean(remove_non_finite.(phantom .* log.(phantom)));
 pixels = size(phantom);
+# SMC-EMS reconstruction
+petSMCEMS = readdlm("PET/pet_smcems.txt", ',', Float64);
+# entropy
+petSMCEMS_ent = -mean(remove_non_finite.(petSMCEMS .* log.(petSMCEMS)));
 # data image
 sinogram = readdlm("PET/sinogram.txt", ',', Float64)
 # number of angles
