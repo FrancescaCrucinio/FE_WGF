@@ -10,6 +10,7 @@ using Random;
 using JLD;
 using LaTeXStrings;
 using QuadGK;
+using LinearAlgebra;
 # custom packages
 using diagnostics;
 using wgf;
@@ -30,17 +31,17 @@ g(x, y) = ((y[1] .- x[1]).^2 .+ (y[2] .- x[2]).^2)./
 
 # dt and number of iterations
 dt = 1e-03;
-Niter = 2000;
+Niter = 100;
 
 # samples from h(y)
 M = 1000;
 # number of particles
 Nparticles = 1000;
 # regularisation parameter
-lambda = 0.05;
+lambda = 0.01;
 
 # initial distribution
-x0 = rand(2, Nparticles);
+x0 = rand(MvNormal([0, 0],  Matrix{Float64}(I, 2, 2)), Nparticles);
 # run WGF
 x, y = wgf_2D_analytic(Nparticles, dt, Niter, lambda, x0, M);
 KDEyWGF =  KernelDensity.kde((x[end, :], y[end, :]));

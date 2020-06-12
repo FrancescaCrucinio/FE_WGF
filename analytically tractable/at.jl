@@ -34,9 +34,9 @@ M = 1000;
 # values at which evaluate KDE
 KDEx = range(-0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 10000;
+Nparticles = 1000;
 # regularisation parameter
-lambda = 0.025;
+lambda = 0.01;
 
 x0 = 0.5*ones(1, Nparticles);
 # x0 = rand(1, Nparticles);
