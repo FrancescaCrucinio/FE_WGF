@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -40,13 +40,13 @@ xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # dt and number of iterations
 dt = 1e-03;
-Niter = 1000;
+Niter = 500;
 # samples from h(y)
-M = 5000;
+M = 20000;
 # number of particles
-Nparticles = 5000;
+Nparticles = 20000;
 # regularisation parameter
-lambda = 0.1;
+lambda = 0.01;
 # variance of normal describing alignment
 sigma = 0.02;
 

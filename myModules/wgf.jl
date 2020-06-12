@@ -114,17 +114,19 @@ function wgf_pet(N, dt, Niter, lambda, noisyI, M, phi, xi, sigma)
     # initialise two matrices x, y storing the particles
     x = zeros(Niter, N);
     y = zeros(Niter, N);
-    # sample random particles for x in [-1, 1] for time step n = 1
-    x[1, :] = 2 * rand(1, N) .- 1;
-    # sample random particles for y in [-1, 1] for time step n = 1
-    y[1, :] = 2 * rand(1, N) .- 1;
-
+    # # sample random particles for x in [-1, 1] for time step n = 1
+    # x[1, :] = 2 * rand(1, N) .- 1;
+    # # sample random particles for y in [-1, 1] for time step n = 1
+    # y[1, :] = 2 * rand(1, N) .- 1;
+    x0 = rand(MvNormal([0, 0], Matrix{Float64}(I, 2, 2)), N);
+    x[1, :] = x0[1, :];
+    y[1, :] = x0[2, :];
     for n=1:(Niter-1)
         # get sample from (y)
         hSample = histogram2D_sampler(noisyI, phi, xi, M);
         # Compute h^N_{n}
         hN = zeros(M, 1);
-        for j=1:M
+        Threads.@threads for j=1:M
             hN[j] = mean(pdf.(Normal.(0, sigma), x[n, :] * cos(hSample[j, 1]) .+
                     y[n, :] * sin(hSample[j, 1]) .- hSample[j, 2])
                     );
@@ -132,7 +134,7 @@ function wgf_pet(N, dt, Niter, lambda, noisyI, M, phi, xi, sigma)
         # gradient and drift
         driftX = zeros(N, 1);
         driftY = zeros(N, 1);
-        for i=1:N
+        Threads.@threads for i=1:N
             # precompute common quantities for gradient
             prec = -pdf.(Normal.(0, sigma), x[n, i] * cos.(hSample[:, 1]) .+
                     y[n, i] * sin.(hSample[:, 1]) .- hSample[:, 2]) .*

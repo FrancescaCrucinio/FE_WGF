@@ -1,5 +1,5 @@
 # push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using StatsPlots;
 using Distributions;
@@ -35,7 +35,7 @@ KDEx = range(0, stop = 1, length = 1000);
 # number of particles
 Nparticles = 500;
 # regularisation parameters
-lambda = range(0.001, stop = 1, length = 100);
+lambda = range(0.001, stop = 0.1, length = 100);
 # number of repetitions
 Nrep = 1000;
 
@@ -58,5 +58,5 @@ Threads.@threads for i=1:length(lambda)
 end
 
 
-save("parameters500.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
+save("parameters500zoom.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
    "Nparticles", Nparticles, "Niter", Niter)
