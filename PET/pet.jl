@@ -73,3 +73,6 @@ miseSMCEMS = (norm(petSMCEMS - phantom).^2)/length(petSMCEMS);
 
 save("pet15062020.jld", "lambda", lambda, "x", x,
    "y", y, "Niter", Niter, "Nparticles", Nparticles, "M", M, "dt", dt);
+
+x = load("PET/pet15062020.jld", "x");
+y = load("PET/pet15062020.jld", "y");
