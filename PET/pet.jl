@@ -11,6 +11,7 @@ using LinearAlgebra;
 using DelimitedFiles;
 using KernelDensity;
 using Interpolations;
+using JLD;
 # custom packages
 using diagnostics;
 using wgf;
@@ -69,3 +70,6 @@ p = heatmap(Xbins, Ybins, petWGF)
 
 miseWGF = (norm(petWGF - phantom).^2)/length(petWGF);
 miseSMCEMS = (norm(petSMCEMS - phantom).^2)/length(petSMCEMS);
+
+x = load("PET/pet15062020.jld", "x");
+y = load("PET/pet15062020.jld", "y");
