@@ -47,10 +47,10 @@
 \DeclareMathOperator{\N}{\mathcal{N}}
 \DeclareMathOperator{\ent}{ent}
 \newcommand{\lp}{\ensuremath{\mathbb{L}_p}}
-\def\bwN{s_N}
+\def\real{\mathbb{R}}
 \newcommand{\norm}[2]{\ensuremath{\Vert #1 \Vert_{#2}}}
 \newcommand{\supnorm}[1]{\norm{#1}{\infty}}
-\newcommand{\variation}[1]{\ensuremath{\frac{\delta E}{\delta #1}}}
+\newcommand{\variation}[1]{\ensuremath{\frac{\delta F}{\delta #1}}}
 
 
 %%% arrows
@@ -175,13 +175,80 @@ How?
 
 \begin{frame}{Gradient Flows}
 \centering
-\includegraphics[width=0.75\textwidth]{gf}
+\includegraphics[width=0.7\textwidth]{gf}
+\begin{align*}
+x^\prime(t)=-\nabla F(x(t))
+\end{align*}
+\end{frame}
+
+\begin{frame}{Wasserstein Gradient Flows (I)}
+Take the manifold
+\begin{align*}
+\mathcal{P}_{2}^{ac}(\real^{d})=\left\lbrace \mu\in\mathcal{P}(\real^{d}):\int\norm{x}{2}^{2}\ d\mu(x)<\infty, \mu<<\mathcal{L}\right\rbrace 
+\end{align*}
+with distance
+\begin{align*}
+W_{2}(\mu,\nu):=\left(\inf_{\pi\in\Pi(\mu,\nu)}\int\norm{x-y}{2}^{2}\ d\pi(x,y)\right)^{1/2}
+\end{align*}
 \end{frame}
 
 
+\begin{frame}{Wasserstein Gradient Flows (II)}
+Curves in $\left(\mathcal{P}_{2}^{ac}(\real^{d}), W_2\right)$ are geodetics
+\begin{align*}
+\mu_s=((1-s)Id+st_{\mu}^{\nu})_{\#}\mu
+\end{align*}
+where $t_{\mu}^{\nu}$ is the unique transport map between $\mu$ and $\nu$ and $T_{\#}\mu$ denotes the push-forward measure
+\begin{align*}
+T_{\#}\mu(A)=\mu(T^{-1}(A)).
+\end{align*}
+\end{frame}
+
+\begin{frame}{Wasserstein Gradient Flows (III)}
+
+For $F:M\subset \real^d\mapsto \real$ the gradient flow equation is
+\begin{align*}
+x^\prime(t)=-\nabla F(x(t)).
+\end{align*}
+
+For $F:\mathcal{P}_{2}^{ac}(\real^{d})\mapsto \real$
+we have\footnote{Jordan, Kinderlehrer, Otto (1998)}
+\begin{align}
+\label{eq:pde}
+\partial_{t}\rho_{t}=-\nabla\cdot\left(\rho_{t}\variation{\rho_t}\right)
+\end{align}
+with $\variation{\rho_t}:=\frac{d}{d\epsilon}F(\rho+\epsilon\chi)_{|\epsilon=0}$.
+\end{frame}
+
+\begin{frame}{When is \eqref{eq:pde} well-behaved?}
+We need:
+\begin{itemize}
+\item $F$ continuous, $F(\rho)<+\infty$ for some $\rho$
+\item $F$ $\lambda-$convex: exists $\lambda\geq0$ s.t.
+\begin{align*}
+F\left(((1-s)Id+st_{\mu}^{\nu})_{\#}\mu\right)\leq(1-s)F(\mu)+sF(\nu)-\frac{\lambda}{2}s(1-s)W_{2}^{2}(\nu,\mu)
+\end{align*}
+\item $F$ is coercive: exists $r>0$ s.t.
+\begin{align*}
+\inf\left\lbrace F(\rho): \rho\in\mathcal{P}_{2}^{ac}(\real^{d}), \ \int\norm{x}{2}^{2}\ d\rho(x)\leq r\right\rbrace>-\infty
+\end{align*}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Then...}
+The gradient flow PDE \eqref{eq:pde} has a unique solution for a given initial condition $\rho_0$.
+
+\vspace{5mm}
+
+For two initial conditions $\rho_0^1, \rho_0^2$ we have the estimate
+\begin{align*}
+W_{2}(\rho_{t}^{1},\rho_{t}^{2})\leq e^{-\lambda t}W_{2}(\rho_{0}^{1},\rho_{0}^{2}).
+\end{align*}
+\end{frame}
+
 \begin{frame}{Gradient Flow for FIE - Assumptions}
 \begin{equation*}
-\mu(dy) = \int_{\X} \rho(dx) K(y\mid x)\qquad \forall y \in \Y,
+\mu(dy) = \int_{\X} \rho(dx) K(y\mid x)\qquad \forall y \in \Y, 
 \end{equation*}
 
 
@@ -198,7 +265,7 @@ is concave for some $\lambda>0$ for all $y\in\Y$.
 
 \begin{frame}{Gradient Flow for FIE}
 \begin{equation*}
-E(\rho) := \KL(\mu,\rho K)-\alpha\ent(\rho)
+F(\rho) := \KL(\mu,\rho K)-\alpha\ent(\rho)
 \end{equation*}
 is continuous, coercive and $\lambda$ geodesically convex with $\lambda=0$ and has first variation
 \begin{equation*}
@@ -231,7 +298,7 @@ dX_{t}=\int\mu\left(dy\right)\frac{\nabla K(X_{t},y)}{\rho_{t}K(y)}dt+\sqrt{2\al
 \end{itemize}
 \end{frame}
 
-\begin{frame}{SDE -Implementation}
+\begin{frame}{SDE - Implementation}
 \begin{itemize}
 \item discretisation in space: take $N$ copies of the SDE and use the resulting empirical measure instead of $\rho_t$
 \begin{align*}
@@ -249,4 +316,10 @@ X_{n+1}^{i,N}& =X_{n}^{i,N}+\int\mu\left(dy\right)\frac{\nabla K(X_{n}^{i,N},y)}
 
 \end{frame}
 
+\begin{frame}{A second Toy Example}
+
+\end{frame}
+\begin{frame}{PET}
+
+\end{frame}
 \end{document}
