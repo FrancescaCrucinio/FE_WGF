@@ -11,6 +11,7 @@ using LinearAlgebra;
 using DelimitedFiles;
 using KernelDensity;
 using Interpolations;
+using JLD;
 # custom packages
 using diagnostics;
 using wgf;
@@ -40,13 +41,13 @@ xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # dt and number of iterations
 dt = 1e-03;
-Niter = 500;
+Niter = 1500;
 # samples from h(y)
 M = 20000;
 # number of particles
 Nparticles = 20000;
 # regularisation parameter
-lambda = 0.01;
+lambda = 0.0005;
 # variance of normal describing alignment
 sigma = 0.02;
 
@@ -55,7 +56,7 @@ x, y = wgf_pet(Nparticles, dt, Niter, lambda, sinogram, M, phi, xi, sigma);
 
 # KDE
 # swap x and y for KDE function (scatter plot shows that x, y are correct)
-KDEyWGF =  KernelDensity.kde((y[end, :], x[end, :]));
+KDEyWGF =  KernelDensity.kde((y[100, :], x[100, :]));
 Xbins = range(-1 + 1/pixels[1], stop = 1 - 1/pixels[1], length = pixels[1]);
 Ybins = range(-1 + 1/pixels[2], stop = 1 - 1/pixels[2], length = pixels[2]);
 petWGF = pdf(KDEyWGF, Ybins, Xbins);
@@ -69,3 +70,6 @@ p = heatmap(Xbins, Ybins, petWGF)
 
 miseWGF = (norm(petWGF - phantom).^2)/length(petWGF);
 miseSMCEMS = (norm(petSMCEMS - phantom).^2)/length(petSMCEMS);
+
+save("pet15062020.jld", "lambda", lambda, "x", x,
+   "y", y, "Niter", Niter, "Nparticles", Nparticles, "M", M, "dt", dt);
