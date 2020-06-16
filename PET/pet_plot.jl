@@ -12,9 +12,6 @@ using DelimitedFiles;
 using KernelDensity;
 using Interpolations;
 using JLD;
-# custom packages
-using diagnostics;
-using wgf;
 
 # entropy function
 function remove_non_finite(x)
@@ -39,20 +36,34 @@ phi = range(0, stop = 2*pi, length = nphi);
 offsets = floor(size(sinogram, 1)/2);
 xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
-# dt and number of iterations
-dt = 1e-03;
-Niter = 1500;
-# samples from h(y)
-M = 20000;
-# number of particles
-Nparticles = 20000;
-# regularisation parameter
-lambda = 0.0005;
-# variance of normal describing alignment
-sigma = 0.02;
+x = load("PET/pet15062020.jld", "x");
+y = load("PET/pet15062020.jld", "y");
+Niter = load("PET/pet15062020.jld", "Niter");
 
-# WGF
-x, y = wgf_pet(Nparticles, dt, Niter, lambda, sinogram, M, phi, xi, sigma);
 
-save("pet15062020.jld", "lambda", lambda, "x", x,
-   "y", y, "Niter", Niter, "Nparticles", Nparticles, "M", M, "dt", dt);
+# select which steps to show
+showIter = [1, 10, 50, 100, 500];
+Npic = 5;
+# mise
+miseWGF = zeros(1, Npic);
+petWGF_ent = zeros(1, Npic);
+# plots
+p = repeat([plot(1)], Npic+1);
+# grid
+Xbins = range(-0.75+ 1/pixels[1], stop = 0.75 - 1/pixels[1], length = pixels[1]);
+Ybins = range(-0.75 + 1/pixels[2], stop = 0.75 - 1/pixels[2], length = pixels[2]);
+
+for n=1:Npic
+    # KDE
+    # swap x and y for KDE function (scatter plot shows that x, y are correct)
+    KDEyWGF =  KernelDensity.kde((y[showIter[n], :], x[showIter[n], :]));
+    petWGF = pdf(KDEyWGF, Ybins, Xbins);
+    p[n] = heatmap(Xbins, Ybins, petWGF, legend = :none);
+
+    # mise
+    miseWGF[n] = (norm(petWGF - phantom).^2)/length(petWGF);
+    # entropy
+    petWGF_ent[n] = -mean(remove_non_finite.(petWGF .* log.(petWGF)));
+end
+p[end] = heatmap(Ybins, Xbins, reverse(phantom, dims=1), legend = :none);
+plot(p..., layout=(2, 3), showaxis=false)

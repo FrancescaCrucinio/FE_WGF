@@ -13,7 +13,7 @@ diagnosticsWGF500 = load("analytically tractable/parameters500.jld", "diagnostic
 diagnosticsWGF1000 = load("analytically tractable/parameters1000.jld", "diagnosticsWGF");
 diagnosticsWGF5000 = load("analytically tractable/parameters5000.jld", "diagnosticsWGF");
 
-labels = ["N=500" "N=1000"];
+labels = ["N=500" "N=1000" "N=5000"];
 pyplot()
 p1 = plot(lambda, [diagnosticsWGF500[:, 1] diagnosticsWGF1000[:, 1] diagnosticsWGF5000[:, 1]], lw = 3, label = labels,
         xlabel=L"$\alpha$", ylabel=L"$\hat{m}_t$", xguidefontsize=10, yguidefontsize=10, legendfontsize=10);

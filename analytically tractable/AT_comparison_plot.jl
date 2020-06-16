@@ -12,24 +12,29 @@ using Random;
 using JLD;
 using LaTeXStrings;
 
-Nparticles = load("analytically tractable/comparison_delta.jld", "Nparticles");
-tSMC = load("analytically tractable/comparison_delta.jld", "tSMC");
-tWGF = load("analytically tractable/comparison_delta.jld", "tWGF");
-diagnosticsSMC = load("analytically tractable/comparison_delta.jld", "diagnosticsSMC");
-diagnosticsWGF = load("analytically tractable/comparison_delta.jld", "diagnosticsWGF");
+Nparticles = load("analytically tractable/comparison_delta16062020.jld", "Nparticles");
+tSMC = load("analytically tractable/comparison_delta16062020.jld", "tSMC");
+tWGF = load("analytically tractable/comparison_delta16062020.jld", "tWGF");
+diagnosticsSMC = load("analytically tractable/comparison_delta16062020.jld", "diagnosticsSMC");
+diagnosticsWGF = load("analytically tractable/comparison_delta16062020.jld", "diagnosticsWGF");
 
-p1 = plot(Nparticles, [tSMC tWGF], lw = 3, xlabel="N", ylabel="Runtime",
-        label = ["SMC" "WGF"], legend=:topleft);
-p2 = plot(Nparticles, [diagnosticsSMC[:, 1] diagnosticsWGF[:, 1]],
-    lw = 3, xlabel="N", ylabel="mean", legend = false);
-hline!([0.5]);
-p3 = plot(Nparticles, [diagnosticsSMC[:, 2] diagnosticsWGF[:, 2]],
-    lw = 3, legend = false, xlabel="N", ylabel="variance");
-hline!([0.043^2]);
-p4 = plot(Nparticles, [diagnosticsSMC[:, 3] diagnosticsWGF[:, 3]],
-    lw = 3, legend = false, xlabel="N", ylabel="MISE");
-plot(p1, p2, p3, p4, layout = (2, 2))
-#
+markers = [:circle :rect :diamond :xcross];
+# markers = [":circle" ":rect" ":diamond" ":xcross" ":star5"];
+labels = ["N=100" "N=500" "N=1000" "N=5000"];
+# labels = ["N=100" "N=500" "N=1000" "N=5000" "N=10000"];
+pyplot()
+p = plot([tSMC tWGF], [diagnosticsSMC[:, 3] diagnosticsWGF[:, 3]],
+    lw = 3, label = ["SMC" "WGF"], xlabel="Runtime (s)", ylabel="MISE",
+    xaxis=:log, yaxis=:log, color = [1 2]);
+for i=1:length(tSMC)
+    scatter!(p, [tSMC[i]], [diagnosticsSMC[i, 3]],
+        markersize = 9, label = labels[i], color = :black, marker = markers[i],
+        markerstrokewidth=0);
+    scatter!(p, [tSMC[i] tWGF[i]], [diagnosticsSMC[i, 3] diagnosticsWGF[i, 3]],
+        markersize = 9, label = ["" ""], color = [1 2], marker = markers[i],
+        markerstrokewidth=0);
+end
+p
 # # savefig(p1, "comparison_runtime.pdf")
 # # savefig(p2, "comparison_mean.pdf")
 # # savefig(p3, "comparison_var.pdf")
