@@ -12,20 +12,22 @@ using Random;
 using JLD;
 using LaTeXStrings;
 
-Nparticles = load("analytically tractable/comparison_delta16062020.jld", "Nparticles");
-tSMC = load("analytically tractable/comparison_delta16062020.jld", "tSMC");
-tWGF = load("analytically tractable/comparison_delta16062020.jld", "tWGF");
-diagnosticsSMC = load("analytically tractable/comparison_delta16062020.jld", "diagnosticsSMC");
-diagnosticsWGF = load("analytically tractable/comparison_delta16062020.jld", "diagnosticsWGF");
+Nparticles = load("analytically tractable/comparison_delta.jld", "Nparticles");
+tSMC = load("analytically tractable/comparison_delta.jld", "tSMC");
+tWGF = load("analytically tractable/comparison_delta.jld", "tWGF");
+diagnosticsSMC = load("analytically tractable/comparison_delta.jld", "diagnosticsSMC");
+diagnosticsWGF = load("analytically tractable/comparison_delta.jld", "diagnosticsWGF");
+qSMC = load("analytically tractable/comparison_delta.jld", "qdistSMC");
+qWGF = load("analytically tractable/comparison_delta.jld", "qdistWGF");
 
-markers = [:circle :rect :diamond :xcross];
-# markers = [":circle" ":rect" ":diamond" ":xcross" ":star5"];
-labels = ["N=100" "N=500" "N=1000" "N=5000"];
-# labels = ["N=100" "N=500" "N=1000" "N=5000" "N=10000"];
+# markers = [:circle :rect :diamond :xcross];
+markers = [:circle :rect :diamond :xcross :star5];
+# labels = ["N=100" "N=500" "N=1000" "N=5000"];
+labels = ["N=100" "N=500" "N=1000" "N=5000" "N=10000"];
 pyplot()
 p = plot([tSMC tWGF], [diagnosticsSMC[:, 3] diagnosticsWGF[:, 3]],
     lw = 3, label = ["SMC" "WGF"], xlabel="Runtime (s)", ylabel="MISE",
-    xaxis=:log, yaxis=:log, color = [1 2]);
+    xaxis=:log, color = [1 2], ylims = (-1.5, +Inf));
 for i=1:length(tSMC)
     scatter!(p, [tSMC[i]], [diagnosticsSMC[i, 3]],
         markersize = 9, label = labels[i], color = :black, marker = markers[i],
