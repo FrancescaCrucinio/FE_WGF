@@ -1,4 +1,4 @@
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 # push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # push!(LOAD_PATH, "/homes/crucinio/WGF/myModules")
 # Julia packages
@@ -12,13 +12,13 @@ using Random;
 using JLD;
 using LaTeXStrings;
 
-Nparticles = load("analytically tractable/comparison_delta.jld", "Nparticles");
-tSMC = load("analytically tractable/comparison_delta.jld", "tSMC");
-tWGF = load("analytically tractable/comparison_delta.jld", "tWGF");
-diagnosticsSMC = load("analytically tractable/comparison_delta.jld", "diagnosticsSMC");
-diagnosticsWGF = load("analytically tractable/comparison_delta.jld", "diagnosticsWGF");
-qSMC = load("analytically tractable/comparison_delta.jld", "qdistSMC");
-qWGF = load("analytically tractable/comparison_delta.jld", "qdistWGF");
+Nparticles = load("analytically tractable/comparison_uniform17062020.jld", "Nparticles");
+tSMC = load("analytically tractable/comparison_uniform17062020.jld", "tSMC");
+tWGF = load("analytically tractable/comparison_uniform17062020.jld", "tWGF");
+diagnosticsSMC = load("analytically tractable/comparison_uniform17062020.jld", "diagnosticsSMC");
+diagnosticsWGF = load("analytically tractable/comparison_uniform17062020.jld", "diagnosticsWGF");
+# qSMC = load("analytically tractable/comparison_uniform17062020.jld", "qdistSMC");
+# qWGF = load("analytically tractable/comparison_uniform17062020.jld", "qdistWGF");
 
 # markers = [:circle :rect :diamond :xcross];
 markers = [:circle :rect :diamond :xcross :star5];
