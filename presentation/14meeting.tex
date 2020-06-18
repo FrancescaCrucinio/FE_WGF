@@ -130,7 +130,7 @@
 
 \begin{frame}{Fredholm Integral Equations of the First Kind (FIE)}
 \begin{equation*}
-      \mu\tikzmark{a}(dy) = \int_{\X} K(x \tikzmark{b}\mid y)\rho\tikzmark{c}(dx)\ \qquad
+      \mu\tikzmark{a}(dy) = \int_{\X} K(x \tikzmark{b},y)\rho\tikzmark{c}(dx)\ \qquad
 \end{equation*}\\[2ex]
 \centering
 
@@ -158,7 +158,7 @@
 
 \begin{frame}{FIE - Solution method}
 \begin{equation*}
-\mu(dy) = \int_{\X} \rho(dx) K(y\mid x)\qquad \forall y \in \Y,
+\mu(dy) = \int_{\X} \rho(dx) K(x,y)\qquad \forall y \in \Y,
 \end{equation*}
 Take $\rho,\mu$ probability measures and $K$ a Markov transition density
 \begin{equation*}
@@ -248,7 +248,7 @@ W_{2}(\rho_{t}^{1},\rho_{t}^{2})\leq e^{-\lambda t}W_{2}(\rho_{0}^{1},\rho_{0}^{
 
 \begin{frame}{Gradient Flow for FIE - Assumptions}
 \begin{equation*}
-\mu(dy) = \int_{\X} \rho(dx) K(y\mid x)\qquad \forall y \in \Y, 
+\mu(dy) = \int_{\X} \rho(dx) K(x,y)\qquad \forall y \in \Y, 
 \end{equation*}
 
 
@@ -313,9 +313,41 @@ X_{n+1}^{i,N}& =X_{n}^{i,N}+\int\mu\left(dy\right)\frac{\nabla K(X_{n}^{i,N},y)}
 \end{frame}
 
 \begin{frame}{Toy Example}
+\begin{equation*}
+\mu(dy) = \int_{\X} \rho(dx) K(x, y), 
+\end{equation*}
+with 
+\begin{align*}
+\mu(y)&=\N(y;m,\sigma_{\mu}^{2}:=\sigma_{K}^{2}+\sigma_{\rho}^{2})\\
+K(x,y)&=\N(y;x,\sigma_{K}^{2})\\
+\rho(x)&=\N(x;m,\sigma_{\rho}^{2}).
+\end{align*}
 
+The unique minimiser of $E$ is
+\begin{align*}
+\rho:\alpha(x)&=\N(x;m,\sigma_{\alpha}^{2})
+\end{align*}
+for $\alpha\in[0, 1)$.
 \end{frame}
 
+
+\begin{frame}{Toy Example}
+\begin{figure}
+\centering
+\resizebox{!}{0.4\textwidth}{%
+\begin{tikzpicture}[every node/.append style={font=\normalsize}]
+\node (img1) {\includegraphics[width=0.5\textwidth]{at_alpha_small}};
+\node[above=of img1, node distance = 0, yshift = -1cm] {$\alpha=0.01$};
+\node[below=of img1, node distance = 0, yshift = 1cm] {$x$};
+  \node[left=of img1, node distance = 0, rotate=90, anchor = center, yshift = -0.9cm] {$\rho(x)$};
+\node[right=of img1, xshift= -0.5cm] (img2) {\includegraphics[width=0.5\textwidth]{at_alpha_large}};
+\node[above=of img2, node distance = 0, yshift = -1cm] {$\alpha=0.5$};
+\node[below=of img2, node distance = 0, yshift = 1cm] {$x$};
+  \node[left=of img2, node distance = 0, rotate=90, anchor = center, yshift = -0.9cm] {$\rho(x)$};
+\end{tikzpicture}
+}
+\end{figure}
+\end{frame}
 \begin{frame}{A second Toy Example}
 
 \end{frame}

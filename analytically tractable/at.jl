@@ -1,4 +1,4 @@
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 # push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
@@ -54,10 +54,10 @@ ExactMinimiser(x) = pdf.(Normal(0.5, sqrt(variance)), x);
 
 # plot
 pyplot()
-p = StatsPlots.plot(f, 0, 1, lw = 3, label = "True f",
-    xlabel=L"$x$", ylabel=L"$f(x)$");
-StatsPlots.plot!(ExactMinimiser, 0, 1, lw = 3, label = "Exact minimiser")
-StatsPlots.plot!(KDEx, KDEyWGF1, lw = 3, label = "WGF")
+p = StatsPlots.plot(f, 0, 1, lw = 5, label = L"True $\rho$", color=:black,
+    legendfontsize = 10);
+StatsPlots.plot!(ExactMinimiser, 0, 1, lw = 3, label = "Exact minimiser", color=1);
+StatsPlots.plot!(KDEx, KDEyWGF1, lw = 3, label = "WGF", color=2);
 # StatsPlots.plot!(KDEx, KDEyWGF2, lw = 3, label = "WGF")
 
 savefig(p, "at.pdf")

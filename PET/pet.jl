@@ -54,25 +54,5 @@ sigma = 0.02;
 # WGF
 x, y = wgf_pet(Nparticles, dt, Niter, lambda, sinogram, M, phi, xi, sigma);
 
-# KDE
-# swap x and y for KDE function (scatter plot shows that x, y are correct)
-KDEyWGF =  KernelDensity.kde((y[100, :], x[100, :]));
-Xbins = range(-1 + 1/pixels[1], stop = 1 - 1/pixels[1], length = pixels[1]);
-Ybins = range(-1 + 1/pixels[2], stop = 1 - 1/pixels[2], length = pixels[2]);
-petWGF = pdf(KDEyWGF, Ybins, Xbins);
-# entropy
-petWGF_ent = -mean(remove_non_finite.(petWGF .* log.(petWGF)));
-
-p = heatmap(Xbins, Ybins, petWGF)
-
-
-# savefig(p, "pet.pdf")
-
-miseWGF = (norm(petWGF - phantom).^2)/length(petWGF);
-miseSMCEMS = (norm(petSMCEMS - phantom).^2)/length(petSMCEMS);
-
 save("pet15062020.jld", "lambda", lambda, "x", x,
    "y", y, "Niter", Niter, "Nparticles", Nparticles, "M", M, "dt", dt);
-
-x = load("PET/pet15062020.jld", "x");
-y = load("PET/pet15062020.jld", "y");
