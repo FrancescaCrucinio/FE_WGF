@@ -1,4 +1,4 @@
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -32,9 +32,9 @@ M = 1000;
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 5000;
+Nparticles = 1000;
 # regularisation parameter
-lambda = [0.005 0.01 0.05];
+lambda = [0.001 0.01 0.05];
 
 
 x0 = 0.5*ones(1, Nparticles);
@@ -47,9 +47,9 @@ Threads.@threads for i=1:length(lambda)
     KDEyWGF[:, i] = KernelEstimator.kerneldensity(x[end,:], xeval=KDEx, h=bwnormal(x[end,:]));
 end
 
-labels = [L"$\alpha=0.005$" L"$\alpha=0.01$" L"$\alpha=0.05$"];
-p = StatsPlots.plot(f, 0, 1, lw = 3, label = "True f",
-    xlabel=L"$x$", ylabel=L"$f(x)$");
-StatsPlots.plot!(KDEx, KDEyWGF, lw = 3, label = labels)
+labels = [L"$\alpha=0.001$" L"$\alpha=0.01$" L"$\alpha=0.05$"];
+p = StatsPlots.plot(f, 0, 1, lw = 3, label = L"True $\rho$", color=:black,
+    legendfontsize = 10);
+StatsPlots.plot!(KDEx, KDEyWGF, lw = 3, label = labels, color = [1 2 3]);
 
 savefig(p, "mixture_alpha.pdf")
