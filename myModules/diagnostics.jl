@@ -7,6 +7,7 @@ using Distances;
 export diagnosticsH
 export diagnosticsF
 export diagnosticsALL
+export relative_error
 
 #=
 Diagnostics for approximations of h
@@ -97,4 +98,17 @@ function diagnosticsALL(f, h, g, KDEx, KDEy, refY)
     return m, v, q, misef, kl, ent
 end
 
+#= Relative error
+OUTPUTS
+1 - matrix of pointwise relative error
+INPUTS
+'a' approximation
+'b' truth
+=#
+function relative_error(a, b)
+    abs_error = abs.(a-b);
+    b_pos = (b .> 0);
+    abs_error[b_pos] = abs_error[b_pos]./b[b_pos];
+    return abs_error
+end
 end

@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -12,6 +12,8 @@ using DelimitedFiles;
 using KernelDensity;
 using Interpolations;
 using JLD;
+# custom modules
+using diagnostics;
 
 # entropy function
 function remove_non_finite(x)
@@ -42,28 +44,33 @@ Niter = load("PET/pet15062020.jld", "Niter");
 
 
 # select which steps to show
-showIter = [1, 10, 50, 100, 500];
-Npic = 5;
+showIter = [1, 10, 50, 100, 300, 500];
+Npic = 6;
 # mise
 miseWGF = zeros(1, Npic);
 petWGF_ent = zeros(1, Npic);
 # plots
-p = repeat([plot(1)], Npic+1);
+p = repeat([plot(1)], Npic);
+p_relative_error = repeat([plot(1)], Npic);
 # grid
 Xbins = range(-0.75+ 1/pixels[1], stop = 0.75 - 1/pixels[1], length = pixels[1]);
 Ybins = range(-0.75 + 1/pixels[2], stop = 0.75 - 1/pixels[2], length = pixels[2]);
-
+# non-zero entries of phantom
+phantom_pos = (phantom.>0);
 for n=1:Npic
     # KDE
     # swap x and y for KDE function (scatter plot shows that x, y are correct)
     KDEyWGF =  KernelDensity.kde((y[showIter[n], :], x[showIter[n], :]));
     petWGF = pdf(KDEyWGF, Ybins, Xbins);
     p[n] = heatmap(Xbins, Ybins, petWGF, legend = :none);
-
     # mise
-    miseWGF[n] = (norm(petWGF - phantom).^2)/length(petWGF);
+    miseWGF[n] = (norm(petWGF - reverse(phantom, dims=1)).^2)/length(petWGF);
     # entropy
     petWGF_ent[n] = -mean(remove_non_finite.(petWGF .* log.(petWGF)));
+    # relative error
+    rel_error = relative_error(petWGF, reverse(phantom, dims = 1));
+    p_relative_error[n] = heatmap(Xbins, Ybins, rel_error, legend = :none);
 end
-p[end] = heatmap(Ybins, Xbins, reverse(phantom, dims=1), legend = :none);
+# p[end] = heatmap(Xbins, Ybins, reverse(phantom, dims=1), legend = :none);
 plot(p..., layout=(2, 3), showaxis=false)
+plot(p_relative_error..., layout=(2, 3), showaxis=false)
