@@ -39,3 +39,4 @@ for i=1:length(tSMCuniform)
         markerstrokewidth=0);
 end
 p
+StatsPlots.savefig(p, "comparison_smc.pdf")

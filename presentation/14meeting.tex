@@ -130,7 +130,7 @@
 
 \begin{frame}{Fredholm Integral Equations of the First Kind (FIE)}
 \begin{equation*}
-      \mu\tikzmark{a}(dy) = \int_{\X} K(x \tikzmark{b},y)\rho\tikzmark{c}(dx)\ \qquad
+      \mu\tikzmark{a}(d\mathbf{u}) = \int K(\mathbf{x} \tikzmark{b},d\mathbf{u})\rho\tikzmark{c}(d\mathbf{x})\ \qquad
 \end{equation*}\\[2ex]
 \centering
 
@@ -151,16 +151,16 @@
 
 \begin{itemize}
 \item Applications: PDEs, indirect density estimation, signal reconstruction, causal inference, ...
-\item Inverse ill posed problems
-\item Solution methods often require discretisation/strong assumptions on $f$
+\item Ill posed inverse problems
+\item Solution methods often require discretisation/strong assumptions on $\rho$
 \end{itemize}
 \end{frame}
 
 \begin{frame}{FIE - Solution method}
 \begin{equation*}
-\mu(dy) = \int_{\X} \rho(dx) K(x,y)\qquad \forall y \in \Y,
+\mu(dy) = \int \rho(dx) K(x,dy),
 \end{equation*}
-Take $\rho,\mu$ probability measures and $K$ a Markov transition density
+Take $\rho,\mu$ probability measures and $K$ a Markov transition kernel
 \begin{equation*}
 \rho^\star:= \text{argmin}\KL(\mu,\rho K)-\alpha\ent(\rho)
 \end{equation*}
@@ -181,53 +181,95 @@ x^\prime(t)=-\nabla F(x(t))
 \end{align*}
 \end{frame}
 
-\begin{frame}{Wasserstein Gradient Flows (I)}
-Take the manifold
+\begin{frame}{Wasserstein Gradient Flows - Space}
+\begin{itemize}
+\item Extension of gradient flows to probability measures
+\item In particular, probability measures $\mu$ with finite second moment
 \begin{align*}
-\mathcal{P}_{2}^{ac}(\real^{d})=\left\lbrace \mu\in\mathcal{P}(\real^{d}):\int\norm{x}{2}^{2}\ d\mu(x)<\infty, \mu<<\mathcal{L}\right\rbrace 
+\int\norm{x}{2}^{2}\ d\mu(x)<\infty
 \end{align*}
-with distance
+and absolutely continuous w.r.t. Lebesque $\mu\ll\mathcal{L}$: $\mathcal{P}_{2}^{ac}(\real^{d})$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Wasserstein Gradient Flows - Distance}
+2-Wasserstein distance
 \begin{align*}
 W_{2}(\mu,\nu):=\left(\inf_{\pi\in\Pi(\mu,\nu)}\int\norm{x-y}{2}^{2}\ d\pi(x,y)\right)^{1/2}
 \end{align*}
+
+e.g. 1D densities $f$ and $g(x)=f(x-h)$\footnote{Santambrogio (2017)}
+\begin{figure}
+\centering
+\resizebox{!}{0.35\textwidth}{%
+\begin{tikzpicture}[every node/.append style={font=\normalsize}]
+\node (img1) {\includegraphics[width=0.4\textwidth]{lp}};
+\node[below=of img1, node distance = 0, yshift = 1cm] {$\mathbb{L}_2$};
+\node[right=of img1, xshift= -0.5cm] (img2) {\includegraphics[width=0.4\textwidth]{wasserstein}};
+\node[below=of img2, node distance = 0, yshift = 1cm] {$W_2$};
+\end{tikzpicture}
+}
+\end{figure}
+
 \end{frame}
 
 
-\begin{frame}{Wasserstein Gradient Flows (II)}
-Curves in $\left(\mathcal{P}_{2}^{ac}(\real^{d}), W_2\right)$ are geodetics
+\begin{frame}{Wasserstein Gradient Flows - Curves}
+Curves in $\left(\mathcal{P}_{2}^{ac}(\real^{d}), W_2\right)$ are geodesics
 \begin{align*}
 \mu_s=((1-s)Id+st_{\mu}^{\nu})_{\#}\mu
 \end{align*}
-where $t_{\mu}^{\nu}$ is the unique transport map between $\mu$ and $\nu$ and $T_{\#}\mu$ denotes the push-forward measure
+where $T_{\#}\mu$ denotes the push-forward measure $T_{\#}\mu(A)=\mu(T^{-1}(A))$
+and $t_{\mu}^{\nu}$ is the unique optimal transport map between $\mu$ and $\nu$:
 \begin{align*}
-T_{\#}\mu(A)=\mu(T^{-1}(A)).
+(t_{\mu}^{\nu}){\#}\mu=\nu,\qquad W_{2}(\mu,\nu)=\left(\int\norm{x-t_{\mu}^{\nu}(x)}{2}^{2}\ d\mu(x)\right)^{1/2}
 \end{align*}
 \end{frame}
 
-\begin{frame}{Wasserstein Gradient Flows (III)}
+\begin{frame}{Wasserstein Gradient Flows - PDE}
 
-For $F:M\subset \real^d\mapsto \real$ the gradient flow equation is
+For $F:M\subset \real^d\rightarrow \real$ the gradient flow equation is
 \begin{align*}
 x^\prime(t)=-\nabla F(x(t)).
 \end{align*}
 
-For $F:\mathcal{P}_{2}^{ac}(\real^{d})\mapsto \real$
+For $F:\mathcal{P}_{2}^{ac}(\real^{d})\rightarrow \real$
 we have\footnote{Jordan, Kinderlehrer, Otto (1998)}
 \begin{align}
 \label{eq:pde}
 \partial_{t}\rho_{t}=-\nabla\cdot\left(\rho_{t}\variation{\rho_t}\right)
 \end{align}
-with $\variation{\rho_t}:=\frac{d}{d\epsilon}F(\rho+\epsilon\chi)_{|\epsilon=0}$.
+with
+\begin{align*}
+\variation{\rho_t}:=\lim_{\epsilon\rightarrow0}\frac{F(\rho+\epsilon\chi) - F(\rho)}{ \epsilon}.
+\end{align*}
 \end{frame}
+
+\begin{frame}{When is \eqref{eq:pde} well-behaved?}
+$F:\real^d\rightarrow \real$ is $\lambda$-convex if for $s\in[0, 1]$
+\begin{align*}
+F(sx+(1-s)y)\leq sF(x)+(1-s)F(y)-\frac {\lambda}{2}s(1-s)\norm{x-y}{2}^{2}
+\end{align*}
+
+\begin{figure}
+\centering
+\resizebox{!}{0.4\textwidth}{%
+\begin{tikzpicture}[every node/.append style={font=\normalsize}]
+\node (img1) {\includegraphics[width=0.4\textwidth]{lambda_convexity}};
+\end{tikzpicture}
+}
+\end{figure}
+\end{frame}
+
 
 \begin{frame}{When is \eqref{eq:pde} well-behaved?}
 We need:
 \begin{itemize}
 \item $F$ continuous, $F(\rho)<+\infty$ for some $\rho$
-\item $F$ $\lambda-$convex: exists $\lambda\geq0$ s.t.
-\begin{align*}
-F\left(((1-s)Id+st_{\mu}^{\nu})_{\#}\mu\right)\leq(1-s)F(\mu)+sF(\nu)-\frac{\lambda}{2}s(1-s)W_{2}^{2}(\nu,\mu)
-\end{align*}
+\item $F$ $\lambda-$geodesically convex w.r.t. $W_2$ with $\lambda\geq0$
+%\begin{align*}
+%F\left(((1-s)Id+st_{\mu}^{\nu})_{\#}\mu\right)\leq(1-s)F(\mu)+sF(\nu)-\frac{\lambda}{2}s(1-s)W_{2}^{2}(\nu,\mu)
+%\end{align*}
 \item $F$ is coercive: exists $r>0$ s.t.
 \begin{align*}
 \inf\left\lbrace F(\rho): \rho\in\mathcal{P}_{2}^{ac}(\real^{d}), \ \int\norm{x}{2}^{2}\ d\rho(x)\leq r\right\rbrace>-\infty
@@ -248,18 +290,14 @@ W_{2}(\rho_{t}^{1},\rho_{t}^{2})\leq e^{-\lambda t}W_{2}(\rho_{0}^{1},\rho_{0}^{
 
 \begin{frame}{Gradient Flow for FIE - Assumptions}
 \begin{equation*}
-\mu(dy) = \int_{\X} \rho(dx) K(x,y)\qquad \forall y \in \Y, 
+\mu(dy) = \int_{\X} \rho(dx) K(x,dy)\qquad \forall y \in \Y, 
 \end{equation*}
 
 
 \begin{enumerate}
     \item $\X, \Y$ subsets of some Euclidean spaces with Borel $\sigma$-algebras; 
-    \item $\mu, \rho$ densities with finite second moment;
-    \item $K$ bounded and bounded away from 0, Lipschitz continuous with Lipschitz continuous gradient and $\lambda$-concave in $x$:
-\begin{equation*}
-x\mapsto K(x,y)+\frac{\lambda}{2}\norm{x}{2}^{2}
-\end{equation*}
-is concave for some $\lambda>0$ for all $y\in\Y$.
+    \item $\mu, \rho \in\mathcal{P}_2^{ac}(\X)$;
+    \item $K$ bounded and bounded away from 0, Lipschitz continuous with Lipschitz continuous gradient and $\lambda$-concave in $x$, uniformly in $y$, for some $\lambda>0$ for all $y\in\Y$.
 \end{enumerate}
 \end{frame}
 
@@ -302,19 +340,19 @@ dX_{t}=\int\mu\left(dy\right)\frac{\nabla K(X_{t},y)}{\rho_{t}K(y)}dt+\sqrt{2\al
 \begin{itemize}
 \item discretisation in space: take $N$ copies of the SDE and use the resulting empirical measure instead of $\rho_t$
 \begin{align*}
-dX_{t}^{i,N}=\int\mu\left(dy\right)\frac{\nabla K(X_{t}^{i,N},y)}{\rho_{t}^{N}K(y)}dt+\sqrt{2\alpha}dW_{t}^{i},\quad\rho_{t}^{N}=\frac{1}{N}\sum_{i=1}^{N}\delta_{X_{t}^{i,N}}
+dX_{t}^{i}=\int\mu\left(dy\right)\frac{\nabla K(X_{t}^{i},y)}{\rho_{t}^{N}K(y)}dt+\sqrt{2\alpha}dW_{t}^{i},\quad\rho_{t}^{N}=\frac{1}{N}\sum_{i=1}^{N}\delta_{X_{t}^{i}}
 \end{align*}
 \item discretisation in time: Euler scheme
 \begin{align*}
-X_{n+1}^{i,N}& =X_{n}^{i,N}+\int\mu\left(dy\right)\frac{\nabla K(X_{n}^{i,N},y)}{\rho_{n}^{N}K(y)}\Delta t+\sqrt{2\alpha}\Delta W^{i},\\
-&\rho_{n}^{N}=\frac{1}{N}\sum_{i=1}^{N}\delta_{X_{n}^{i,N}}
+X_{n+1}^{i}& =X_{n}^{i}+\int\mu\left(dy\right)\frac{\nabla K(X_{n}^{i},y)}{\rho_{n}^{N}K(y)}\Delta t+\sqrt{2\alpha}\Delta W^{i}_n,\\
+&\rho_{n}^{N}=\frac{1}{N}\sum_{i=1}^{N}\delta_{X_{n}^{i}}
 \end{align*}
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Toy Example}
 \begin{equation*}
-\mu(dy) = \int_{\X} \rho(dx) K(x, y), 
+\mu(dy) = \int_{\X} \rho(dx) K(x, dy), 
 \end{equation*}
 with 
 \begin{align*}
@@ -325,7 +363,7 @@ K(x,y)&=\N(y;x,\sigma_{K}^{2})\\
 
 The unique minimiser of $E$ is
 \begin{align*}
-\rho:\alpha(x)&=\N(x;m,\sigma_{\alpha}^{2})
+\rho_\alpha(x)&=\N(x;m,\sigma_{\alpha}^{2})
 \end{align*}
 for $\alpha\in[0, 1)$.
 \end{frame}
@@ -364,7 +402,7 @@ for $\alpha\in[0, 1)$.
 \end{frame}
 
 \begin{frame}{PET}
-The reconstruction of a cross-section of the brain (Figure (a)) from the data image provided by PET scanners (Figure (b)) is described by a 2D Fredholm integral equation of the first kind.
+The reconstruction of a cross-section of the brain (a) from the data image provided by PET scanners (b) is described by a 2D Fredholm integral equation of the first kind.
 
 \begin{figure}
 \setcounter{subfigure}{0}
