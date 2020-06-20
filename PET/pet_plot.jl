@@ -12,9 +12,11 @@ using DelimitedFiles;
 using KernelDensity;
 using Interpolations;
 using JLD;
+using Plots;
 # custom modules
 using diagnostics;
 
+pyplot()
 # entropy function
 function remove_non_finite(x)
        return isfinite(x) ? x : zero(x)
@@ -71,6 +73,12 @@ for n=1:Npic
     rel_error = relative_error(petWGF, reverse(phantom, dims = 1));
     p_relative_error[n] = heatmap(Xbins, Ybins, rel_error, legend = :none);
 end
-# p[end] = heatmap(Xbins, Ybins, reverse(phantom, dims=1), legend = :none);
+p_phantom = heatmap(reverse(phantom, dims=1), legend = :none,
+    aspect_ratio=1, showaxis=false, grid=false, size = (128, 128));
+p_sinogram = heatmap(reverse(sinogram, dims=1), legend = :none,
+    showaxis=false, grid=false, size = (128, 185));
 plot(p..., layout=(2, 3), showaxis=false)
 plot(p_relative_error..., layout=(2, 3), showaxis=false)
+
+savefig(p_phantom, "phantom.pdf")
+savefig(p_sinogram, "sinogram.pdf")

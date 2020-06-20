@@ -1,8 +1,5 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
-# push!(LOAD_PATH, "/homes/crucinio/WGF/myModules")
 # Julia packages
-# using Revise;
 using StatsPlots;
 using Distributions;
 using Statistics;
@@ -13,31 +10,32 @@ using JLD;
 using LaTeXStrings;
 
 Nparticles = load("analytically tractable/comparison_uniform17062020.jld", "Nparticles");
-tSMC = load("analytically tractable/comparison_uniform17062020.jld", "tSMC");
-tWGF = load("analytically tractable/comparison_uniform17062020.jld", "tWGF");
-diagnosticsSMC = load("analytically tractable/comparison_uniform17062020.jld", "diagnosticsSMC");
-diagnosticsWGF = load("analytically tractable/comparison_uniform17062020.jld", "diagnosticsWGF");
+tSMCuniform = load("analytically tractable/comparison_uniform17062020.jld", "tSMC");
+tWGFuniform = load("analytically tractable/comparison_uniform17062020.jld", "tWGF");
+diagnosticsSMCuniform = load("analytically tractable/comparison_uniform17062020.jld", "diagnosticsSMC");
+diagnosticsWGFuniform = load("analytically tractable/comparison_uniform17062020.jld", "diagnosticsWGF");
+
+tSMCdelta = load("analytically tractable/comparison_delta18062020.jld", "tSMC");
+tWGFdelta = load("analytically tractable/comparison_delta18062020.jld", "tWGF");
+diagnosticsSMCdelta = load("analytically tractable/comparison_delta18062020.jld", "diagnosticsSMC");
+diagnosticsWGFdelta = load("analytically tractable/comparison_delta18062020.jld", "diagnosticsWGF");
 # qSMC = load("analytically tractable/comparison_uniform17062020.jld", "qdistSMC");
 # qWGF = load("analytically tractable/comparison_uniform17062020.jld", "qdistWGF");
 
-# markers = [:circle :rect :diamond :xcross];
 markers = [:circle :rect :diamond :xcross :star5];
-# labels = ["N=100" "N=500" "N=1000" "N=5000"];
 labels = ["N=100" "N=500" "N=1000" "N=5000" "N=10000"];
 pyplot()
-p = plot([tSMC tWGF], [diagnosticsSMC[:, 3] diagnosticsWGF[:, 3]],
-    lw = 3, label = ["SMC" "WGF"], xlabel="Runtime (s)", ylabel="MISE",
-    xaxis=:log, color = [1 2], ylims = (-1.5, +Inf));
-for i=1:length(tSMC)
-    scatter!(p, [tSMC[i]], [diagnosticsSMC[i, 3]],
+p = plot([tSMCuniform tWGFuniform tWGFdelta],
+    [diagnosticsSMCuniform[:, 3] diagnosticsWGFuniform[:, 3] diagnosticsWGFdelta[:, 3]],
+    lw = 3, label = [L"SMC - Unif" L"WGF - Unif" L"WGF - $\delta$"],
+    xaxis=:log, color = [1 2 3], ylims = (0, 1.5), legend=:outerright);
+for i=1:length(tSMCuniform)
+    scatter!(p, [tSMCuniform[i]], [diagnosticsSMCuniform[i, 3]],
         markersize = 9, label = labels[i], color = :black, marker = markers[i],
         markerstrokewidth=0);
-    scatter!(p, [tSMC[i] tWGF[i]], [diagnosticsSMC[i, 3] diagnosticsWGF[i, 3]],
-        markersize = 9, label = ["" ""], color = [1 2], marker = markers[i],
+    scatter!(p, [tSMCuniform[i] tWGFuniform[i] tWGFdelta[i]],
+        [diagnosticsSMCuniform[i, 3] diagnosticsWGFuniform[i, 3] diagnosticsWGFdelta[i, 3]],
+        markersize = 9, label = ["" ""], color = [1 2 3], marker = markers[i],
         markerstrokewidth=0);
 end
 p
-# # savefig(p1, "comparison_runtime.pdf")
-# # savefig(p2, "comparison_mean.pdf")
-# # savefig(p3, "comparison_var.pdf")
-# # savefig(p4, "comparison_mise.pdf")
