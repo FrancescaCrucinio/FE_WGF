@@ -14,13 +14,15 @@ tSMCuniform = load("analytically tractable/comparison_uniform17062020.jld", "tSM
 tWGFuniform = load("analytically tractable/comparison_uniform17062020.jld", "tWGF");
 diagnosticsSMCuniform = load("analytically tractable/comparison_uniform17062020.jld", "diagnosticsSMC");
 diagnosticsWGFuniform = load("analytically tractable/comparison_uniform17062020.jld", "diagnosticsWGF");
+# qSMC = load("analytically tractable/comparison_uniform17062020.jld", "qdistSMC");
+# qWGF = load("analytically tractable/comparison_uniform17062020.jld", "qdistWGF");
 
 tSMCdelta = load("analytically tractable/comparison_delta18062020.jld", "tSMC");
 tWGFdelta = load("analytically tractable/comparison_delta18062020.jld", "tWGF");
 diagnosticsSMCdelta = load("analytically tractable/comparison_delta18062020.jld", "diagnosticsSMC");
 diagnosticsWGFdelta = load("analytically tractable/comparison_delta18062020.jld", "diagnosticsWGF");
-# qSMC = load("analytically tractable/comparison_uniform17062020.jld", "qdistSMC");
-# qWGF = load("analytically tractable/comparison_uniform17062020.jld", "qdistWGF");
+qSMCdelta = load("analytically tractable/comparison_delta18062020.jld", "qdistSMC");
+qWGFdelta = load("analytically tractable/comparison_delta18062020.jld", "qdistWGF");
 
 markers = [:circle :rect :diamond :xcross :star5];
 labels = ["N=100" "N=500" "N=1000" "N=5000" "N=10000"];
@@ -40,3 +42,8 @@ for i=1:length(tSMCuniform)
 end
 p
 StatsPlots.savefig(p, "comparison_smc.pdf")
+
+
+p1 = boxplot(transpose(tSMCdelta), transpose(qSMCdelta))
+p2 = boxplot(transpose(tWGFdelta), transpose(qWGFdelta))
+plot(p1, p2, layout = (2,1))

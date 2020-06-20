@@ -367,9 +367,36 @@ The unique minimiser of $E$ is
 \end{align*}
 for $\alpha\in[0, 1)$.
 \end{frame}
+\begin{frame}
+A number of quantities need to be specified
+\begin{itemize}
+\item regularisation: $\alpha$
+\item gradient flow set up: $\rho_0$
+\item numerical approximation of SDE: $N$ (500/1000), $\Delta t$ ($10^{-3}$ is enough)
+\end{itemize}
 
+And, how does it compare to other methods?
+\end{frame}
 
-\begin{frame}{Toy Example}
+\begin{frame}{$\rho_0$}
+\begin{figure}
+\centering
+\resizebox{!}{0.4\textwidth}{%
+\begin{tikzpicture}[every node/.append style={font=\normalsize}]
+\node (img1) {\includegraphics[width=0.5\textwidth]{initial_distribution_E}};
+\node[above=of img1, node distance = 0, yshift = -1cm] {100 iterations};
+\node[below=of img1, node distance = 0, yshift = 1cm] {Iteration};
+  \node[left=of img1, node distance = 0, rotate=90, anchor = center, yshift = -0.9cm] {$E(\hat{\rho})$};
+\node[right=of img1, xshift= -0.5cm] (img2) {\includegraphics[width=0.5\textwidth]{initial_distribution_E_1000iter}};
+\node[above=of img2, node distance = 0, yshift = -1cm] {1000 iterations};
+\node[below=of img2, node distance = 0, yshift = 1cm] {Iteration};
+  \node[left=of img2, node distance = 0, rotate=90, anchor = center, yshift = -0.9cm] {$E(\hat{\rho})$};
+\end{tikzpicture}
+}
+\end{figure}
+\end{frame}
+
+\begin{frame}{$\alpha$}
 \begin{figure}
 \centering
 \resizebox{!}{0.4\textwidth}{%
@@ -386,20 +413,24 @@ for $\alpha\in[0, 1)$.
 }
 \end{figure}
 \end{frame}
-\begin{frame}{A second Toy Example}
 
-\centering
-\resizebox{!}{0.45\textwidth}{%
-\begin{tikzpicture}[every node/.append style={font=\normalsize}]
-%\node (img1) {\includegraphics[width=0.4\textwidth]{Images/mixture}};
-%\node[below=of img1, node distance = 0, yshift = 1cm] {$x$};
-%  \node[left=of img1, node distance = 0, rotate=90, anchor = center, yshift = -0.9cm] {$\rho(x)$};
-\node[right=of img1, xshift= -0.5cm] (img2) {\includegraphics[width=0.45\textwidth]{Images/mixture_alpha}};
-\node[below=of img2, node distance = 0, yshift = 1cm] {$x$};
-  \node[left=of img2, node distance = 0, rotate=90, anchor = center, yshift = -0.9cm] {$\rho(x)$};
-\end{tikzpicture}
-}
+\begin{frame}{Comparison}
+
 \end{frame}
+%\begin{frame}{A second Toy Example}
+%
+%\centering
+%\resizebox{!}{0.45\textwidth}{%
+%\begin{tikzpicture}[every node/.append style={font=\normalsize}]
+%%\node (img1) {\includegraphics[width=0.4\textwidth]{Images/mixture}};
+%%\node[below=of img1, node distance = 0, yshift = 1cm] {$x$};
+%%  \node[left=of img1, node distance = 0, rotate=90, anchor = center, yshift = -0.9cm] {$\rho(x)$};
+%\node[right=of img1, xshift= -0.5cm] (img2) {\includegraphics[width=0.45\textwidth]{Images/mixture_alpha}};
+%\node[below=of img2, node distance = 0, yshift = 1cm] {$x$};
+%  \node[left=of img2, node distance = 0, rotate=90, anchor = center, yshift = -0.9cm] {$\rho(x)$};
+%\end{tikzpicture}
+%}
+%\end{frame}
 
 \begin{frame}{PET}
 The reconstruction of a cross-section of the brain (a) from the data image provided by PET scanners (b) is described by a 2D Fredholm integral equation of the first kind.
