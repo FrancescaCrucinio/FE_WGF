@@ -1,4 +1,4 @@
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -32,9 +32,9 @@ M = 1000;
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 5000;
+Nparticles = 1000;
 # regularisation parameter
-lambda = 0.005;
+lambda = 0.001;
 
 
 x0 = 0.5*ones(1, Nparticles);
@@ -45,8 +45,8 @@ x, _ =  wgf_gaussian_mixture(Nparticles, dt, Niter, lambda, x0, M);
 KDEyWGF = KernelEstimator.kerneldensity(x[end,:], xeval=KDEx, h=bwnormal(x[end,:]));
 stats = diagnosticsF(f, KDEx, KDEyWGF);
 
-p = StatsPlots.plot(f, 0, 1, lw = 3, label = "True f",
-    xlabel=L"$x$", ylabel=L"$f(x)$");
-StatsPlots.plot!(KDEx, KDEyWGF, lw = 3, label = "WGF")
+p = StatsPlots.plot(f, 0, 1, lw = 3, label = L"True $\rho$", color=:black,
+    legendfontsize = 10);
+StatsPlots.plot!(KDEx, KDEyWGF, lw = 3, label = "WGF", color = 1);
 
 savefig(p, "mixture.pdf")
