@@ -118,7 +118,7 @@ function wgf_pet(N, dt, Niter, lambda, noisyI, M, phi, xi, sigma)
     # x[1, :] = 2 * rand(1, N) .- 1;
     # # sample random particles for y in [-1, 1] for time step n = 1
     # y[1, :] = 2 * rand(1, N) .- 1;
-    x0 = rand(MvNormal([0, 0], Matrix{Float64}(I, 2, 2)), N);
+    x0 = rand(MvNormal([0, 0], 2*Matrix{Float64}(I, 2, 2)), N);
     x[1, :] = x0[1, :];
     y[1, :] = x0[2, :];
     for n=1:(Niter-1)

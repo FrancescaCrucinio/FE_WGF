@@ -41,7 +41,7 @@ xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # dt and number of iterations
 dt = 1e-03;
-Niter = 1500;
+Niter = 500;
 # samples from h(y)
 M = 20000;
 # number of particles
@@ -54,5 +54,5 @@ sigma = 0.02;
 # WGF
 x, y = wgf_pet(Nparticles, dt, Niter, lambda, sinogram, M, phi, xi, sigma);
 
-save("pet15062020.jld", "lambda", lambda, "x", x,
+save("pet20062020.jld", "lambda", lambda, "x", x,
    "y", y, "Niter", Niter, "Nparticles", Nparticles, "M", M, "dt", dt);
