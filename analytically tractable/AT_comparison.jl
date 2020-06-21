@@ -63,7 +63,7 @@ Threads.@threads for i=1:length(Nparticles)
     qdistrepSMC = zeros(Nrep, length(KDEx));
     @simd for j=1:Nrep
         # initial distribution
-        x0 = rand(1)*ones(1, Nparticles[i]);
+        x0 = rand(1, Nparticles[i]);
         # run SMC
         trepSMC[j] = @elapsed begin
              xSMC, W = smc_AT_approximated_potential(Nparticles[i], Niter, epsilon, x0, M);
@@ -93,7 +93,7 @@ Threads.@threads for i=1:length(Nparticles)
 end
 
 
-save("comparison_delta18062020.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
+save("comparison_uniform21062020.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
     "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
     "Nparticles", Nparticles, "Niter", Niter, "qdistWGF", qdistWGF,
     "qdistSMC", qdistSMC);
