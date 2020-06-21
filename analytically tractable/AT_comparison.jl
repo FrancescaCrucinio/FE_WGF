@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+#push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # push!(LOAD_PATH, "/homes/crucinio/WGF/myModules")
 # Julia packages
 # using Revise;
@@ -43,7 +43,7 @@ epsilon = 1e-03;
 lambda = 1e-02;
 
 # number of repetitions
-Nrep = 2;
+Nrep = 1000;
 
 # diagnostics
 tSMC = zeros(length(Nparticles), 1);
@@ -93,7 +93,7 @@ Threads.@threads for i=1:length(Nparticles)
 end
 
 
-save("comparison_uniform17062020.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
+save("comparison_uniform21062020.jld", "lambda", lambda, "diagnosticsWGF", diagnosticsWGF,
     "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
     "Nparticles", Nparticles, "Niter", Niter, "qdistWGF", qdistWGF,
     "qdistSMC", qdistSMC);
