@@ -197,7 +197,7 @@ and absolutely continuous w.r.t. Lebesque $\mu\ll\mathcal{L}$: $\mathcal{P}_{2}^
 \begin{align*}
 W_{2}(\mu,\nu):=\left(\inf_{\pi\in\Pi(\mu,\nu)}\int\norm{x-y}{2}^{2}\ d\pi(x,y)\right)^{1/2}
 \end{align*}
-
+\pause
 e.g. 1D densities $f$ and $g(x)=f(x-h)$\footnote{Santambrogio (2017)}
 \begin{figure}
 \centering
@@ -415,7 +415,14 @@ And, how does it compare to other methods?
 \end{frame}
 
 \begin{frame}{Comparison}
-
+\centering
+\resizebox{!}{0.5\textwidth}{%
+\begin{tikzpicture}[every node/.append style={font=\normalsize}]
+\node (img1) {\includegraphics[width=0.5\textwidth]{Images/comparison_smc}};
+\node[below=of img1, node distance = 0, yshift = 1cm] {Runtime (s)};
+  \node[left=of img1, node distance = 0, rotate=90, anchor = center, yshift = -0.9cm] {$\mise(\rho)$};
+\end{tikzpicture}
+}
 \end{frame}
 %\begin{frame}{A second Toy Example}
 %
