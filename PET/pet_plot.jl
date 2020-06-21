@@ -64,14 +64,18 @@ for n=1:Npic
     # swap x and y for KDE function (scatter plot shows that x, y are correct)
     KDEyWGF =  KernelDensity.kde((y[showIter[n], :], x[showIter[n], :]));
     petWGF = pdf(KDEyWGF, Ybins, Xbins);
-    p[n] = heatmap(Xbins, Ybins, petWGF, legend = :none);
+    p[n] = heatmap(Xbins, Ybins, petWGF, legend = :none,
+        aspect_ratio=1, showaxis=false, grid=false, size = (128, 128));
     # mise
     miseWGF[n] = (norm(petWGF - reverse(phantom, dims=1)).^2)/length(petWGF);
     # entropy
     petWGF_ent[n] = -mean(remove_non_finite.(petWGF .* log.(petWGF)));
     # relative error
     rel_error = relative_error(petWGF, reverse(phantom, dims = 1));
-    p_relative_error[n] = heatmap(Xbins, Ybins, rel_error, legend = :none);
+    p_relative_error[n] = heatmap(Xbins, Ybins, rel_error, legend = :none,
+        aspect_ratio=1, showaxis=false, grid=false, size = (128, 128));
+    savefig(p[n], "pet$n.pdf");
+    savefig(p_relative_error[n], "pet_relerror$n.pdf");
 end
 p_phantom = heatmap(reverse(phantom, dims=1), legend = :none,
     aspect_ratio=1, showaxis=false, grid=false, size = (128, 128));

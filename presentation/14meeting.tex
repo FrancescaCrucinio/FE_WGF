@@ -213,17 +213,33 @@ e.g. 1D densities $f$ and $g(x)=f(x-h)$\footnote{Santambrogio (2017)}
 
 \end{frame}
 
+\begin{frame}{Wasserstein Gradient Flows - Distance}
+In $\mathcal{P}_{2}^{ac}(\real^{d})$, the optimal $\pi$ is unique, $\pi=(Id, t_\mu^\nu)$ so that
+\begin{align*}
+(t_{\mu}^{\nu}){\#}\mu=\nu,\qquad W_{2}(\mu,\nu)=\left(\int\norm{x-t_{\mu}^{\nu}(x)}{2}^{2}\ d\mu(x)\right)^{1/2}
+\end{align*}
+where $T_{\#}\mu$ denotes the push-forward measure $T_{\#}\mu(A)=\mu(T^{-1}(A))$.
+\end{frame}
+
 
 \begin{frame}{Wasserstein Gradient Flows - Curves}
 Curves in $\left(\mathcal{P}_{2}^{ac}(\real^{d}), W_2\right)$ are geodesics
 \begin{align*}
 \mu_s=((1-s)Id+st_{\mu}^{\nu})_{\#}\mu
 \end{align*}
-where $T_{\#}\mu$ denotes the push-forward measure $T_{\#}\mu(A)=\mu(T^{-1}(A))$
-and $t_{\mu}^{\nu}$ is the unique optimal transport map between $\mu$ and $\nu$:
-\begin{align*}
-(t_{\mu}^{\nu}){\#}\mu=\nu,\qquad W_{2}(\mu,\nu)=\left(\int\norm{x-t_{\mu}^{\nu}(x)}{2}^{2}\ d\mu(x)\right)^{1/2}
-\end{align*}
+with $t_{\mu}^{\nu}$ the unique optimal transport map between $\mu$ and $\nu$.
+\begin{figure}
+\centering
+\resizebox{0.5\linewidth}{!}{%
+\begin{tikzpicture}[-latex, auto, node distance=10pt and 100pt, on grid, state/.style={font=\normalsize}]
+\node[scale=.5, circle, fill=black, minimum size=0.01cm, label={$\mu$}] (A) {};
+\node[below=of A, font=\footnotesize] {$s=0$};
+\node (B) [right=of A, scale=.5, circle, fill=black, minimum size=0.01cm, label={$\nu$}] {};
+\node[below=of B, font=\footnotesize] {$s=1$};
+\path[-, bend left=40, thick] (A) edge node[above]{$\mu_s$}  (B);
+\end{tikzpicture}
+}
+\end{figure}
 \end{frame}
 
 \begin{frame}{Wasserstein Gradient Flows - PDE}
@@ -449,6 +465,28 @@ The reconstruction of a cross-section of the brain (a) from the data image provi
 \includegraphics[height=0.45\textheight]{phantom}}\qquad
 \subfloat[Sinogram + noise \label{fig:sinogram}]{
 \includegraphics[height=0.45\textheight]{sinogram}}
+\end{figure}
+\end{frame}
+
+\begin{frame}{PET}
+\begin{figure}
+\centering
+\resizebox{0.85\textwidth}{!}{%
+\begin{tikzpicture}[every node/.append style={font=\scriptsize}, node distance = 0pt and 5pt]
+\node (img1) {\includegraphics[width=0.2\linewidth]{pet1}};
+\node[below=of img1, yshift=0.2cm] {Iteration 1};
+\node[right=of img1] (img2) {\includegraphics[width=0.2\linewidth]{pet2}};
+\node[below=of img2, yshift=0.2cm] {Iteration 10};
+\node[right=of img2] (img3) {\includegraphics[width=0.2\linewidth]{pet3}};
+\node[below=of img3, yshift=0.2cm] {Iteration 50};
+\node[below=of img1, yshift=-0.3cm] (img4) {\includegraphics[width=0.2\linewidth]{pet4}};
+\node[below=of img4, yshift=0.2cm] {Iteration 100};
+\node[right=of img4] (img5) {\includegraphics[width=0.2\linewidth]{pet5}};
+\node[below=of img5, yshift=0.2cm] {Iteration 300};
+\node[right=of img5] (img6) {\includegraphics[width=0.2\linewidth]{pet6}};
+\node[below=of img6, yshift=0.2cm] {Iteration 500};
+\end{tikzpicture}
+}
 \end{figure}
 \end{frame}
 \end{document}
