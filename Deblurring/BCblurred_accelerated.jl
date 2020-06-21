@@ -45,8 +45,8 @@ Threads.@threads for i=1:pixels[2]
     u = Xbins[i];
     @simd for j=1:pixels[1]
         v = Ybins[j];
-        Imageh[j, i] = sum(remove_non_finite.(Imagef .* pdf.(Normal(v, sigma), gridY) .*
-            pdf.(Beta(0.5, 1), (gridX .- u))));
+        Imageh[j, i] = sum(Imagef .* pdf.(Normal(v, sigma), gridY) .*
+            remove_non_finite.(pdf.(Beta(0.5, 1), (gridX .- u))));
     end
 end
 
