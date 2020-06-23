@@ -66,7 +66,7 @@ Threads.@threads for i=1:length(Nparticles)
         x0 = rand(1, Nparticles[i]);
         # run SMC
         trepSMC[j] = @elapsed begin
-             xSMC, W = smc_AT_approximated_potential(Nparticles[i], Niter, epsilon, x0, M);
+            xSMC, W = smc_AT_approximated_potential(Nparticles[i], Niter, epsilon, x0, M);
             # kde
             bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
             KDEySMC = weightedKDE(xSMC[end, :], W[end, :], bw, KDEx);

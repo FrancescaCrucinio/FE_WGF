@@ -306,14 +306,14 @@ W_{2}(\rho_{t}^{1},\rho_{t}^{2})\leq e^{-\lambda t}W_{2}(\rho_{0}^{1},\rho_{0}^{
 
 \begin{frame}{Gradient Flow for FIE - Assumptions}
 \begin{equation*}
-\mu(dy) = \int_{\X} \rho(dx) K(x,dy)\qquad \forall y \in \Y, 
+\mu(y) = \int_{\X} \rho(y) K(x,d)\ dx\qquad \forall y \in \Y, 
 \end{equation*}
 
 
 \begin{enumerate}
     \item $\X, \Y$ subsets of some Euclidean spaces with Borel $\sigma$-algebras; 
     \item $\mu, \rho \in\mathcal{P}_2^{ac}(\X)$;
-    \item $K$ bounded and bounded away from 0, Lipschitz continuous with Lipschitz continuous gradient and for fixed $y\in\Y$, $\lambda$-concave in $x$ for some $\lambda>0$.
+    \item $K$ bounded and bounded away from 0, Lipschitz continuous with Lipschitz continuous gradient and for all fixed $y\in\Y$, $\lambda$-concave in $x$ for some $\lambda>0$ (potentially dependent on $y$).
 \end{enumerate}
 \end{frame}
 
@@ -321,7 +321,7 @@ W_{2}(\rho_{t}^{1},\rho_{t}^{2})\leq e^{-\lambda t}W_{2}(\rho_{0}^{1},\rho_{0}^{
 \begin{equation*}
 F(\rho) := \KL(\mu,\rho K)-\alpha\ent(\rho)
 \end{equation*}
-is continuous, coercive and $\lambda$ geodesically convex with $\lambda=0$ and has first variation
+is continuous, coercive and $\lambda$-geodesically convex with $\lambda=0$ and has first variation
 \begin{equation*}
 \variation{\rho}\left(x\right)=-\int\mu\left(dy\right)\frac{K(x,y)}{\rho K(y)}+\alpha\left(1+\log\rho\left(x\right)\right).
 \end{equation*}

@@ -27,7 +27,7 @@ function remove_non_finite(x)
 end
 
 # acceleration
-a = 1;
+a = -100/300;
 sigma = 0.02;
 # create empty image
 Imageh = zeros(pixels);
@@ -46,7 +46,7 @@ Threads.@threads for i=1:pixels[2]
     @simd for j=1:pixels[1]
         v = Ybins[j];
         Imageh[j, i] = sum(Imagef .* pdf.(Normal(v, sigma), gridY) .*
-            remove_non_finite.(pdf.(Beta(0.5, 1), (gridX .- u))));
+            remove_non_finite.(pdf.(Beta(0.5, 1), (gridX .- u)/a)));
     end
 end
 
