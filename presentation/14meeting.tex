@@ -162,7 +162,7 @@
 \end{equation*}
 Take $\rho,\mu$ probability measures and $K$ a Markov transition kernel
 \begin{equation*}
-\rho^\star:= \text{argmin}\KL(\mu,\rho K)-\alpha\ent(\rho)
+\rho^\star:= \text{argmin}\ \KL(\mu,\rho K)-\alpha\ent(\rho)
 \end{equation*}
 for some $\alpha>0$.
 \pause
@@ -188,7 +188,7 @@ x^\prime(t)=-\nabla F(x(t))
 \begin{align*}
 \int\norm{x}{2}^{2}\ d\mu(x)<\infty
 \end{align*}
-and absolutely continuous w.r.t. Lebesque $\mu\ll\mathcal{L}$: $\mathcal{P}_{2}^{ac}(\real^{d})$
+and absolutely continuous w.r.t. Lebesgue $\mu\ll\mathcal{L}$: $\mathcal{P}_{2}^{ac}(\real^{d})$
 \end{itemize}
 \end{frame}
 
@@ -198,7 +198,7 @@ and absolutely continuous w.r.t. Lebesque $\mu\ll\mathcal{L}$: $\mathcal{P}_{2}^
 W_{2}(\mu,\nu):=\left(\inf_{\pi\in\Pi(\mu,\nu)}\int\norm{x-y}{2}^{2}\ d\pi(x,y)\right)^{1/2}
 \end{align*}
 \pause
-e.g. 1D densities $f$ and $g(x)=f(x-h)$\footnote{Santambrogio (2017)}
+e.g. 1D densities\footnote{Santambrogio (2017)}
 \begin{figure}
 \centering
 \resizebox{!}{0.35\textwidth}{%
@@ -213,10 +213,10 @@ e.g. 1D densities $f$ and $g(x)=f(x-h)$\footnote{Santambrogio (2017)}
 
 \end{frame}
 
-\begin{frame}{Wasserstein Gradient Flows - Distance}
-In $\mathcal{P}_{2}^{ac}(\real^{d})$, the optimal $\pi$ is unique, $\pi=(Id, t_\mu^\nu)$ so that
+\begin{frame}{Wasserstein Gradient Flows - Optimal transport}
+In $\mathcal{P}_{2}^{ac}(\real^{d})$, we have
 \begin{align*}
-(t_{\mu}^{\nu}){\#}\mu=\nu,\qquad W_{2}(\mu,\nu)=\left(\int\norm{x-t_{\mu}^{\nu}(x)}{2}^{2}\ d\mu(x)\right)^{1/2}
+W_{2}(\mu,\nu)=\left(\int\norm{x-t_{\mu}^{\nu}(x)}{2}^{2}\ d\mu(x)\right)^{1/2} \qquad\text{with } (t_{\mu}^{\nu}){\#}\mu=\nu,\qquad 
 \end{align*}
 where $T_{\#}\mu$ denotes the push-forward measure $T_{\#}\mu(A)=\mu(T^{-1}(A))$.
 \end{frame}

@@ -12,28 +12,23 @@ using TestImages, Colors;
 using Images;
 # custom packages
 using diagnostics;
-using smcems;
 using wgf;
 using samplers;
 
-I = load("BCblurred.png");
-I = Gray.(I);
-I = convert(Array{Float64}, I);
-pixels = size(I);
+Imageh = convert(Array{Float64}, Imageh);
 
 # number of iterations
-Niter = trunc(Int, 1e04);
+Niter = 100;
 # samples from h(y)
-M = 1000;
+M = 5000;
 # number of particles
 Nparticles = 5000;
 # regularisation parameter
-lambda = 50;
+lambda = 0.01;
+dt = 10^-3;
 
 sigma = 0.02;
-a = 1.01;
-b = 1.01;
-v = 128;
-x, y = wgf_deblurring(Nparticles, Niter, lambda, I, M, sigma, v, a, b);
+a = -100;
+x, y = wgf_deblurring(Nparticles, Niter, dt, lambda, Imageh, M, sigma, a);
 
-scatter(x[Niter, :], y[Niter, :])
+scatter(x[end, :], y[end, :])
