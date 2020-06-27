@@ -15,6 +15,8 @@ using diagnostics;
 using wgf;
 using samplers;
 
+include("wgf_deblurring.jl")
+Imageh = load("Deblurring/Blurred_image.png");
 Imageh = convert(Array{Float64}, Imageh);
 
 # number of iterations
@@ -25,10 +27,10 @@ M = 5000;
 Nparticles = 5000;
 # regularisation parameter
 lambda = 0.01;
-dt = 10^-3;
+dt = 10^-4;
 
-sigma = 0.02;
-a = -100;
+sigma = 0.05;
+a = 50;
 x, y = wgf_deblurring(Nparticles, Niter, dt, lambda, Imageh, M, sigma, a);
 
-scatter(x[end, :], y[end, :])
+scatter(x[10, :], y[10, :])

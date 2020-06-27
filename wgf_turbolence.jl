@@ -11,9 +11,9 @@ INPUTS
 'sigma' standard deviation for Normal approximating Dirac delta
 'a' acceleration of motion
 =#
-function wgf_deblurring(N, Niter, dt, lambda, I, M, sigma, a)
+function wgf_turbolence(N, Niter, dt, lambda, I, M, beta, R)
     # normalize acceleration
-    a = a/300;
+    R = R/300;
     # initialise two matrices x, y storing the particles
     x = zeros(Niter, N);
     y = zeros(Niter, N);
@@ -33,19 +33,18 @@ function wgf_deblurring(N, Niter, dt, lambda, I, M, sigma, a)
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M
-            hN[j] = mean(pdf.(Normal.(0, sigma), hSample[j, 2] .- y[n, :]) .*
-                    pdf.(Beta(0.5, 1), (hSample[j, 1] .- x[n, :])/a)
-                 );
+            hN[j] = mean((1 .+ ((hSample[j, 1] .- x[n, :]).^2 .+
+                (hSample[j, 2] .- y[n, :]).^2)/R^2).^(-beta));
         end
         # gradient and drift
         driftX = zeros(N, 1);
         driftY = zeros(N, 1);
         for i=1:N
             # precompute normal and beta for gradient and drift
-            prec = pdf.(Normal.(0, sigma), hSample[:, 2] .- y[n, i]) .*
-                    pdf.(Beta(0.5, 1), (hSample[:, 1] .- x[n, i])/a);
-            gradientX = prec ./(2*(hSample[:, 1] .- x[n, i]));
-            gradientY = prec .* (hSample[:, 2] .- y[n, i])/(sigma^2);
+            prec = (2*beta/R^4) * (1 .+ ((hSample[:, 1] .- x[n, i]).^2 .+
+                (hSample[:, 2] .- y[n, i]).^2)/R^2).^(-beta-1);
+            gradientX = prec .* (hSample[:, 1] .- x[n, i]);
+            gradientY = prec .* (hSample[:, 2] .- y[n, i]);
             driftX[i] = mean(gradientX./hN);
             driftY[i] = mean(gradientY./hN);
         end
