@@ -19,15 +19,16 @@ using wgf;
 Imageh = load("Deblurring/galaxy_blurred_noisy.png");
 Imageh = convert(Array{Float64}, Imageh);
 pixels = size(Imageh);
+
 # number of iterations
 Niter = 100;
 # samples from h(y)
-M = 10000;
+M = 20000;
 # number of particles
-Nparticles = 10000;
+Nparticles = 20000;
 # regularisation parameter
-lambda = 0.01;
-dt = 10^-3;
+lambda = 0.001;
+dt = 10^-4;
 
 R = 50;
 beta = 3;
@@ -37,11 +38,21 @@ Xbins = range(-1 + 1/pixels[2], stop = 1 - 1/pixels[2], length = pixels[2]);
 Ybins = range(0.5 - 1/pixels[1], stop = -0.5 + 1/pixels[1], length = pixels[1]);
 KDEyWGF =  KernelDensity.kde((y[end, :], x[end, :]));
 resWGF = pdf(KDEyWGF, Ybins, Xbins);
+
+# normalize image
+resWGF = map(clamp01nan, resWGF);
 Gray.(resWGF)
 Gray.(Imagef)
 Gray.(Imageh)
+
+
+Imagef = load("Deblurring/galaxy.png");
+Imagef = Gray.(Imagef);
+Imagef
+Imagef = convert(Array{Float64}, Imagef);
 
 d = Euclidean()
 d(Gray.(resWGF), Gray.(Imagef))
 
 (norm(resWGF - Imagef).^2)/length(resWGF)
+save("galaxy_reconstruction.png", Gray.(resWGF));
