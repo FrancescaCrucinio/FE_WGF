@@ -18,11 +18,11 @@ struct FIE
    end
 
 function wgf_solve(fie::FIE, α::Float64, gradient::Function, Nparticles::Int=1000,
-    dt::Float64=1e-03, ρ0::RealMatrix=rand(size(fie.ρ_support, 1), Nparticles), M::Int=Nparticles)
+    dt::Float64=1e-03, Niter::Int=100, ρ0::RealMatrix=randn(size(fie.ρ_support, 1), Nparticles), M::Int=Nparticles)
 
     # input checks
     if α<=0
-        error("the regularisation parameter alpha shuold be positive!")
+        error("the regularisation parameter alpha should be positive!")
     end
     if size(ρ0, 1) != size(fie.ρ_support, 1)
         error("initial distribution must have $size(fie.ρ_support, 1) dimensions!")
@@ -33,8 +33,6 @@ function wgf_solve(fie::FIE, α::Float64, gradient::Function, Nparticles::Int=10
     if dt<1e-03
         warn("Finer time discretisations should be preferred")
     end
-    # number of iterations
-    Niter = trunc(Int, 1/dt);
     # dimension of solution
     D = size(fie.ρ_support, 1);
     # initial distribution

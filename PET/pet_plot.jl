@@ -9,10 +9,10 @@ using StatsBase;
 using Random;
 using LinearAlgebra;
 using DelimitedFiles;
-using KernelDensity;
-using Interpolations;
 using JLD;
 using Plots;
+using RCall;
+R"library(ks)"
 # custom modules
 using diagnostics;
 
@@ -57,13 +57,16 @@ p_relative_error = repeat([plot(1)], Npic);
 # grid
 Xbins = range(-0.75+ 1/pixels[1], stop = 0.75 - 1/pixels[1], length = pixels[1]);
 Ybins = range(-0.75 + 1/pixels[2], stop = 0.75 - 1/pixels[2], length = pixels[2]);
+gridX = repeat(Xbins, inner=[pixels[2], 1]);
+gridY = repeat(Ybins, outer=[pixels[1] 1]);
+KDEeval = [gridX gridY];
 # non-zero entries of phantom
 phantom_pos = (phantom.>0);
 for n=1:Npic
     # KDE
-    # swap x and y for KDE function (scatter plot shows that x, y are correct)
-    KDEyWGF =  KernelDensity.kde((y[showIter[n], :], x[showIter[n], :]));
-    petWGF = pdf(KDEyWGF, Ybins, Xbins);
+    KDEdata = [x[showIter[n], :] y[showIter[n], :]];
+    KDEyWGF = rks.kde(x = KDEdata, var"eval.points" = KDEeval);
+    petWGF = reshape(rcopy(KDEyWGF[3]), (pixels[1], pixels[2]));
     p[n] = heatmap(Xbins, Ybins, petWGF, legend = :none,
         aspect_ratio=1, showaxis=false, grid=false, size = (128, 128));
     # mise
