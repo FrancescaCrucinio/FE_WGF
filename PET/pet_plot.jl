@@ -12,7 +12,7 @@ using DelimitedFiles;
 using JLD;
 using Plots;
 using RCall;
-R"library(ks)"
+@rimport ks as rks
 # custom modules
 using diagnostics;
 
@@ -23,6 +23,7 @@ function remove_non_finite(x)
 end
 # Shepp Logan phantom
 phantom = readdlm("PET/phantom.txt", ',', Float64);
+phantom = reverse(phantom, dims=1);
 # entropy
 phantom_ent = -mean(remove_non_finite.(phantom .* log.(phantom)));
 pixels = size(phantom);
@@ -31,7 +32,8 @@ petSMCEMS = readdlm("PET/pet_smcems.txt", ',', Float64);
 # entropy
 petSMCEMS_ent = -mean(remove_non_finite.(petSMCEMS .* log.(petSMCEMS)));
 # data image
-sinogram = readdlm("PET/sinogram.txt", ',', Float64)
+sinogram = readdlm("PET/sinogram.txt", ',', Float64);
+sinogram = reverse(sinogram, dims=1);
 # number of angles
 nphi = size(sinogram, 2);
 # angles
@@ -51,9 +53,7 @@ Npic = 6;
 # mise
 miseWGF = zeros(1, Npic);
 petWGF_ent = zeros(1, Npic);
-# plots
-p = repeat([plot(1)], Npic);
-p_relative_error = repeat([plot(1)], Npic);
+
 # grid
 Xbins = range(-0.75+ 1/pixels[1], stop = 0.75 - 1/pixels[1], length = pixels[1]);
 Ybins = range(-0.75 + 1/pixels[2], stop = 0.75 - 1/pixels[2], length = pixels[2]);
@@ -67,25 +67,45 @@ for n=1:Npic
     KDEdata = [x[showIter[n], :] y[showIter[n], :]];
     KDEyWGF = rks.kde(x = KDEdata, var"eval.points" = KDEeval);
     petWGF = reshape(rcopy(KDEyWGF[3]), (pixels[1], pixels[2]));
-    p[n] = heatmap(Xbins, Ybins, petWGF, legend = :none,
-        aspect_ratio=1, showaxis=false, grid=false, size = (128, 128));
+    # plot
+    R"""
+        data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = $KDEyWGF[3]);
+        p <- ggplot(data, aes(x, y)) +
+            geom_raster(aes(fill = estimate), interpolate=TRUE) +
+            theme_void() +
+            theme(legend.position = "none", aspect.ratio=1) +
+            scale_fill_viridis(discrete=FALSE, option="magma")
+        ggsave(paste("pet", $n, ".eps", sep=""), p)
+    """
     # mise
     miseWGF[n] = (norm(petWGF - reverse(phantom, dims=1)).^2)/length(petWGF);
     # entropy
     petWGF_ent[n] = -mean(remove_non_finite.(petWGF .* log.(petWGF)));
     # relative error
     rel_error = relative_error(petWGF, reverse(phantom, dims = 1));
-    p_relative_error[n] = heatmap(Xbins, Ybins, rel_error, legend = :none,
-        aspect_ratio=1, showaxis=false, grid=false, size = (128, 128));
-    savefig(p[n], "pet$n.pdf");
-    savefig(p_relative_error[n], "pet_relerror$n.pdf");
+    R"""
+        data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = c($rel_error));
+        p <- ggplot(data, aes(x, y)) +
+            geom_raster(aes(fill = z), interpolate=TRUE) +
+            theme_void() +
+            theme(legend.position = "none", aspect.ratio=1) +
+            scale_fill_viridis(discrete=FALSE, option="magma")
+        ggsave(paste("pet_relerror", $n, ".eps", sep=""), p)
+    """
 end
-p_phantom = heatmap(reverse(phantom, dims=1), legend = :none,
-    aspect_ratio=1, showaxis=false, grid=false, size = (128, 128));
-p_sinogram = heatmap(reverse(sinogram, dims=1), legend = :none,
-    showaxis=false, grid=false, size = (128, 185));
-plot(p..., layout=(2, 3), showaxis=false)
-plot(p_relative_error..., layout=(2, 3), showaxis=false)
-
-savefig(p_phantom, "phantom.pdf")
-savefig(p_sinogram, "sinogram.pdf")
+R"""
+    data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = c($phantom));
+    p <- ggplot(data, aes(x, y)) +
+        geom_raster(aes(fill = z), interpolate=TRUE) +
+        theme_void() +
+        theme(legend.position = "none", aspect.ratio=1) +
+        scale_fill_viridis(discrete=FALSE, option="magma")
+    ggsave("phantom.eps", p)
+    data <- data.frame(x = $xi, y = $phi, z = c($sinogram));
+    p <- ggplot(data, aes(x, y)) +
+        geom_raster(aes(fill = z), interpolate=TRUE) +
+        theme_void() +
+        theme(legend.position = "none", aspect.ratio=1) +
+        scale_fill_viridis(discrete=FALSE, option="magma")
+    ggsave("sinogram.eps", p)
+"""
