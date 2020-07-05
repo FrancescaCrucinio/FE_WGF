@@ -1,4 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/Github/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -7,12 +8,12 @@ using Statistics;
 using StatsBase;
 using Random;
 using LinearAlgebra;
-using ImageMagick;
-using TestImages, Colors;
-using Images;
 using KernelDensity;
 using Interpolations;
-using ImageDistances;
+using FileIO;
+using ImageIO;
+using JLD;
+using Images;
 # custom packages
 using wgf;
 
@@ -21,14 +22,14 @@ Imageh = convert(Array{Float64}, Imageh);
 pixels = size(Imageh);
 
 # number of iterations
-Niter = 100;
+Niter = 500;
 # samples from h(y)
 M = 20000;
 # number of particles
 Nparticles = 20000;
 # regularisation parameter
-lambda = 0.001;
-dt = 10^-4;
+lambda = 0.01;
+dt = 10^-3;
 
 R = 50;
 beta = 3;
@@ -41,10 +42,12 @@ resWGF = pdf(KDEyWGF, Ybins, Xbins);
 
 # normalize image
 resWGF = map(clamp01nan, resWGF);
-Gray.(resWGF)
-Gray.(Imagef)
-Gray.(Imageh)
 
+
+save("resWGF10-3.jld", "resWGF", resWGF)
+
+Gray.(resWGF)
+Gray.(Imageh)
 
 Imagef = load("Deblurring/galaxy.png");
 Imagef = Gray.(Imagef);
