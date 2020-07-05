@@ -1,4 +1,4 @@
-push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/Package")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/Package")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -21,7 +21,7 @@ g(x, y) = pdf(Normal(x, sqrt(sigmaG)), y);
 
 fie=FIE(h, g, [0 1]);
 
-x= wgf_solve(fie, 0.025, gradient, dt=1e-02);
+x= wgf_solve(fie, 0.01, gradient, 1000, 1e-03);
 
 KDEyWGF =  KernelDensity.kde(x[end, :]);
 # evaluate KDE at reference points
