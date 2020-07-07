@@ -36,7 +36,7 @@ R = 50;
 beta = 3;
 x, y = wgf_turbolence(Nparticles, Niter, dt, lambda, Imageh, M, beta, R);
 
-save("turbolence06072020.jld", "x", x, "y", y, "Niter", Niter, "pixels", pixels);
+save("turbolence07072020.jld", "x", x, "y", y, "Niter", Niter, "pixels", pixels);
 
 @rimport ks as rks
 # grid

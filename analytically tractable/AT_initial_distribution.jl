@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using Distributions;
@@ -12,7 +12,6 @@ using Distances;
 using RCall;
 @rimport ks as rks
 # custom packages
-using diagnostics;
 using wgf;
 
 # Compare initial distributions
@@ -40,7 +39,7 @@ refY = range(0, stop = 1, length = 1000);
 # number of particles
 Nparticles = 1000;
 # regularisation parameter
-alpha = 0.01;
+alpha = 0.05;
 
 # initial distributions
 x0 = [0.0*ones(1, Nparticles); 0.5*ones(1, Nparticles);
@@ -86,18 +85,27 @@ iterations = repeat(2:Niter, outer=[6, 1]);
 # plot
 R"""
     library(ggplot2)
+    library(cowplot)
     glabels <- c(expression(delta[0]), expression(delta[0.5]), expression(delta[1]),
         "U(0, 1)", expression(N(m, sigma[rho]^2)), expression(N(m, sigma[rho]^2+ epsilon)))
     g <- rep(1:6, , each= $Niter -1)
     data <- data.frame(x = $iterations, y = c($E), g = g);
-    p1 <- ggplot(data, aes(x, y, group = factor(g), color = factor(g))) +
+    p <- ggplot(data, aes(x, y, group = factor(g), color = factor(g))) +
     geom_line(size = 2) +
     scale_colour_discrete(labels=glabels) +
-    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank())
+    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), legend.position="bottom", aspect.ratio = 2/4) +
+    guides(colour = guide_legend(nrow = 1))
+    # legend
+    plegend <- get_legend(p)
+    p1 <- ggplot(subset(data, x %in% c(101, 1000)), aes(x, y, group = factor(g), color = factor(g))) +
+    geom_line(size = 2) +
+    scale_colour_discrete(labels=glabels) +
+    theme(axis.title=element_blank(), text = element_text(size=20), legend.position='none', aspect.ratio = 2/3)
     p2 <- ggplot(subset(data, x %in% c(2, 100)), aes(x, y, group = factor(g), color = factor(g))) +
     geom_line(size = 2) +
     scale_colour_discrete(labels=glabels) +
-    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank())
+    theme(axis.title=element_blank(), text = element_text(size=20), legend.position='none', aspect.ratio = 2/3)
     ggsave("initial_distribution_E_1000iter.eps", p1)
     ggsave("initial_distribution_E.eps", p2)
+    ggsave("initial_distribution_legend.eps", plegend, width = 7, height = 1)
 """
