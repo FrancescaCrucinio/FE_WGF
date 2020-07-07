@@ -2,20 +2,21 @@ push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 # push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
-using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
 using KernelEstimator;
 using Random;
 using JLD;
-using LaTeXStrings;
+using Distances;
+using RCall;
+@rimport ks as rks
 # custom packages
 using diagnostics;
 using wgf;
 
 # Compare initial distributions
-# pyplot()
+
 # set seed
 Random.seed!(1234);
 
@@ -39,7 +40,7 @@ refY = range(0, stop = 1, length = 1000);
 # number of particles
 Nparticles = 1000;
 # regularisation parameter
-lambda = 0.025;
+alpha = 0.01;
 
 # initial distributions
 x0 = [0.0*ones(1, Nparticles); 0.5*ones(1, Nparticles);
@@ -47,87 +48,56 @@ x0 = [0.0*ones(1, Nparticles); 0.5*ones(1, Nparticles);
     0.5 .+ sqrt(sigmaF)*randn(1, Nparticles);
     0.5 .+ sqrt(sigmaF+0.01)*randn(1, Nparticles)];
 
-m = zeros(Niter-1, size(x0, 1));
-v = zeros(Niter-1, size(x0, 1));
-q = zeros(Niter-1, size(x0, 1));
-misef = zeros(Niter-1, size(x0, 1));
-KL = zeros(Niter-1, size(x0, 1));
-ent = zeros(Niter-1, size(x0, 1));
 E = zeros(Niter-1, size(x0, 1));
 # function computing KDE
-phi(t) = KernelEstimator.kerneldensity(t, xeval=KDEx, h=bwnormal(t));
-# function computing diagnostics
-psi(t) = diagnosticsALL(f, h, g, KDEx, t, refY);
-# number of repetitions
-Nrep = 1;
-Threads.@threads for i=1:size(x0, 1)
-    mrep = zeros(Niter-1, Nrep);
-    vrep = zeros(Niter-1, Nrep);
-    qrep = zeros(Niter-1, Nrep);
-    misefrep = zeros(Niter-1, Nrep);
-    KLrep = zeros(Niter-1, Nrep);
-    entrep = zeros(Niter-1, Nrep);
-    Erep = zeros(Niter-1, Nrep);
-    @simd for k=1:Nrep
-        ### WGF
-        x, _ = wgf_AT(Nparticles, dt, Niter, lambda, x0[i, :], M);
-        # KDE
-        KDEyWGF = mapslices(phi, x[2:end, :], dims = 2);
-        diagnosticsWGF = mapslices(psi, KDEyWGF, dims = 2);
-        # turn into matrix
-        diagnosticsWGF = reduce(hcat, getindex.(diagnosticsWGF,j) for j in eachindex(diagnosticsWGF[1]));
-        mrep[:, k] = diagnosticsWGF[:, 1];
-        vrep[:, k] = diagnosticsWGF[:, 2];
-        qrep[:, k] = diagnosticsWGF[:, 3];
-        misefrep[:, k] = diagnosticsWGF[:, 4];
-        KLrep[:, k] = diagnosticsWGF[:, 5];
-        entrep[:, k] = diagnosticsWGF[:, 6];
-        Erep[:, k] = diagnosticsWGF[:, 5] .- lambda*diagnosticsWGF[:, 6];
-        println("$i, $k")
-    end
-    m[:, i] = mean(mrep, dims = 2);
-    v[:, i] = mean(vrep, dims = 2);
-    q[:, i] = mean(qrep, dims = 2);
-    misef[:, i] = mean(misefrep, dims = 2);
-    KL[:, i] = mean(KLrep, dims = 2);
-    ent[:, i] = mean(entrep, dims = 2);
-    E[:, i] = mean(Erep, dims = 2);
+function phi(t)
+    RKDE = rks.kde(x = t, var"eval.points" = KDEx);
+    return abs.(rcopy(RKDE[3]));
 end
-# save data
-# JLD.save("initial_d1000iter.jld", "x0", x0, "m", m, "v", v, "q", q, "misef", misef,
-#    "KL", KL, "ent", ent, "E", E);
-# load data
-d = load("analytically tractable/initial_d1000iter.jld");
-m = d["m"];
-v = d["v"];
-q = d["q"];
-misef = d["misef"];
-E = d["E"];
-KL = d["KL"];
-ent = d["ent"];
+# function computing E
+function psi(t)
+    # entropy
+    function remove_non_finite(x)
+	       return isfinite(x) ? x : zero(x)
+    end
+    ent = -mean(remove_non_finite.(t .* log.(t)));
+    # kl
+    trueH = h.(refY);
+    # approximated value
+    delta = refY[2] - refY[1];
+    hatH = zeros(1, length(refY));
+    # convolution with approximated f
+    # this gives the approximated value
+    for i=1:length(refY)
+        hatH[i] = delta*sum(g.(KDEx, refY[i]).*t);
+    end
+    kl = kl_divergence(trueH, hatH);
+    return kl-alpha*ent;
+end
+for i=1:size(x0, 1)
+    ### WGF
+    x, _ = wgf_AT(Nparticles, dt, Niter, alpha, x0[i, :], M);
+    # KDE
+    KDEyWGF = mapslices(phi, x[2:end, :], dims = 2);
+    E[:, i] = mapslices(psi, KDEyWGF, dims = 2);
+end
 
+iterations = repeat(2:Niter, outer=[6, 1]);
 # plot
-pyplot()
-labels = [L"$\delta_0$" L"$\delta_{0.5}$" L"$\delta_1$" L"U$[0, 1]$" L"$N(m, \sigma^2_\rho)$" L"$N(m, \sigma^2_\rho+\varepsilon)$"];
-p1 = StatsPlots.plot(2:Niter, m, lw = 3, label = labels, legendfontsize=10);
-p2 = StatsPlots.plot(2:Niter, v, lw = 3, label = labels, legendfontsize=10);
-p3 = StatsPlots.plot(2:Niter, q, lw = 3, label = labels, legendfontsize=10);
-p4 = StatsPlots.plot(10:Niter, misef[9:end, :], lw = 3, label = labels, legendfontsize=10);
-p5 = StatsPlots.plot(10:Niter, E[9:end, :], lw = 3, label = labels, legendfontsize=10);
-p6 = StatsPlots.plot(2:Niter, KL, lw = 3, label = labels, legendfontsize=10);
-p7 = StatsPlots.plot(2:Niter, ent, lw = 3, label = labels, legendfontsize=10);
-
-# (iteration 1 not present)
-p2short = StatsPlots.plot(5:100, v[4:99, :], lw = 3, label = labels, legendfontsize=10);
-p3short = StatsPlots.plot(5:100, q[4:99, :], lw = 3, label = labels, legendfontsize=10);
-p4short = StatsPlots.plot(5:100, misef[4:99, :], lw = 3, label = labels, legendfontsize=10);
-p5short = StatsPlots.plot(5:100, E[4:99, :], lw = 3, label = labels, legendfontsize=10);
-p7short = StatsPlots.plot(5:100, ent[4:99, :], lw = 3, label = labels, legendfontsize=10);
-
-savefig(p2short, "initial_distribution_variance.pdf")
-savefig(p4short, "initial_distribution_mise.pdf")
-savefig(p5short, "initial_distribution_E.pdf")
-savefig(p7short, "initial_distribution_ent.pdf")
-
-savefig(p4, "initial_distribution_mise_1000iter.pdf")
-savefig(p5, "initial_distribution_E_1000iter.pdf")
+R"""
+    library(ggplot2)
+    glabels <- c(expression(delta[0]), expression(delta[0.5]), expression(delta[1]),
+        "U(0, 1)", expression(N(m, sigma[rho]^2)), expression(N(m, sigma[rho]^2+ epsilon)))
+    g <- rep(1:6, , each= $Niter -1)
+    data <- data.frame(x = $iterations, y = c($E), g = g);
+    p1 <- ggplot(data, aes(x, y, group = factor(g), color = factor(g))) +
+    geom_line(size = 2) +
+    scale_colour_discrete(labels=glabels) +
+    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank())
+    p2 <- ggplot(subset(data, x %in% c(2, 100)), aes(x, y, group = factor(g), color = factor(g))) +
+    geom_line(size = 2) +
+    scale_colour_discrete(labels=glabels) +
+    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank())
+    ggsave("initial_distribution_E_1000iter.eps", p1)
+    ggsave("initial_distribution_E.eps", p2)
+"""
