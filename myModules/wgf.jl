@@ -361,9 +361,9 @@ function wgf_turbolence(N, Niter, dt, lambda, I, M, beta, R)
     x = zeros(Niter, N);
     y = zeros(Niter, N);
     # sample random particles for x in [-1, 1] for time step n = 1
-    x[1, :] = 0.25*randn(1, N);
+    x[1, :] = 0.2*randn(1, N);
     # sample random particles for y in [-0.5, 0.5] for time step n = 1
-    y[1, :] = 0.125*randn(1, N);
+    y[1, :] = 0.1*randn(1, N);
     # get samples from h(y)
     pixels = size(I);
     # x is in [-1, 1]
