@@ -1,11 +1,11 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 # Julia packages
 using Revise;
-using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
 using Random;
+using RCall;
 # custom packages
 using wgf;
 
@@ -18,12 +18,19 @@ sigmaG = 0.045^2;
 sigmaF = 0.043^2;
 sigmaH = sigmaF + sigmaG;
 
-α = range(0, stop = 0.99, length = 1000);
+alpha = range(0, stop = 0.99, length = 1000);
 
 sigma, E = AT_exact_minimiser(sigmaG, sigmaH, α);
 
-pyplot()
-p1 = plot(α, sigma, lw = 3, legend = false);
-savefig(p1, "at_exact_variance.pdf")
-p2 = plot(α, E, lw = 3, legend = false);
-savefig(p2, "at_exact_E.pdf")
+R"""
+    library(ggplot2)
+    data <- data.frame(alpha = $alpha, variance = $sigma, E = $E)
+    p1 <- ggplot(data, aes(alpha, variance)) +
+    geom_line(size = 2) +
+    theme(axis.title=element_blank(), text = element_text(size=20))
+    p2 <-  ggplot(data, aes(alpha, E)) +
+    geom_line(size = 2) +
+    theme(axis.title=element_blank(), , text = element_text(size=20))
+    ggsave("at_exact_variance.eps", p1)
+    ggsave("at_exact_E.eps", p2)
+"""

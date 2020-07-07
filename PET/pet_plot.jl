@@ -2,7 +2,6 @@ push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 # push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
-using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
@@ -10,13 +9,9 @@ using Random;
 using LinearAlgebra;
 using DelimitedFiles;
 using JLD;
-using Plots;
 using RCall;
 @rimport ks as rks
-# custom modules
-using diagnostics;
 
-pyplot()
 # entropy function
 function remove_non_finite(x)
        return isfinite(x) ? x : zero(x)
