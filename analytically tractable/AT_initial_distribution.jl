@@ -105,7 +105,7 @@ R"""
     geom_line(size = 2) +
     scale_colour_discrete(labels=glabels) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.position='none', aspect.ratio = 2/3)
-    ggsave("initial_distribution_E_1000iter.eps", p1,  height=5)
-    ggsave("initial_distribution_E.pdf", p2,  height=5)
+    ggsave("initial_distribution_E_1000iter.eps", p1, height=5)
+    ggsave("initial_distribution_E.eps", p2, height=5)
     ggsave("initial_distribution_legend.eps", plegend, width = 7, height = 1)
 """
