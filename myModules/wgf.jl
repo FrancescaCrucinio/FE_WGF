@@ -65,18 +65,15 @@ INPUTS
 'N' number of particles
 'dt' discretisation step
 'Niter' number of iterations
-'lambda' regularisation parameter
+'alpha' regularisation parameter
 'x0' user selected initial distribution
 'M' number of samples from h(y) to be drawn at each iteration
 =#
-function wgf_gaussian_mixture(N, dt, Niter, lambda, x0, M)
+function wgf_gaussian_mixture(N, dt, Niter, alpha, x0, M)
     # initialise a matrix x storing the particles
     x = zeros(Niter, N);
     # initial distribution is given as input:
     x[1, :] = x0;
-    # initialise a matrix drift storing the drift
-    drift = zeros(Niter-1, N);
-
     for n=1:(Niter-1)
         # get samples from h(y)
         y = Ysample_gaussian_mixture(M);
@@ -86,14 +83,15 @@ function wgf_gaussian_mixture(N, dt, Niter, lambda, x0, M)
             hN[j] = mean(pdf.(Normal.(x[n, :], 0.045), y[j]));
         end
         # gradient and drift
+        drift = zeros(N, 1);
         for i=1:N
             gradient = pdf.(Normal.(x[n, i], 0.045), y) .* (y .- x[n, i])/(0.045^2);
-            drift[n, i] = mean(gradient./hN);
+            drift[i] = mean(gradient./hN);
         end
         # update locations
-        x[n+1, :] = x[n, :] .+ drift[n, :]*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
+        x[n+1, :] = x[n, :] .+ drift*dt .+ sqrt(2*alpha*dt)*randn(N, 1);
     end
-    return x, drift
+    return x
 end
 
 #=
@@ -397,5 +395,4 @@ function wgf_turbolence(N, Niter, dt, lambda, I, M, beta, R)
     end
     return x, y
 end
-
 end
