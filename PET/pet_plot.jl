@@ -64,6 +64,8 @@ for n=1:Npic
     petWGF = reshape(rcopy(KDEyWGF[3]), (pixels[1], pixels[2]));
     # plot
     R"""
+    library(ggplot2)
+    library(viridis)
         data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = $KDEyWGF[3]);
         p <- ggplot(data, aes(x, y)) +
             geom_raster(aes(fill = estimate), interpolate=TRUE) +
