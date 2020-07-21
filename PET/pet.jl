@@ -12,6 +12,8 @@ using DelimitedFiles;
 using KernelDensity;
 using Interpolations;
 using JLD;
+using RCall;
+@rimport ks as rks;
 # custom packages
 using diagnostics;
 using wgf;
@@ -41,13 +43,13 @@ xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # dt and number of iterations
 dt = 1e-03;
-Niter = 500;
+Niter = 5000;
 # samples from h(y)
 M = 20000;
 # number of particles
 Nparticles = 20000;
 # regularisation parameter
-lambda = 0.0005;
+lambda = 0.0001;
 # variance of normal describing alignment
 sigma = 0.02;
 
@@ -64,7 +66,7 @@ KDEeval = [gridX gridY];
 
 # function computing KDE
 function psi(t)
-    RKDE = rks.kde(x = [t[1:N]; t[(N+1):(2N)]], var"eval.points" = KDEeval);
+    RKDE = rks.kde(x = [t[1:Nparticles]; t[(Nparticles+1):(2Nparticles)]], var"eval.points" = KDEeval);
     return abs.(rcopy(RKDE[3]));
 end
 # function computing entropy
@@ -82,5 +84,5 @@ ent = mapslices(psi_ent, KDEyWGF, dims = 2);
 plot(1:Niter, ent)
 #
 
-save("pet20062020.jld", "lambda", lambda, "x", x,
+save("pet21072020.jld", "lambda", lambda, "x", x,
    "y", y, "Niter", Niter, "Nparticles", Nparticles, "M", M, "dt", dt);
