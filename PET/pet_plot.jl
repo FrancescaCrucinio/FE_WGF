@@ -12,7 +12,7 @@ using JLD;
 using RCall;
 @rimport ks as rks
 # custom modules
-using diagnostics
+using diagnostics;
 
 # entropy function
 function remove_non_finite(x)
