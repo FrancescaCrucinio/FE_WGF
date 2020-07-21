@@ -4,6 +4,8 @@ using Distributions;
 using Statistics;
 using LinearAlgebra;
 using KernelEstimator;
+using RCall;
+@rimport ks as rks;
 
 using samplers;
 
@@ -65,18 +67,15 @@ INPUTS
 'N' number of particles
 'dt' discretisation step
 'Niter' number of iterations
-'lambda' regularisation parameter
+'alpha' regularisation parameter
 'x0' user selected initial distribution
 'M' number of samples from h(y) to be drawn at each iteration
 =#
-function wgf_gaussian_mixture(N, dt, Niter, lambda, x0, M)
+function wgf_gaussian_mixture(N, dt, Niter, alpha, x0, M)
     # initialise a matrix x storing the particles
     x = zeros(Niter, N);
     # initial distribution is given as input:
     x[1, :] = x0;
-    # initialise a matrix drift storing the drift
-    drift = zeros(Niter-1, N);
-
     for n=1:(Niter-1)
         # get samples from h(y)
         y = Ysample_gaussian_mixture(M);
@@ -86,20 +85,22 @@ function wgf_gaussian_mixture(N, dt, Niter, lambda, x0, M)
             hN[j] = mean(pdf.(Normal.(x[n, :], 0.045), y[j]));
         end
         # gradient and drift
+        drift = zeros(N, 1);
         for i=1:N
             gradient = pdf.(Normal.(x[n, i], 0.045), y) .* (y .- x[n, i])/(0.045^2);
-            drift[n, i] = mean(gradient./hN);
+            drift[i] = mean(gradient./hN);
         end
         # update locations
-        x[n+1, :] = x[n, :] .+ drift[n, :]*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
+        x[n+1, :] = x[n, :] .+ drift*dt .+ sqrt(2*alpha*dt)*randn(N, 1);
     end
-    return x, drift
+    return x
 end
 
 #=
  WGF for positron emission tomography
 OUTPUTS
 1 - particle locations (2D)
+2 - entropy of reconstruction
 INPUTS
 'N' number of particles
 'dt' discretisation step
@@ -117,13 +118,27 @@ function wgf_pet(N, dt, Niter, lambda, noisyI, M, phi, xi, sigma)
     # initialise two matrices x, y storing the particles
     x = zeros(Niter, N);
     y = zeros(Niter, N);
+    # initialise vector storing the delta_entropy
+    ent = zeros(Niter, 1);
+    # grid fr KDE
+    Xbins = range(-0.75+ 1/pixels[1], stop = 0.75 - 1/pixels[1], length = pixels[1]);
+    Ybins = range(-0.75 + 1/pixels[2], stop = 0.75 - 1/pixels[2], length = pixels[2]);
+    gridX = repeat(Xbins, inner=[pixels[2], 1]);
+    gridY = repeat(Ybins, outer=[pixels[1] 1]);
+    KDEeval = [gridX gridY];
     # # sample random particles for x in [-1, 1] for time step n = 1
     # x[1, :] = 2 * rand(1, N) .- 1;
     # # sample random particles for y in [-1, 1] for time step n = 1
     # y[1, :] = 2 * rand(1, N) .- 1;
-    x0 = rand(MvNormal([0, 0], Matrix{Float64}(I, 2, 2)), N);
+    x0 = rand(MvNormal([0, 0], 0.1*Matrix{Float64}(I, 2, 2)), N);
     x[1, :] = x0[1, :];
     y[1, :] = x0[2, :];
+    # KDE
+    KDEdata = [x[1, :] y[1, :]];
+    KDEyWGF = rks.kde(x = KDEdata, var"eval.points" = KDEeval);
+    # extract KDE
+    petWGF = rcopy(KDEyWGF[3]);
+    ent[1] = -mean(remove_non_finite.(petWGF .* log.(petWGF)));
     for n=1:(Niter-1)
         # get sample from (y)
         hSample = histogram2D_sampler(noisyI, phi, xi, M);
@@ -151,8 +166,14 @@ function wgf_pet(N, dt, Niter, lambda, noisyI, M, phi, xi, sigma)
         # update locations
         x[n+1, :] = x[n, :] .+ driftX*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
         y[n+1, :] = y[n, :] .+ driftY*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
+        # KDE
+        KDEdata = [x[n+1, :] y[n+1, :]];
+        KDEyWGF = rks.kde(x = KDEdata, var"eval.points" = KDEeval);
+        # extract KDE
+        petWGF = rcopy(KDEyWGF[3]);
+        ent[n+1] = -mean(remove_non_finite.(petWGF .* log.(petWGF)));
     end
-    return x, y
+    return x, y, ent
 end
 
 #=
@@ -397,5 +418,4 @@ function wgf_turbolence(N, Niter, dt, lambda, I, M, beta, R)
     end
     return x, y
 end
-
 end

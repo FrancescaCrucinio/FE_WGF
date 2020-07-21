@@ -67,7 +67,7 @@ function diagnosticsF(f, x, y)
     mise = mean(difference);
     # entropy
     function remove_non_finite(x)
-	       return isfinite(x) ? x : zero(x)
+	       return isfinite(x) ? x : 0
     end
     ent = -mean(remove_non_finite.(y .* log.(y)));
     return m, v, difference, mise, ent
@@ -111,4 +111,5 @@ function relative_error(a, b)
     abs_error[b_pos] = abs_error[b_pos]./b[b_pos];
     return abs_error
 end
+
 end

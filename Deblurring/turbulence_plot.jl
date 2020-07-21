@@ -37,11 +37,15 @@ KDEeval = [gridX gridY];
 # KDE
 KDEdata = [x[Niter, :] y[Niter, :]];
 KDEyWGF = rks.kde(x = KDEdata, var"eval.points" = KDEeval);
-deblurringWGF = reshape(rcopy(KDEyWGF[3]), (pixels[2], pixels[1]));
+deblurringWGF = reshape(rcopy(KDEyWGF[3]), (pixels[1], pixels[2]));
 deblurringWGF = map(clamp01nan, deblurringWGF);
 # plot
 Gray.(reverse(deblurringWGF, dims = 1))
-save("galaxy_reconsruction.png", Gray.(reverse(deblurringWGF, dims = 1));
+deblurringWGF = reshape(rcopy(KDEyWGF[3]), (pixels[1], pixels[2]));
+deblurringWGF = map(clamp01nan, deblurringWGF);
+# plot
+Gray.(reverse(deblurringWGF, dims = 1))
+save("galaxy_reconsruction.png", Gray.(reverse(deblurringWGF, dims = 1)));
 # mise
 miseWGF = (norm(deblurringWGF - Imagef).^2)/length(deblurringWGF);
 # entropy
