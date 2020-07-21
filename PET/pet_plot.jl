@@ -11,6 +11,8 @@ using DelimitedFiles;
 using JLD;
 using RCall;
 @rimport ks as rks
+# custom modules
+using diagnostics;
 
 # entropy function
 function remove_non_finite(x)
@@ -37,9 +39,9 @@ phi = range(0, stop = 2*pi, length = nphi);
 offsets = floor(size(sinogram, 1)/2);
 xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
-x = load("PET/pet15062020.jld", "x");
-y = load("PET/pet15062020.jld", "y");
-Niter = load("PET/pet15062020.jld", "Niter");
+x = load("PET/pet20062020.jld", "x");
+y = load("PET/pet20062020.jld", "y");
+Niter = load("PET/pet20062020.jld", "Niter");
 
 
 # select which steps to show
@@ -64,6 +66,9 @@ for n=1:Npic
     petWGF = reshape(rcopy(KDEyWGF[3]), (pixels[1], pixels[2]));
     # plot
     R"""
+        library(ggplot2)
+        library(scales)
+        library(viridis)
         data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = $KDEyWGF[3]);
         p <- ggplot(data, aes(x, y)) +
             geom_raster(aes(fill = estimate), interpolate=TRUE) +
