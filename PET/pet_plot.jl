@@ -51,7 +51,25 @@ gridX = repeat(Xbins, inner=[pixels[2], 1]);
 gridY = repeat(Ybins, outer=[pixels[1] 1]);
 KDEeval = [gridX gridY];
 
+# function computing KDE
+function psi(t)
+    RKDE = rks.kde(x = [t[1:N]; t[(N+1):(2N)]], var"eval.points" = KDEeval);
+    return abs.(rcopy(RKDE[3]));
+end
+# function computing entropy
+function psi_ent(t)
+    # entropy
+    function remove_non_finite(x)
+	       return isfinite(x) ? x : 0
+    end
+    ent = -mean(remove_non_finite.(t .* log.(t)));
+end
 
+
+
+KDEyWGF = mapslices(psi, [x y], dims = 2);
+ent = mapslices(psi_ent, KDEyWGF, dims = 2);
+plot(1:1500, ent)
 #
 # # select which steps to show
 # showIter = [1, 10, 50, 100, 300, 500];

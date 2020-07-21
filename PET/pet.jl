@@ -54,5 +54,33 @@ sigma = 0.02;
 # WGF
 x, y = wgf_pet(Nparticles, dt, Niter, lambda, sinogram, M, phi, xi, sigma);
 
+
+# grid
+Xbins = range(-0.75+ 1/pixels[1], stop = 0.75 - 1/pixels[1], length = pixels[1]);
+Ybins = range(-0.75 + 1/pixels[2], stop = 0.75 - 1/pixels[2], length = pixels[2]);
+gridX = repeat(Xbins, inner=[pixels[2], 1]);
+gridY = repeat(Ybins, outer=[pixels[1] 1]);
+KDEeval = [gridX gridY];
+
+# function computing KDE
+function psi(t)
+    RKDE = rks.kde(x = [t[1:N]; t[(N+1):(2N)]], var"eval.points" = KDEeval);
+    return abs.(rcopy(RKDE[3]));
+end
+# function computing entropy
+function psi_ent(t)
+    # entropy
+    function remove_non_finite(x)
+	       return isfinite(x) ? x : 0
+    end
+    ent = -mean(remove_non_finite.(t .* log.(t)));
+end
+
+
+KDEyWGF = mapslices(psi, [x y], dims = 2);
+ent = mapslices(psi_ent, KDEyWGF, dims = 2);
+plot(1:Niter, ent)
+#
+
 save("pet20062020.jld", "lambda", lambda, "x", x,
    "y", y, "Niter", Niter, "Nparticles", Nparticles, "M", M, "dt", dt);
