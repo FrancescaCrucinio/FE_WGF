@@ -43,11 +43,11 @@ xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # dt and number of iterations
 dt = 1e-03;
-Niter = 5000;
+Niter = 2000;
 # samples from h(y)
-M = 20000;
+M = 10000;
 # number of particles
-Nparticles = 20000;
+Nparticles = 10000;
 # regularisation parameter
 lambda = 0.0001;
 # variance of normal describing alignment
@@ -84,5 +84,5 @@ ent = mapslices(psi_ent, KDEyWGF, dims = 2);
 plot(1:Niter, ent)
 #
 
-save("pet21072020.jld", "lambda", lambda, "x", x,
+save("pet26072020.jld", "lambda", lambda, "x", x,
    "y", y, "Niter", Niter, "Nparticles", Nparticles, "M", M, "dt", dt);
