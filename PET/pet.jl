@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/OneDrive/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -12,8 +12,14 @@ using DelimitedFiles;
 using KernelDensity;
 using Interpolations;
 using JLD;
+# R
 using RCall;
 @rimport ks as rks;
+R"""
+library(ggplot2)
+library(scales)
+library(viridis)
+"""
 # custom packages
 using diagnostics;
 using wgf;
@@ -24,15 +30,13 @@ function remove_non_finite(x)
 end
 # Shepp Logan phantom
 phantom = readdlm("PET/phantom.txt", ',', Float64);
+phantom = reverse(phantom, dims=1);
+pixels = size(phantom);
 # entropy
 phantom_ent = -mean(remove_non_finite.(phantom .* log.(phantom)));
-pixels = size(phantom);
-# SMC-EMS reconstruction
-petSMCEMS = readdlm("PET/pet_smcems.txt", ',', Float64);
-# entropy
-petSMCEMS_ent = -mean(remove_non_finite.(petSMCEMS .* log.(petSMCEMS)));
 # data image
-sinogram = readdlm("PET/sinogram.txt", ',', Float64)
+sinogram = readdlm("PET/sinogram.txt", ',', Float64);
+sinogram = reverse(sinogram, dims=1);
 # number of angles
 nphi = size(sinogram, 2);
 # angles
@@ -42,19 +46,16 @@ offsets = floor(size(sinogram, 1)/2);
 xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # dt and number of iterations
-dt = 1e-03;
-Niter = 5000;
+dt = 1e-02;
+Niter = 2000;
 # samples from h(y)
-M = 20000;
+M = 5000;
 # number of particles
-Nparticles = 20000;
+Nparticles = 5000;
 # regularisation parameter
-lambda = 0.0001;
+alpha = 0.01;
 # variance of normal describing alignment
 sigma = 0.02;
-
-# WGF
-x, y = wgf_pet(Nparticles, dt, Niter, lambda, sinogram, M, phi, xi, sigma);
 
 
 # grid
@@ -63,6 +64,32 @@ Ybins = range(-0.75 + 1/pixels[2], stop = 0.75 - 1/pixels[2], length = pixels[2]
 gridX = repeat(Xbins, inner=[pixels[2], 1]);
 gridY = repeat(Ybins, outer=[pixels[1] 1]);
 KDEeval = [gridX gridY];
+R"""
+    data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = c($phantom));
+    p <- ggplot(data, aes(x, y)) +
+        geom_raster(aes(fill = z), interpolate=TRUE) +
+        theme_void() +
+        theme(legend.position = "none", aspect.ratio=1) +
+        scale_fill_viridis(discrete=FALSE, option="magma")
+    # ggsave("phantom.eps", p)
+"""
+
+# WGF
+x, y = wgf_pet(Nparticles, dt, Niter, alpha, sinogram, M, phi, xi, sigma);
+
+# KDE
+KDEdata = [x[Niter, :] y[Niter, :]];
+KDEyWGF = rks.kde(x = KDEdata, var"eval.points" = KDEeval);
+# plot
+R"""
+    data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = $KDEyWGF[3]);
+    p <- ggplot(data, aes(x, y)) +
+        geom_raster(aes(fill = estimate), interpolate=TRUE) +
+        theme_void() +
+        theme(legend.position = "none", aspect.ratio=1) +
+        scale_fill_viridis(discrete=FALSE, option="magma")
+    # ggsave(paste("pet", $n, ".eps", sep=""), p)
+"""
 
 # function computing KDE
 function psi(t)
@@ -82,7 +109,4 @@ end
 KDEyWGF = mapslices(psi, [x y], dims = 2);
 ent = mapslices(psi_ent, KDEyWGF, dims = 2);
 plot(1:Niter, ent)
-#
-
-save("pet21072020.jld", "lambda", lambda, "x", x,
-   "y", y, "Niter", Niter, "Nparticles", Nparticles, "M", M, "dt", dt);
+hline!([phantom_ent])
