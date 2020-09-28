@@ -16,7 +16,6 @@ using RCall;
 using diagnostics;
 using wgf;
 
-pyplot()
 # set seed
 Random.seed!(1234);
 

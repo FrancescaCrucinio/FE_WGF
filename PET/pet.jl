@@ -71,7 +71,7 @@ R"""
         theme_void() +
         theme(legend.position = "none", aspect.ratio=1) +
         scale_fill_viridis(discrete=FALSE, option="magma")
-    # ggsave("phantom.eps", p)
+    ggsave("phantom.png", p)
 """
 
 # WGF
