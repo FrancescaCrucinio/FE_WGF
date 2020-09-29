@@ -15,17 +15,17 @@ using RCall;
 using diagnostics;
 using smcems;
 using wgf;
+using samplers;
 
 # set seed
-Random.seed!(1234);
+Random.seed!(7777);
 
 # data for anaytically tractable example
-sigmaG = 0.045^2;
-sigmaF = 0.043^2;
-sigmaH = sigmaF + sigmaG;
-f(x) = pdf.(Normal(0.5, sqrt(sigmaF)), x);
-h(x) = pdf.(Normal(0.5, sqrt(sigmaH)), x);
-g(x, y) = pdf.(Normal(x, sqrt(sigmaG)), y);
+# data for gaussian mixture example
+f(x) = pdf.(Normal(0.3, 0.015), x)/3 + 2*pdf.(Normal(0.5, 0.043), x)/3;
+h(x) = 2*pdf.(Normal(0.3, sqrt(0.043^2 + 0.045^2)), x)/3 +
+        pdf.(Normal(0.5, sqrt(0.015^2 + 0.045^2)), x)/3;
+g(x, y) = pdf.(Normal(x, 0.045), y);
 
 # parameters
 # dt and number of iterations
@@ -34,14 +34,14 @@ Niter = 100;
 # samples from h(y)
 M = 1000;
 # number of particles
-Nparticles = [100; 500; 1000; 5000; 10000];
+Nparticles = [100; 500; 1000; 5000];
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # regularisation parameters
-epsilon = 0.001;
-alpha = 0.01; # chosen to give the same entropy as SMCEMS
+epsilon = 1e-3;
+alpha = 2e-1;
 # number of repetitions
-Nrep = 1000;
+Nrep = 10;
 
 # diagnostics
 tSMC = zeros(length(Nparticles), 1);
@@ -64,10 +64,12 @@ Threads.@threads for i=1:length(Nparticles)
     @simd for j=1:Nrep
         # initial distribution
         x0SMC = rand(1, Nparticles[i]);
-        x0SMC = rand(1, Nparticles[i]);#????
+        x0WGF = 0.5*ones(1, Nparticles[i]);
+        # sample from h(y)
+        y = Ysample_gaussian_mixture(10000);
         # run SMC
         trepSMC[j] = @elapsed begin
-            xSMC, W = smc_AT_approximated_potential(Nparticles[i], Niter, epsilon, x0, M); ###write smc for gaussian mixture
+            xSMC, W = smc_gaussian_mixture(Nparticles[i], Niter, epsilon, x0SMC, y, M);
             # kde
             bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
             RKDESMC = rks.kde(x = xSMC[end,:], var"h" = bw, var"eval.points" = KDEx, var"w" = W[end, :]);
@@ -79,7 +81,7 @@ Threads.@threads for i=1:length(Nparticles)
         entropySMC[i, j] = eSMC;
         # run WGF
         trepWGF[j] = @elapsed begin
-            xWGF = wgf_gaussian_mixture(Nparticles[i], dt, Niter, alpha, x0WGF, M);
+            xWGF = wgf_gaussian_mixture(Nparticles[i], dt, Niter, alpha, x0WGF, y, M);
             RKDEWGF = rks.kde(x = xWGF[end,:], var"eval.points" = KDEx);
             KDEyWGF =  abs.(rcopy(RKDEWGF[3]));
         end
@@ -96,3 +98,36 @@ Threads.@threads for i=1:length(Nparticles)
     qdistSMC[i, :] = mean(qdistrepSMC, dims = 1);
     qdistWGF[i, :] = mean(qdistrepWGF, dims = 1);
 end
+
+qdistSMC = transpose(qdistSMC);
+qdistWGF = transpose(qdistWGF);
+miseSMC = diagnosticsSMC[:, 3];
+miseWGF = diagnosticsWGF[:, 3];
+groups = length(Nparticles);
+# plot
+R"""
+    library(ggplot2)
+    # mise vs runtime
+    g <- rep(1:2, , each= $groups)
+    symbol <- rep(c("N=100", "N=500", "N=1000", "N=5000"), times= 2)
+    data <- data.frame(x = c($tSMC, $tWGF), y = c($miseSMC, $miseWGF), g = g);
+    data$symbol <- factor(symbol, levels = c("N=100", "N=500", "N=1000", "N=5000"))
+    p1 <- ggplot(data, aes(x, y, group = factor(g), color = factor(g))) +
+    geom_line(size = 2) +
+    geom_point(aes(shape=symbol), size=4) +
+    scale_colour_manual(values = c("blue", "red"), labels=c("SMC-EMS", "WGF")) +
+    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
+    # ggsave("mixture_runtime_vs_mise.eps", p1,  height=5)
+
+    # boxplot for smoothness
+    symbol <- rep(c("N=100", "N=500", "N=1000", "N=5000", "N=100", "N=500", "N=1000", "N=5000"), each= 1000)
+    g <- rep(1:2, , each= $groups*1000)
+    runtime <- rep(c($tSMC, $tWGF), each = 1000)
+    runtime <- round(runtime, 2)
+    data <- data.frame(x = factor(runtime), y = c(c($qdistSMC), c($qdistWGF)), g = g);
+    data$symbol <- factor(symbol, levels = c("N=100", "N=500", "N=1000", "N=5000"))
+    p2 <- ggplot(data) +
+    geom_boxplot(aes(x = x, y=y, color = symbol)) +
+    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank())
+    # ggsave("mixture_runtime_vs_mse.eps", p2,  height=5)
+"""

@@ -67,16 +67,18 @@ INPUTS
 'Niter' number of iterations
 'alpha' regularisation parameter
 'x0' user selected initial distribution
+'hSample' sample from h(y)
 'M' number of samples from h(y) to be drawn at each iteration
 =#
-function wgf_gaussian_mixture(N, dt, Niter, alpha, x0, M)
+function wgf_gaussian_mixture(N, dt, Niter, alpha, x0, hSample, M)
     # initialise a matrix x storing the particles
     x = zeros(Niter, N);
     # initial distribution is given as input:
     x[1, :] = x0;
+
     for n=1:(Niter-1)
-        # get samples from h(y)
-        y = Ysample_gaussian_mixture(M);
+        # samples from h(y)
+        y = sample(hSample, M, replace=true);
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M
