@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using Distributions;
@@ -31,21 +31,23 @@ g(x, y) = pdf.(Normal(x, sqrt(sigmaG)), y);
 dt = 1e-03;
 Niter = 1000;
 # samples from h(y)
-M = 1000;
+M = 500;
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # reference values for KL divergence
 refY = range(0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 1000;
+Nparticles = 500;
 # regularisation parameter
 alpha = 0.05;
 
+# exact minimiser
+variance, _  = AT_exact_minimiser(sigmaG, sigmaH, alpha);
 # initial distributions
 x0 = [0.0*ones(1, Nparticles); 0.5*ones(1, Nparticles);
     1*ones(1, Nparticles); rand(1, Nparticles);
-    0.5 .+ sqrt(sigmaF)*randn(1, Nparticles);
-    0.5 .+ sqrt(sigmaF+0.01)*randn(1, Nparticles)];
+    0.5 .+ sqrt(variance)*randn(1, Nparticles);
+    0.5 .+ sqrt(variance+0.01)*randn(1, Nparticles)];
 
 E = zeros(Niter-1, size(x0, 1));
 # function computing KDE
@@ -86,13 +88,15 @@ iterations = repeat(2:Niter, outer=[6, 1]);
 R"""
     library(ggplot2)
     library(cowplot)
+    library(scales)
     glabels <- c(expression(delta[0]), expression(delta[0.5]), expression(delta[1]),
-        "U(0, 1)", expression(N(m, sigma[rho]^2)), expression(N(m, sigma[rho]^2+ epsilon)))
+        "U(0, 1)", expression(N(m, sigma[alpha]^2)), expression(N(m, sigma[alpha]^2+ epsilon)))
     g <- rep(1:6, , each= $Niter -1)
     data <- data.frame(x = $iterations, y = c($E), g = g);
     p <- ggplot(data, aes(x, y, group = factor(g), color = factor(g))) +
     geom_line(size = 2) +
     scale_colour_discrete(labels=glabels) +
+    scale_y_log10(labels = trans_format("log10", math_format(10^.x))) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), legend.position="bottom", aspect.ratio = 2/4) +
     guides(colour = guide_legend(nrow = 1))
     # legend
@@ -100,12 +104,12 @@ R"""
     p1 <- ggplot(subset(data, x %in% c(101, 1000)), aes(x, y, group = factor(g), color = factor(g))) +
     geom_line(size = 2) +
     scale_colour_discrete(labels=glabels) +
+    scale_y_log10(labels = trans_format("log10", math_format(10^.x))) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.position='none', aspect.ratio = 2/3)
     p2 <- ggplot(subset(data, x %in% c(2, 100)), aes(x, y, group = factor(g), color = factor(g))) +
     geom_line(size = 2) +
     scale_colour_discrete(labels=glabels) +
+    scale_y_log10(labels = trans_format("log10", math_format(10^.x))) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.position='none', aspect.ratio = 2/3)
-    ggsave("initial_distribution_E_1000iter.eps", p1, height=5)
-    ggsave("initial_distribution_E.eps", p2, height=5)
-    ggsave("initial_distribution_legend.eps", plegend, width = 7, height = 1)
+    ggsave("initial_distribution_E.eps", p, height=5)
 """

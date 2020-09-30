@@ -15,8 +15,8 @@ using RCall;
 # custom packages
 using diagnostics;
 using wgf;
+using samplers;
 
-pyplot()
 # set seed
 Random.seed!(1234);
 
@@ -58,6 +58,8 @@ Niter = 200;
 
 # samples from h(y)
 M = 1000;
+# sample from h(y)
+hSample = Ysample_gaussian_mixture(M);
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # reference values for KL divergence
@@ -72,7 +74,7 @@ f_approx = zeros(length(KDEx), length(alpha));
 for i=1:length(alpha)
     x0 = 0.5 .+ randn(1, Nparticles)/10;
     # run WGF
-    x =  wgf_gaussian_mixture(Nparticles, dt, Niter, alpha[i], x0, M);
+    x =  wgf_gaussian_mixture(Nparticles, dt, Niter, alpha[i], x0, hSample, M);
     a = alpha[i];
     KDEyWGF = mapslices(phi, x, dims = 2);
     f_approx[:, i] = KDEyWGF[end, :];

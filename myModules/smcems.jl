@@ -4,10 +4,71 @@ using Distributions;
 using Statistics;
 using StatsBase;
 
+export smc_gaussian_mixture
 export smc_AT_approximated_potential
 export optimal_bandwidthESS
 export weightedKDE
 export AT_alpha_SMC
+
+
+#= SMC for gaussian mixture exmaple
+OUTPUTS
+1 - particle locations
+2 - particle weights
+INPUTS
+'N' number of particles
+'Niter' number of time steps
+'epsilon' standard deviation for Gaussian smoothing kernel
+'x0' initial distribution.
+user selected initial distribution
+'hSample' sample from h(y)
+'M' number of samples from h(y) to be drawn at each iteration
+=#
+function smc_gaussian_mixture(N, Niter, epsilon, x0, hSample, M)
+    # initialise a matrix x storing the particles at each time step
+    x = zeros(Niter,N);
+    # initialise a matrix W storing the weights at each time step
+    W = zeros(Niter,N);
+    # initial distribution is given as input:
+    x[1, :] = x0;
+    # uniform weights at time n = 1
+    W[1, :] = ones(1, N)/N;
+
+    for n=2:Niter
+        # samples from h(y)
+        y = sample(hSample, M, replace=true);
+        # ESS
+        ESS=1/sum(W[n-1,:].^2);
+        # RESAMPLING
+        if(ESS < N/2)
+            indices = trunc.(Int, mult_resample(W[n-1,:], N));
+            x[n,:] = x[n-1, indices];
+            W[n,:] .= 1/N;
+        else
+            x[n,:] = x[n-1,:];
+            W[n,:] = W[n-1,:];
+        end
+
+        # Compute h^N_{n}
+        hN = zeros(M,1);
+        for j=1:M
+            hN[j] = mean(pdf.(Normal.(x[n, :], 0.045), y[j]));
+        end
+        # Markov kernel: Random walk step
+        x[n, :] = x[n, :] + epsilon*randn(N, 1);
+
+        # update weights
+        for i=1:N
+            g = pdf.(Normal.(x[n, i], 0.045), y);
+            potential = sum(g ./ hN);
+            # update weight
+            W[n, i] = potential;
+        end
+        # normalise weights
+        W[n, :] = W[n, :] ./ sum(W[n, :]);
+    end
+    return x, W
+end
 
 #=
  SMC for analytically tractable example (approximated potential)

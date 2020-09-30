@@ -53,7 +53,7 @@ KDEeval = [gridX gridY];
 
 # function computing KDE
 function psi(t)
-    RKDE = rks.kde(x = [t[1:N]; t[(N+1):(2N)]], var"eval.points" = KDEeval);
+    RKDE = rks.kde(x = [t[1:Nparticles]; t[(Nparticles+1):(2Nparticles)]], var"eval.points" = KDEeval);
     return abs.(rcopy(RKDE[3]));
 end
 # function computing entropy
@@ -69,7 +69,7 @@ end
 
 KDEyWGF = mapslices(psi, [x y], dims = 2);
 ent = mapslices(psi_ent, KDEyWGF, dims = 2);
-plot(1:1500, ent)
+plot(1:100, ent)
 #
 # # select which steps to show
 # showIter = [1, 10, 50, 100, 300, 500];
