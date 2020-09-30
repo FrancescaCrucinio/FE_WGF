@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -8,7 +8,7 @@ using Statistics;
 using StatsBase;
 using KernelEstimator;
 using Random;
-using JLD2;
+using JLD;
 using RCall;
 @rimport ks as rks
 # custom packages
