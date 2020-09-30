@@ -1,14 +1,14 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 # push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
-# using Revise;
+using Revise;
 using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
 using KernelEstimator;
 using Random;
-using JLD;
+using JLD2;
 using RCall;
 @rimport ks as rks
 # custom packages
@@ -18,7 +18,7 @@ using wgf;
 using samplers;
 
 # set seed
-Random.seed!(7777);
+Random.seed!(1234);
 
 # data for anaytically tractable example
 # data for gaussian mixture example
@@ -34,14 +34,14 @@ Niter = 100;
 # samples from h(y)
 M = 1000;
 # number of particles
-Nparticles = [100; 500; 1000; 5000];
+Nparticles = [100; 500; 1000; 5000; 10000];
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # regularisation parameters
 epsilon = 1e-3;
 alpha = 2e-1;
 # number of repetitions
-Nrep = 10;
+Nrep = 1000;
 
 # diagnostics
 tSMC = zeros(length(Nparticles), 1);
@@ -66,13 +66,13 @@ Threads.@threads for i=1:length(Nparticles)
         x0SMC = rand(1, Nparticles[i]);
         x0WGF = 0.5*ones(1, Nparticles[i]);
         # sample from h(y)
-        y = Ysample_gaussian_mixture(10000);
+        hSample = Ysample_gaussian_mixture(100000);
         # run SMC
         trepSMC[j] = @elapsed begin
-            xSMC, W = smc_gaussian_mixture(Nparticles[i], Niter, epsilon, x0SMC, y, M);
+            xSMC, W = smc_gaussian_mixture(Nparticles[i], Niter, epsilon, x0SMC, hSample, M);
             # kde
             bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
-            RKDESMC = rks.kde(x = xSMC[end,:], var"h" = bw, var"eval.points" = KDEx, var"w" = W[end, :]);
+            RKDESMC = rks.kde(x = xSMC[end,:], var"h" = bw, var"eval.points" = KDEx, var"w" = Nparticles[i]*W[end, :]);
             KDEySMC =  abs.(rcopy(RKDESMC[3]));
         end
         mSMC, vSMC, qSMC, miseSMC, eSMC = diagnosticsF(f, KDEx, KDEySMC);
@@ -81,7 +81,7 @@ Threads.@threads for i=1:length(Nparticles)
         entropySMC[i, j] = eSMC;
         # run WGF
         trepWGF[j] = @elapsed begin
-            xWGF = wgf_gaussian_mixture(Nparticles[i], dt, Niter, alpha, x0WGF, y, M);
+            xWGF = wgf_gaussian_mixture(Nparticles[i], dt, Niter, alpha, x0WGF, hSample, M);
             RKDEWGF = rks.kde(x = xWGF[end,:], var"eval.points" = KDEx);
             KDEyWGF =  abs.(rcopy(RKDEWGF[3]));
         end
@@ -109,9 +109,9 @@ R"""
     library(ggplot2)
     # mise vs runtime
     g <- rep(1:2, , each= $groups)
-    symbol <- rep(c("N=100", "N=500", "N=1000", "N=5000"), times= 2)
+    symbol <- rep(c("N=100", "N=500", "N=1000", "N=5000", "N=10000"), times= 2)
     data <- data.frame(x = c($tSMC, $tWGF), y = c($miseSMC, $miseWGF), g = g);
-    data$symbol <- factor(symbol, levels = c("N=100", "N=500", "N=1000", "N=5000"))
+    data$symbol <- factor(symbol, levels = c("N=100", "N=500", "N=1000", "N=5000", "N=10000"))
     p1 <- ggplot(data, aes(x, y, group = factor(g), color = factor(g))) +
     geom_line(size = 2) +
     geom_point(aes(shape=symbol), size=4) +
@@ -120,14 +120,19 @@ R"""
     # ggsave("mixture_runtime_vs_mise.eps", p1,  height=5)
 
     # boxplot for smoothness
-    symbol <- rep(c("N=100", "N=500", "N=1000", "N=5000", "N=100", "N=500", "N=1000", "N=5000"), each= 1000)
+    symbol <- rep(c("N=100", "N=500", "N=1000", "N=5000", "N=10000", "N=100", "N=500", "N=1000", "N=5000", "N=10000"), each= 1000)
     g <- rep(1:2, , each= $groups*1000)
     runtime <- rep(c($tSMC, $tWGF), each = 1000)
     runtime <- round(runtime, 2)
     data <- data.frame(x = factor(runtime), y = c(c($qdistSMC), c($qdistWGF)), g = g);
-    data$symbol <- factor(symbol, levels = c("N=100", "N=500", "N=1000", "N=5000"))
+    data$symbol <- factor(symbol, levels = c("N=100", "N=500", "N=1000", "N=5000", "N=10000"))
     p2 <- ggplot(data) +
     geom_boxplot(aes(x = x, y=y, color = symbol)) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank())
     # ggsave("mixture_runtime_vs_mse.eps", p2,  height=5)
 """
+
+save("smc_vs_wgf30Sep2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnosticsWGF", diagnosticsWGF,
+    "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
+    "Nparticles", Nparticles, "Niter", Niter, "qdistWGF", qdistWGF,
+    "qdistSMC", qdistSMC);
