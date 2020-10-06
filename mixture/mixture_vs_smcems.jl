@@ -41,7 +41,7 @@ KDEx = range(0, stop = 1, length = 1000);
 epsilon = 1e-3;
 alpha = 2e-1;
 # number of repetitions
-Nrep = 1000;
+Nrep = 100;
 
 # diagnostics
 tSMC = zeros(length(Nparticles), 1);
@@ -132,7 +132,7 @@ R"""
     # ggsave("mixture_runtime_vs_mse.eps", p2,  height=5)
 """
 
-save("smc_vs_wgf30Sep2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnosticsWGF", diagnosticsWGF,
+save("smc_vs_wgf5Oct2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnosticsWGF", diagnosticsWGF,
     "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
     "Nparticles", Nparticles, "Niter", Niter, "qdistWGF", qdistWGF,
     "qdistSMC", qdistSMC);
