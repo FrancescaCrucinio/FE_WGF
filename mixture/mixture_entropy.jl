@@ -30,13 +30,13 @@ g(x, y) = pdf.(Normal(x, 0.045), y);
 # parameters
 # dt and number of iterations
 dt = 1e-03;
-Niter = 100;
+Niter = 500;
 # number of particles
-Nparticles = 1000;
+Nparticles = 500;
 # values at which evaluate KDE
-KDEx = range(0, stop = 1, length = 1000);
+KDEx = range(0, stop = 1, length = 100);
 # regularisation parameters
-epsilon = 1e-1;
+epsilon = 1e-3;
 alpha = 1e-2;
 
 # initial distributions
@@ -46,18 +46,18 @@ x0WGF = 0.5*ones(1, Nparticles);
 hSample = Ysample_gaussian_mixture(100000);
 # SMC
 # N = 1000
-xSMC, W = smc_gaussian_mixture(Nparticles, Niter, epsilon, x0SMC, hSample, Nparticles);
+xSMC1, W1 = smc_gaussian_mixture(Nparticles, Niter, epsilon, x0SMC, hSample, Nparticles);
 # kde
-bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
-RKDESMC= rks.kde(x = xSMC[end,:], var"h" = bw, var"eval.points" = KDEx, var"w" = W[end, :]);
-KDEySMC1000 =  abs.(rcopy(RKDESMC[3]));
+bw1 = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC1[Niter, :], W1[Niter, :])^2);
+RKDESMC1 = rks.kde(x = xSMC1[end,:], var"h" = bw1, var"eval.points" = KDEx, var"w" = W1[end, :]);
+KDEySMC1 =  abs.(rcopy(RKDESMC1[3]));
 # N = 10000
-x0SMC = rand(1, Nparticles*10);
-xSMC, W = smc_gaussian_mixture(Nparticles*10, Niter, epsilon, x0SMC, hSample, Nparticles*10);
+x0SMC = rand(1, Nparticles*2);
+xSMC2, W2 = smc_gaussian_mixture(Nparticles*2, Niter, epsilon, x0SMC, hSample, Nparticles*2);
 # kde
-bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
-RKDESMC= rks.kde(x = xSMC[end,:], var"h" = bw, var"eval.points" = KDEx, var"w" = W[end, :]);
-KDEySMC10000 =  abs.(rcopy(RKDESMC[3]));
+bw2 = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC2[Niter, :], W2[Niter, :])^2);
+RKDESMC2 = rks.kde(x = xSMC2[end,:], var"h" = bw2, var"eval.points" = KDEx, var"w" = W2[end, :]);
+KDEySMC2 =  abs.(rcopy(RKDESMC2[3]));
 # WGF
 xWGF = wgf_gaussian_mixture_tamed(Nparticles, dt, Niter, alpha, x0WGF, hSample, Nparticles, 0.5);
 RKDEWGF = rks.kde(x = xWGF[end,:], var"eval.points" = KDEx);
@@ -71,15 +71,16 @@ R"""
     library(ggplot2)
     x = rep($KDEx, 4);
     g <- rep(1:4, , each= length($KDEx));
-    glabels <- c(expression(rho(x)), "SMCEMS, N=1000", "SMCEMS, N=10000", "WGF");
-    data <- data.frame(x = x, y = c($solution, $KDEySMC1000, $KDEySMC10000, $KDEyWGF), g = g)
+    glabels <- c(expression(rho(x)), "SMCEMS, N=500", "SMCEMS, N=1000", "WGF, N=500");
+    data <- data.frame(x = x, y = c($solution, $KDEySMC1, $KDEySMC2, $KDEyWGF), g = g)
     p <- ggplot(data, aes(x, y, group = factor(g), color = factor(g))) +
     geom_line(size = 2) +
-    scale_colour_manual(values = c("black", "blue", "blue4", "red"), labels=glabels) +
+    scale_colour_manual(values = c("black", "blue", "dodgerblue", "red"), labels=glabels) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
     # ggsave("mixture_entropy.eps", p,  height=5)
 """
+
 diagnosticsF(f, KDEx, solution)
-diagnosticsF(f, KDEx, KDEySMC1000)
-diagnosticsF(f, KDEx, KDEySMC10000)
+diagnosticsF(f, KDEx, KDEySMC1)
+diagnosticsF(f, KDEx, KDEySMC2)
 diagnosticsF(f, KDEx, KDEyWGF)
