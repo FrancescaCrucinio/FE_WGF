@@ -6,15 +6,63 @@ using LinearAlgebra;
 using KernelEstimator;
 
 using samplers;
+# include("C:/Users/Francesca/Desktop/WGF/epidemiology/C19_approximate_K.jl")
+
 
 export wgf_AT
+export wgf_AT_tamed
 export wgf_gaussian_mixture
+export wgf_gaussian_mixture_tamed
 export wgf_pet
 export wgf_mvnormal
 export AT_exact_minimiser
 export wgf_2D_analytic
 export AT_alpha_WGF
 export wgf_turbolence
+export wgf_C19_tamed
+export wgf_HIV_tamed
+export wgf_flu_tamed
+
+#=
+ WGF for analytically tractable example
+OUTPUTS
+1 - particle locations
+2 - drift evolution
+INPUTS
+'N' number of particles
+'dt' discretisation step
+'Niter' number of iterations
+'lambda' regularisation parameter
+'x0' user selected initial distribution
+'M' number of samples from h(y) to be drawn at each iteration
+'a' parameter for tamed Euler scheme
+=#
+function wgf_AT_tamed(N, dt, Niter, lambda, x0, M, a)
+    # initialise a matrix x storing the particles
+    x = zeros(Niter, N);
+    # initial distribution is given as input:
+    x[1, :] = x0;
+    # initialise a matrix drift storing the drift
+    drift = zeros(Niter-1, N);
+
+    for n=1:(Niter-1)
+        # get samples from h(y)
+        y = rand(Normal(0.5, sqrt(0.043^2 + 0.045^2)), M);
+        # Compute h^N_{n}
+        hN = zeros(M, 1);
+        for j=1:M
+            hN[j] = mean(pdf.(Normal.(x[n, :], 0.045), y[j]));
+        end
+        # gradient and drift
+        for i=1:N
+            gradient = pdf.(Normal.(x[n, i], 0.045), y) .* (y .- x[n, i])/(0.045^2);
+            drift[n, i] = mean(gradient./hN);
+        end
+        # update locations
+        x[n+1, :] = x[n, :] .+ dt * drift[n, :]./(1 .+ Niter^(-a) * abs.(drift[n, :])) .+ sqrt(2*lambda*dt)*randn(N, 1);
+    end
+    return x, drift
+end
 
 #=
  WGF for analytically tractable example
@@ -54,6 +102,47 @@ function wgf_AT(N, dt, Niter, lambda, x0, M)
         x[n+1, :] = x[n, :] .+ drift[n, :]*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
     end
     return x, drift
+end
+
+#=
+ WGF for gaussian mixture
+OUTPUTS
+1 - particle locations
+2 - drift evolution
+INPUTS
+'N' number of particles
+'dt' discretisation step
+'Niter' number of iterations
+'alpha' regularisation parameter
+'x0' user selected initial distribution
+'hSample' sample from h(y)
+'M' number of samples from h(y) to be drawn at each iteration
+'a' parameter for tamed Euler scheme
+=#
+function wgf_gaussian_mixture_tamed(N, dt, Niter, alpha, x0, hSample, M, a)
+    # initialise a matrix x storing the particles
+    x = zeros(Niter, N);
+    # initial distribution is given as input:
+    x[1, :] = x0;
+
+    for n=1:(Niter-1)
+        # samples from h(y)
+        y = Ysample_gaussian_mixture(M);
+        # Compute h^N_{n}
+        hN = zeros(M, 1);
+        for j=1:M
+            hN[j] = mean(pdf.(Normal.(x[n, :], 0.045), y[j]));
+        end
+        # gradient and drift
+        drift = zeros(N, 1);
+        for i=1:N
+            gradient = pdf.(Normal.(x[n, i], 0.045), y) .* (y .- x[n, i])/(0.045^2);
+            drift[i] = mean(gradient./hN);
+        end
+        # update locations
+        x[n+1, :] = x[n, :] .+  dt * drift./(1 .+ Niter^(-a) * abs.(drift)) .+ sqrt(2*alpha*dt)*randn(N, 1);
+    end
+    return x
 end
 
 #=
@@ -396,5 +485,130 @@ function wgf_turbolence(N, Niter, dt, lambda, I, M, beta, R)
         y[n+1, :] = y[n, :] .+ driftY*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
     end
     return x, y
+end
+
+#=
+ WGF for analytically tractable example
+OUTPUTS
+1 - particle locations
+INPUTS
+'N' number of particles
+'dt' discretisation step
+'Niter' number of iterations
+'lambda' regularisation parameter
+'x0' user selected initial distribution
+'hSample' sample from h(y)
+'M' number of samples from h(y) to be drawn at each iteration
+'a' parameter for tamed Euler scheme
+=#
+function wgf_C19_tamed(N, dt, Niter, lambda, x0, hSample, M, a)
+    # initialise a matrix x storing the particles
+    x = zeros(Niter, N);
+    # initial distribution is given as input:
+    x[1, :] = x0;
+
+    alpha = 4.9^2/3.3^2;
+    beta = 4.9/3.3.^2;
+    sigma = sqrt(2log(5.5/5.2));
+    mu = log(5.2);
+
+    for n=1:(Niter-1)
+        # get samples from h(y)
+        y = sample(hSample, M, replace = true);
+        # Compute h^N_{n}
+        hN = zeros(M, 1);
+        for j=1:M
+            hN[j] = mean(C19_K(x[n, :] .- y[j], alpha, beta, mu, sigma));
+        end
+        # gradient and drift
+        drift = zeros(N, 1);
+        for i=1:N
+            gradient = -beta^2 .* C19_K(x[n, i] .- y, alpha-1, beta, mu, sigma);
+            drift[i] = mean(gradient./hN);
+        end
+        # update locations
+        x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ Niter^(-a) * abs.(drift)) .+ sqrt(2*lambda*dt)*randn(N, 1);
+    end
+    return x
+end
+
+#=
+ WGF for analytically tractable example
+OUTPUTS
+1 - particle locations
+INPUTS
+'N' number of particles
+'dt' discretisation step
+'Niter' number of iterations
+'lambda' regularisation parameter
+'x0' user selected initial distribution
+'hSample' sample from h(y)
+'M' number of samples from h(y) to be drawn at each iteration
+'a' parameter for tamed Euler scheme
+=#
+function wgf_HIV_tamed(N, dt, Niter, alpha, x0, hSample, M, a)
+    # initialise a matrix x storing the particles
+    x = zeros(Niter, N);
+    # initial distribution is given as input:
+    x[1, :] = x0;
+
+    kappa = 2.516;
+    lambda = 8/ log(2)^(1/kappa);
+
+    for n=1:(Niter-1)
+        # get samples from h(y)
+        y = sample(hSample, M, replace = true);
+        # Compute h^N_{n}
+        hN = zeros(M, 1);
+        for j=1:M
+            hN[j] = mean(pdf.(Weibull(kappa, lambda), y[j] .- x[n, :] .+ 1));
+        end
+        # gradient and drift
+        drift = zeros(N, 1);
+        for i=1:N
+            gradient = zeros(M, 1);
+            positive = (y .- x[n, i]).>0;
+            gradient[positive] = pdf.(Weibull(kappa, lambda),  y[positive] .- x[n, i]  .+ 1) .*
+                ((kappa-1)*lambda./(y[positive] .- x[n, i] .+ 1) - kappa*(y[positive] .- x[n, i] .+ 1).^(kappa-1)./lambda^kappa);
+            ratio = gradient./hN;
+            ratio[isnan.(ratio)] .= 0;
+            drift[i] = mean(ratio);
+        end
+        # update locations
+        x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ Niter^(-a) * abs.(drift)) .+ sqrt(2*alpha*dt)*randn(N, 1);
+    end
+    return x
+end
+
+function wgf_flu_tamed(N, dt, Niter, alpha, x0, hSample, M, a)
+    # initialise a matrix x storing the particles
+    x = zeros(Niter, N);
+    # initial distribution is given as input:
+    x[1, :] = x0;
+
+    theta = 1/2.6;
+    kappa = 2.6^2;
+
+    for n=1:(Niter-1)
+        # get samples from h(y)
+        y = sample(hSample, M, replace = true);
+        # Compute h^N_{n}
+        hN = zeros(M, 1);
+        for j=1:M
+            hN[j] = mean(pdf.(Gamma(kappa, theta), x[n, :] .- y[j]));
+        end
+        # gradient and drift
+        drift = zeros(N, 1);
+        for i=1:N
+            gradient = pdf.(Gamma(kappa, theta),  x[n, i] .- y) .*
+                ((kappa-1)./(x[n, i] .- y) .- 1/theta);
+            ratio = gradient./hN;
+            ratio[isnan.(ratio)] .= 0;
+            drift[i] = mean(ratio);
+        end
+        # update locations
+        x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ Niter^(-a) * abs.(drift)) .+ sqrt(2*alpha*dt)*randn(N, 1);
+    end
+    return x
 end
 end

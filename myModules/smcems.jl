@@ -4,6 +4,8 @@ using Distributions;
 using Statistics;
 using StatsBase;
 
+using samplers;
+
 export smc_gaussian_mixture
 export smc_AT_approximated_potential
 export optimal_bandwidthESS
@@ -36,7 +38,7 @@ function smc_gaussian_mixture(N, Niter, epsilon, x0, hSample, M)
 
     for n=2:Niter
         # samples from h(y)
-        y = sample(hSample, M, replace=true);
+        y = Ysample_gaussian_mixture(M);
         # ESS
         ESS=1/sum(W[n-1,:].^2);
         # RESAMPLING

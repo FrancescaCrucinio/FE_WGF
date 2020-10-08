@@ -7,6 +7,7 @@ using QuadGK;
 
 export Ysample_gaussian_mixture
 export histogram2D_sampler
+export walker_sampler
 export rejection_sampling_2D_analytic
 
 # Sample y from the gaussian mixture model
