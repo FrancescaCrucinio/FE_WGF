@@ -58,13 +58,13 @@ dt = 1e-03;
 Niter = 200;
 
 # samples from h(y)
-M = 1000;
+M = 500;
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # reference values for KL divergence
 refY = range(0, stop = 1, length = 1000);
 # number of particles
-Nparticles = 1000;
+Nparticles = 500;
 # regularisation parameter
 alpha = [0.01 0.1 0.5 1 1.1 1.5];
 a = alpha[1];
@@ -73,7 +73,7 @@ f_approx = zeros(length(KDEx), length(alpha));
 for i=1:length(alpha)
     x0 = 0.5 .+ randn(1, Nparticles)/10;
     # run WGF
-    x, _ =  wgf_AT(Nparticles, dt, Niter, alpha[i], x0, M);
+    x, _ =  wgf_AT_tamed(Nparticles, dt, Niter, alpha[i], x0, M, 0.5);
     a = alpha[i];
     KDEyWGF = mapslices(phi, x, dims = 2);
     f_approx[:, i] = KDEyWGF[end, :];

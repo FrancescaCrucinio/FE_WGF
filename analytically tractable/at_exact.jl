@@ -49,7 +49,7 @@ alpha = 0.05;
 x0 = 0.5 .+ randn(1, Nparticles)/10;
 # x0 = rand(1, Nparticles);
 ### WGF
-x, _ =  wgf_AT(Nparticles, dt, Niter, alpha, x0, M);
+x, _ =  wgf_AT_tamed(Nparticles, dt, Niter, alpha, x0, M, 0.5);
 # KDE
 # optimal bandwidth Gaussian
 KDEyWGF =  KernelEstimator.kerneldensity(x[end,:], xeval=KDEx, h=bwnormal(x[end,:]));
@@ -70,5 +70,5 @@ R"""
     geom_line(size = 2) +
     scale_colour_manual(values = c("black", "red", "blue"), labels=glabels) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
-    # ggsave("at_exact_min.eps", p, height=5)
+    ggsave("at_exact_min.eps", p, height=5)
 """

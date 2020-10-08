@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -36,21 +36,21 @@ M = 1000;
 # number of particles
 Nparticles = [100; 500; 1000; 5000; 10000];
 # values at which evaluate KDE
-KDEx = range(0, stop = 1, length = 1000);
+KDEx = range(0, stop = 1, length = 100);
 # regularisation parameters
 epsilon = 1e-3;
-alpha = 2e-1;
+alpha = 1e-1;
 # number of repetitions
-Nrep = 1000;
+Nrep = 5;
 
 # diagnostics
 tSMC = zeros(length(Nparticles), 1);
 diagnosticsSMC = zeros(length(Nparticles), 3);
-qdistSMC = zeros(length(Nparticles), length(KDEx));
+qdistSMC = zeros(length(KDEx), length(Nparticles));
 entropySMC = zeros(length(Nparticles), Nrep);
 tWGF = zeros(length(Nparticles), 1);
 diagnosticsWGF = zeros(length(Nparticles), 3);
-qdistWGF = zeros(length(Nparticles), length(KDEx));
+qdistWGF = zeros(length(KDEx), length(Nparticles));
 entropyWGF = zeros(length(Nparticles), Nrep);
 Threads.@threads for i=1:length(Nparticles)
     # times
@@ -66,7 +66,7 @@ Threads.@threads for i=1:length(Nparticles)
         x0SMC = rand(1, Nparticles[i]);
         x0WGF = 0.5*ones(1, Nparticles[i]);
         # sample from h(y)
-        hSample = Ysample_gaussian_mixture(100000);
+        hSample = Ysample_gaussian_mixture(10);
         # run SMC
         trepSMC[j] = @elapsed begin
             xSMC, W = smc_gaussian_mixture(Nparticles[i], Niter, epsilon, x0SMC, hSample, M);
@@ -81,7 +81,7 @@ Threads.@threads for i=1:length(Nparticles)
         entropySMC[i, j] = eSMC;
         # run WGF
         trepWGF[j] = @elapsed begin
-            xWGF = wgf_gaussian_mixture(Nparticles[i], dt, Niter, alpha, x0WGF, hSample, M);
+            xWGF = wgf_gaussian_mixture_tamed(Nparticles[i], dt, Niter, alpha, x0WGF, hSample, M, 0.5);
             RKDEWGF = rks.kde(x = xWGF[end,:], var"eval.points" = KDEx);
             KDEyWGF =  abs.(rcopy(RKDEWGF[3]));
         end
@@ -95,12 +95,10 @@ Threads.@threads for i=1:length(Nparticles)
     tWGF[i] = mean(trepWGF);
     diagnosticsSMC[i, :] = mean(drepSMC, dims = 1);
     diagnosticsWGF[i, :] = mean(drepWGF,dims = 1);
-    qdistSMC[i, :] = mean(qdistrepSMC, dims = 1);
-    qdistWGF[i, :] = mean(qdistrepWGF, dims = 1);
+    qdistSMC[:, i] = mean(qdistrepSMC, dims = 1);
+    qdistWGF[:, i] = mean(qdistrepWGF, dims = 1);
 end
 
-qdistSMC = transpose(qdistSMC);
-qdistWGF = transpose(qdistWGF);
 miseSMC = diagnosticsSMC[:, 3];
 miseWGF = diagnosticsWGF[:, 3];
 groups = length(Nparticles);
@@ -131,8 +129,30 @@ R"""
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank())
     # ggsave("mixture_runtime_vs_mse.eps", p2,  height=5)
 """
-
-save("smc_vs_wgf30Sep2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnosticsWGF", diagnosticsWGF,
-    "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
-    "Nparticles", Nparticles, "Niter", Niter, "qdistWGF", qdistWGF,
-    "qdistSMC", qdistSMC);
+#
+# save("smc_vs_wgf30Sep2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnosticsWGF", diagnosticsWGF,
+#     "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
+#     "Nparticles", Nparticles, "Niter", Niter, "qdistWGF", qdistWGF,
+#     "qdistSMC", qdistSMC);
+#
+#     Nparticles = load("smc_vs_wgf5Oct2020.jld", "Nparticles");
+#     tSMC = load("smc_vs_wgf5Oct2020.jld", "tSMC");
+#     tWGF = load("smc_vs_wgf5Oct2020.jld", "tWGF");
+#     diagnosticsSMC = load("smc_vs_wgf5Oct2020.jld", "diagnosticsSMC");
+#     diagnosticsWGF = load("smc_vs_wgf5Oct2020.jld", "diagnosticsWGF");
+#     tSMC = load("smc_vs_wgf5Oct2020.jld", "tSMC");
+#     tWGF = load("smc_vs_wgf5Oct2020.jld", "tWGF");
+#     qdistSMC = load("smc_vs_wgf5Oct2020.jld", "qdistSMC");
+#     qdistWGF = load("smc_vs_wgf5Oct2020.jld", "qdistWGF");
+p1 = histogram(entropySMC[1, :]);
+histogram!(entropyWGF[1, :]);
+p2 = histogram(entropySMC[2, :]);
+histogram!(entropyWGF[2, :]);
+p3 = histogram(entropySMC[3, :]);
+histogram!(entropyWGF[3, :]);
+p4 = histogram(entropySMC[4, :]);
+histogram!(entropyWGF[4, :]);
+p5 = histogram(entropySMC[5, :]);
+histogram!(entropyWGF[5, :]);
+p6 = plot()
+plot(p1, p2, p3, p4, p5, p6, layout=(3, 2))

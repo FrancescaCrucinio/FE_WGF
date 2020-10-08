@@ -77,7 +77,7 @@ function psi(t)
 end
 for i=1:size(x0, 1)
     ### WGF
-    x, _ = wgf_AT(Nparticles, dt, Niter, alpha, x0[i, :], M);
+    x, _ = wgf_AT_tamed(Nparticles, dt, Niter, alpha, x0[i, :], M, 0.5);
     # KDE
     KDEyWGF = mapslices(phi, x[2:end, :], dims = 2);
     E[:, i] = mapslices(psi, KDEyWGF, dims = 2);
