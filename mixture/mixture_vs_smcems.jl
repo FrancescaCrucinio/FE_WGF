@@ -128,6 +128,18 @@ R"""
     geom_boxplot(aes(x = x, y=y, color = symbol)) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank())
     # ggsave("mixture_runtime_vs_mse.eps", p2,  height=5)
+
+    # entropy distribution
+    symbol <- rep(c("N=100", "N=500", "N=1000", "N=5000", "N=10000", "N=100", "N=500", "N=1000", "N=5000", "N=10000"), each= 100)
+    g <- rep(1:2, , each= $groups*100)
+    data <- data.frame(x = c(c($entropySMC), c($entropyWGF)), g = factor(g))
+    data$symbol <- factor(symbol, levels = c("N=100", "N=500", "N=1000", "N=5000", "N=10000"))
+    p3 <- ggplot(data, aes(x = x, fill = g)) +
+    geom_histogram() +
+    scale_fill_manual(values = c("blue", "red"), labels=c("SMC-EMS", "WGF")) +
+    facet_grid(~ symbol) +
+    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank())
+    # ggsave("mixture_entropy.eps", p3,  height=5)
 """
 #
 save("smc_vs_wgf10Oct2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnosticsWGF", diagnosticsWGF,
