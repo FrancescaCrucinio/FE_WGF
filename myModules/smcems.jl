@@ -38,7 +38,7 @@ function smc_gaussian_mixture(N, Niter, epsilon, x0, hSample, M)
 
     for n=2:Niter
         # samples from h(y)
-        y = Ysample_gaussian_mixture(M);
+                y = sample(hSample, M, replace = true);
         # ESS
         # ESS=1/sum(W[n-1,:].^2);
         # RESAMPLING

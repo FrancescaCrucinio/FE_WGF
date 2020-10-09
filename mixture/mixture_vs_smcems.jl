@@ -39,7 +39,7 @@ Nparticles = [100; 500; 1000; 5000; 10000];
 KDEx = range(0, stop = 1, length = 100);
 # regularisation parameters
 epsilon = 1e-3;
-alpha = 1e-1;
+alpha = 2e-2;
 # number of repetitions
 Nrep = 5;
 
@@ -118,9 +118,9 @@ R"""
     # ggsave("mixture_runtime_vs_mise.eps", p1,  height=5)
 
     # boxplot for smoothness
-    symbol <- rep(c("N=100", "N=500", "N=1000", "N=5000", "N=10000", "N=100", "N=500", "N=1000", "N=5000", "N=10000"), each= 1000)
-    g <- rep(1:2, , each= $groups*1000)
-    runtime <- rep(c($tSMC, $tWGF), each = 1000)
+    symbol <- rep(c("N=100", "N=500", "N=1000", "N=5000", "N=10000", "N=100", "N=500", "N=1000", "N=5000", "N=10000"), each= 100)
+    g <- rep(1:2, , each= $groups*100)
+    runtime <- rep(c($tSMC, $tWGF), each = 100)
     runtime <- round(runtime, 2)
     data <- data.frame(x = factor(runtime), y = c(c($qdistSMC), c($qdistWGF)), g = g);
     data$symbol <- factor(symbol, levels = c("N=100", "N=500", "N=1000", "N=5000", "N=10000"))
