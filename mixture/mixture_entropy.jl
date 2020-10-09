@@ -77,7 +77,7 @@ R"""
     geom_line(size = 2) +
     scale_colour_manual(values = c("black", "blue", "dodgerblue", "red"), labels=glabels) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
-    # ggsave("mixture_entropy.eps", p,  height=5)
+    # ggsave("mixture_N.eps", p,  height=5)
 """
 
 diagnosticsF(f, KDEx, solution)
