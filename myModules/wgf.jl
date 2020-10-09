@@ -127,7 +127,7 @@ function wgf_gaussian_mixture_tamed(N, dt, Niter, alpha, x0, hSample, M, a)
 
     for n=1:(Niter-1)
         # samples from h(y)
-        y = Ysample_gaussian_mixture(M);
+        y = sample(hSample, M, replace = true);
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M

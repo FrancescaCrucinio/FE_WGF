@@ -38,8 +38,8 @@ Nparticles = [100; 500; 1000; 5000; 10000];
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 100);
 # regularisation parameters
-epsilon = 1e-5;
-alpha = 1.5e-1;
+epsilon = 1e-3;
+alpha = 2e-2;
 # number of repetitions
 Nrep = 100;
 
@@ -130,7 +130,7 @@ R"""
     # ggsave("mixture_runtime_vs_mse.eps", p2,  height=5)
 """
 #
-save("smc_vs_wgf8Oct2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnosticsWGF", diagnosticsWGF,
+save("smc_vs_wgf9Oct2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnosticsWGF", diagnosticsWGF,
 #     "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
 #     "Nparticles", Nparticles, "Niter", Niter, "qdistWGF", qdistWGF,
 #     "qdistSMC", qdistSMC);
