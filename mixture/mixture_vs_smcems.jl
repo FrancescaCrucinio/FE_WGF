@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+#push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+ push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -38,10 +38,10 @@ Nparticles = [100; 500; 1000; 5000; 10000];
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 100);
 # regularisation parameters
-epsilon = 1e-3;
-alpha = 1e-1;
+epsilon = 1e-5;
+alpha = 1.5e-1;
 # number of repetitions
-Nrep = 5;
+Nrep = 100;
 
 # diagnostics
 tSMC = zeros(length(Nparticles), 1);
@@ -118,9 +118,9 @@ R"""
     # ggsave("mixture_runtime_vs_mise.eps", p1,  height=5)
 
     # boxplot for smoothness
-    symbol <- rep(c("N=100", "N=500", "N=1000", "N=5000", "N=10000", "N=100", "N=500", "N=1000", "N=5000", "N=10000"), each= 1000)
-    g <- rep(1:2, , each= $groups*1000)
-    runtime <- rep(c($tSMC, $tWGF), each = 1000)
+    symbol <- rep(c("N=100", "N=500", "N=1000", "N=5000", "N=10000", "N=100", "N=500", "N=1000", "N=5000", "N=10000"), each= 100)
+    g <- rep(1:2, , each= $groups*100)
+    runtime <- rep(c($tSMC, $tWGF), each = 100)
     runtime <- round(runtime, 2)
     data <- data.frame(x = factor(runtime), y = c(c($qdistSMC), c($qdistWGF)), g = g);
     data$symbol <- factor(symbol, levels = c("N=100", "N=500", "N=1000", "N=5000", "N=10000"))
@@ -130,7 +130,7 @@ R"""
     # ggsave("mixture_runtime_vs_mse.eps", p2,  height=5)
 """
 #
-# save("smc_vs_wgf30Sep2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnosticsWGF", diagnosticsWGF,
+save("smc_vs_wgf8Oct2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnosticsWGF", diagnosticsWGF,
 #     "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
 #     "Nparticles", Nparticles, "Niter", Niter, "qdistWGF", qdistWGF,
 #     "qdistSMC", qdistSMC);
