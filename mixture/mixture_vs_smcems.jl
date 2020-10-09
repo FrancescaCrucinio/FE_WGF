@@ -66,7 +66,7 @@ Threads.@threads for i=1:length(Nparticles)
         x0SMC = rand(1, Nparticles[i]);
         x0WGF = 0.5*ones(1, Nparticles[i]);
         # sample from h(y)
-        hSample = Ysample_gaussian_mixture(10);
+        hSample = Ysample_gaussian_mixture(100000);
         # run SMC
         trepSMC[j] = @elapsed begin
             xSMC, W = smc_gaussian_mixture(Nparticles[i], Niter, epsilon, x0SMC, hSample, M);
@@ -130,10 +130,10 @@ R"""
     # ggsave("mixture_runtime_vs_mse.eps", p2,  height=5)
 """
 #
-save("smc_vs_wgf9Oct2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnosticsWGF", diagnosticsWGF,
-#     "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
-#     "Nparticles", Nparticles, "Niter", Niter, "qdistWGF", qdistWGF,
-#     "qdistSMC", qdistSMC);
+save("smc_vs_wgf10Oct2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnosticsWGF", diagnosticsWGF,
+     "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
+     "Nparticles", Nparticles, "Niter", Niter, "qdistWGF", qdistWGF,
+     "qdistSMC", qdistSMC);
 #
 #     Nparticles = load("smc_vs_wgf5Oct2020.jld", "Nparticles");
 #     tSMC = load("smc_vs_wgf5Oct2020.jld", "tSMC");
