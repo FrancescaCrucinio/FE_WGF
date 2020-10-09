@@ -47,13 +47,13 @@ xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # dt and number of iterations
 dt = 1e-02;
-Niter = 2000;
+Niter = 100;
 # samples from h(y)
-M = 5000;
+M = 10000;
 # number of particles
-Nparticles = 5000;
+Nparticles = 10000;
 # regularisation parameter
-alpha = 0.001;
+alpha = 0.005;
 # variance of normal describing alignment
 sigma = 0.02;
 
@@ -75,16 +75,18 @@ R"""
 """
 
 # WGF
-x, y = wgf_pet(Nparticles, dt, Niter, alpha, sinogram, M, phi, xi, sigma);
+x, y = wgf_pet_tamed(Nparticles, dt, Niter, alpha, sinogram, M, phi, xi, sigma, 0.5);
 
 # KDE
 KDEdata = [x[Niter, :] y[Niter, :]];
-KDEyWGF = rks.kde(x = KDEdata, var"eval.points" = KDEeval);
+RKDE = rks.kde(x = KDEdata, var"eval.points" = KDEeval);
+KDEyWGF = abs.(rcopy(RKDE[3]));
+KDEyWGF = reverse(KDEyWGF, dims=1);
 # plot
 R"""
-    data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = $KDEyWGF[3]);
+    data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = $KDEyWGF);
     p <- ggplot(data, aes(x, y)) +
-        geom_raster(aes(fill = estimate), interpolate=TRUE) +
+        geom_raster(aes(fill = z), interpolate=TRUE) +
         theme_void() +
         theme(legend.position = "none", aspect.ratio=1) +
         scale_fill_viridis(discrete=FALSE, option="magma")

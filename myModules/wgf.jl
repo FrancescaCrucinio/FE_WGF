@@ -14,6 +14,7 @@ export wgf_AT_tamed
 export wgf_gaussian_mixture
 export wgf_gaussian_mixture_tamed
 export wgf_pet
+export wgf_pet_tamed
 export wgf_mvnormal
 export AT_exact_minimiser
 export wgf_2D_analytic
@@ -240,6 +241,67 @@ function wgf_pet(N, dt, Niter, lambda, noisyI, M, phi, xi, sigma)
         # update locations
         x[n+1, :] = x[n, :] .+ driftX*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
         y[n+1, :] = y[n, :] .+ driftY*dt .+ sqrt(2*lambda*dt)*randn(N, 1);
+    end
+    return x, y
+end
+
+#=
+ WGF for positron emission tomography
+OUTPUTS
+1 - particle locations (2D)
+INPUTS
+'N' number of particles
+'dt' discretisation step
+'Niter' number of iterations
+'lambda' regularisation parameter
+'noisyI' data image (Radon transform)
+'M' number of samples from h(y) to be drawn at each iteration
+'phi' degrees at which projections are taken
+'xi' offset of projections
+'sigma' standard deviation for Normal describing alignment
+'a' parameter for tamed Euler scheme
+=#
+function wgf_pet_tamed(N, dt, Niter, lambda, noisyI, M, phi, xi, sigma, a)
+    # normalise xi
+    xi = xi./maximum(xi);
+    # initialise two matrices x, y storing the particles
+    x = zeros(Niter, N);
+    y = zeros(Niter, N);
+    # # sample random particles for x in [-1, 1] for time step n = 1
+    # x[1, :] = 2 * rand(1, N) .- 1;
+    # # sample random particles for y in [-1, 1] for time step n = 1
+    # y[1, :] = 2 * rand(1, N) .- 1;
+    x0 = rand(MvNormal([0, 0], Matrix{Float64}(I, 2, 2)), N);
+    x[1, :] = x0[1, :];
+    y[1, :] = x0[2, :];
+    for n=1:(Niter-1)
+        # get sample from (y)
+        hSample = histogram2D_sampler(noisyI, phi, xi, M);
+        # Compute h^N_{n}
+        hN = zeros(M, 1);
+        Threads.@threads for j=1:M
+            hN[j] = mean(pdf.(Normal.(0, sigma), x[n, :] * cos(hSample[j, 1]) .+
+                    y[n, :] * sin(hSample[j, 1]) .- hSample[j, 2])
+                    );
+        end
+        # gradient and drift
+        driftX = zeros(N, 1);
+        driftY = zeros(N, 1);
+        Threads.@threads for i=1:N
+            # precompute common quantities for gradient
+            prec = -pdf.(Normal.(0, sigma), x[n, i] * cos.(hSample[:, 1]) .+
+                    y[n, i] * sin.(hSample[:, 1]) .- hSample[:, 2]) .*
+                    (x[n, i] * cos.(hSample[:, 1]) .+
+                    y[n, i] * sin.(hSample[:, 1]) .- hSample[:, 2])/sigma^2;
+            gradientX = prec .* cos.(hSample[:, 1]);
+            gradientY = prec .* sin.(hSample[:, 1]);
+            driftX[i] = mean(gradientX./hN);
+            driftY[i] = mean(gradientY./hN);
+        end
+        # update locations
+        drift_norm = sqrt.(sum([driftX driftY].^2, dims = 2));
+        x[n+1, :] = x[n, :] .+ dt * driftX./(1 .+ Niter^(-a) * drift_norm) .+ sqrt(2*lambda*dt)*randn(N, 1);
+        y[n+1, :] = y[n, :] .+ dt * driftY./(1 .+ Niter^(-a) * drift_norm) .+ sqrt(2*lambda*dt)*randn(N, 1);
     end
     return x, y
 end
