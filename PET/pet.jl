@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -77,7 +77,26 @@ R"""
 # WGF
 x, y = wgf_pet_tamed(Nparticles, dt, Niter, alpha, sinogram, M, phi, xi, sigma, 0.5);
 
+# function computing KDE
+function psi(t)
+    RKDE = rks.kde(x = [t[1:Nparticles] t[(Nparticles+1):(2Nparticles)]], var"eval.points" = KDEeval);
+    return abs.(rcopy(RKDE[3]));
+end
+# function computing entropy
+function psi_ent(t)
+    # entropy
+    function remove_non_finite(x)
+	       return isfinite(x) ? x : 0
+    end
+    ent = -mean(remove_non_finite.(t .* log.(t)));
+end
+
 # KDE
+KDEyWGF = mapslices(psi, [x y], dims = 2);
+ent = mapslices(psi_ent, KDEyWGF, dims = 2);
+plot(1:Niter, ent)
+hline!([phantom_ent])
+
 KDEdata = [x[Niter, :] y[Niter, :]];
 RKDE = rks.kde(x = KDEdata, var"eval.points" = KDEeval);
 KDEyWGF = abs.(rcopy(RKDE[3]));
@@ -92,27 +111,3 @@ R"""
         scale_fill_viridis(discrete=FALSE, option="magma")
     # ggsave(paste("pet", $n, ".eps", sep=""), p)
 """
-
-# function computing KDE
-function psi(t)
-    RKDE = rks.kde(x = [t[1:Nparticles]; t[(Nparticles+1):(2Nparticles)]], var"eval.points" = KDEeval);
-    return abs.(rcopy(RKDE[3]));
-end
-# function computing entropy
-function psi_ent(t)
-    # entropy
-    function remove_non_finite(x)
-	       return isfinite(x) ? x : 0
-    end
-    ent = -mean(remove_non_finite.(t .* log.(t)));
-end
-
-
-KDEyWGF = mapslices(psi, [x y], dims = 2);
-ent = mapslices(psi_ent, KDEyWGF, dims = 2);
-plot(1:Niter, ent)
-hline!([phantom_ent])
-
-petWGF = reshape(KDEyWGF, (pixels[1], pixels[2]));
-
-var(petWGF .- phantom)
