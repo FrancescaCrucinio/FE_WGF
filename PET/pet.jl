@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -36,7 +36,7 @@ pixels = size(phantom);
 phantom_ent = -mean(remove_non_finite.(phantom .* log.(phantom)));
 # data image
 sinogram = readdlm("PET/sinogram.txt", ',', Float64);
-sinogram = reverse(sinogram, dims=1);
+# sinogram = reverse(sinogram, dims=1);
 # number of angles
 nphi = size(sinogram, 2);
 # angles
@@ -49,11 +49,11 @@ xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 dt = 1e-02;
 Niter = 100;
 # samples from h(y)
-M = 10000;
+M = 5000;
 # number of particles
-Nparticles = 10000;
+Nparticles = 5000;
 # regularisation parameter
-alpha = 0.005;
+alpha = 0.01;
 # variance of normal describing alignment
 sigma = 0.02;
 
@@ -81,7 +81,7 @@ x, y = wgf_pet_tamed(Nparticles, dt, Niter, alpha, sinogram, M, phi, xi, sigma, 
 KDEdata = [x[Niter, :] y[Niter, :]];
 RKDE = rks.kde(x = KDEdata, var"eval.points" = KDEeval);
 KDEyWGF = abs.(rcopy(RKDE[3]));
-KDEyWGF = reverse(KDEyWGF, dims=1);
+# KDEyWGF = reverse(KDEyWGF, dims=1);
 # plot
 R"""
     data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = $KDEyWGF);
