@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -93,17 +93,17 @@ end
 
 # KDE
 KDEyWGF = mapslices(psi, [x y], dims = 2);
+# entropy
 ent = mapslices(psi_ent, KDEyWGF, dims = 2);
+# last time step
+KDEyWGFfinal = KDEyWGF[Niter, :];
 plot(1:Niter, ent)
 hline!([phantom_ent])
 
-KDEdata = [x[Niter, :] y[Niter, :]];
-RKDE = rks.kde(x = KDEdata, var"eval.points" = KDEeval);
-KDEyWGF = abs.(rcopy(RKDE[3]));
-# KDEyWGF = reverse(KDEyWGF, dims=1);
 # plot
 R"""
-    data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = $KDEyWGF);
+    # solution
+    data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = $KDEyWGFfinal);
     p <- ggplot(data, aes(x, y)) +
         geom_raster(aes(fill = z), interpolate=TRUE) +
         theme_void() +
@@ -111,3 +111,6 @@ R"""
         scale_fill_viridis(discrete=FALSE, option="magma")
     # ggsave(paste("pet", $n, ".eps", sep=""), p)
 """
+# ise
+petWGF = reshape(KDEyWGFfinal, (pixels[1], pixels[2]));
+var(petWGF .- phantom)
