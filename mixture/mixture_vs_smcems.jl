@@ -110,12 +110,14 @@ R"""
     symbol <- rep(c("N=100", "N=500", "N=1000", "N=5000", "N=10000"), times= 2)
     data <- data.frame(x = c($tSMC, $tWGF), y = c($miseSMC, $miseWGF), g = g);
     data$symbol <- factor(symbol, levels = c("N=100", "N=500", "N=1000", "N=5000", "N=10000"))
-    p1 <- ggplot(data, aes(x, y, group = factor(g), color = factor(g))) +
-    geom_line(size = 2) +
-    geom_point(aes(shape=symbol), size=4) +
+    p1 <- ggplot(data, aes(x, y, group = factor(g), color = factor(g), linetype = factor(g), shape = symbol)) +
+    geom_line(size = 2, aes(linetype = factor(g))) +
+    geom_point(size=4) +
     scale_colour_manual(values = c("blue", "red"), labels=c("SMC-EMS", "WGF")) +
-    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
-    # ggsave("mixture_runtime_vs_mise.eps", p1,  height=5)
+    scale_linetype_manual(values = c("longdash", "dotdash"), labels=c("SMC-EMS", "WGF")) +
+    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(),
+        aspect.ratio = 2/3, legend.key.size = unit(1, "cm"), plot.margin=grid::unit(c(0,0,0,0), "mm"))
+    # ggsave("mixture_runtime_vs_mise.eps", p1, , height = 4)
 
     # boxplot for smoothness
     symbol <- rep(c("N=100", "N=500", "N=1000", "N=5000", "N=10000", "N=100", "N=500", "N=1000", "N=5000", "N=10000"), each= 100)
@@ -125,9 +127,12 @@ R"""
     data <- data.frame(x = factor(runtime), y = c(c($qdistSMC), c($qdistWGF)), g = g);
     data$symbol <- factor(symbol, levels = c("N=100", "N=500", "N=1000", "N=5000", "N=10000"))
     p2 <- ggplot(data) +
-    geom_boxplot(aes(x = x, y=y, color = symbol)) +
-    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank())
-    # ggsave("mixture_runtime_vs_mse.eps", p2,  height=5)
+    geom_boxplot(lwd = 1, alpha = 0.2, aes(x = x, y=y, color = symbol, linetype = factor(g), fill = symbol)) +
+    scale_linetype_manual(values = c("solid", "dotted"), labels=c("SMC-EMS", "WGF")) +
+    scale_y_log10(breaks = scales::trans_breaks("log10", function(x) 10^x), labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+    theme(axis.title=element_blank(), text = element_text(size=40), legend.title=element_blank(),
+        plot.margin=grid::unit(c(0,0,0,0), "mm"))
+    # ggsave("mixture_runtime_vs_mse.eps", p2)
 
     # entropy distribution
     symbol <- rep(c("N=100", "N=500", "N=1000", "N=5000", "N=10000", "N=100", "N=500", "N=1000", "N=5000", "N=10000"), each= 100)
@@ -146,25 +151,13 @@ save("smc_vs_wgf10Oct2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnostics
      "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
      "Nparticles", Nparticles, "Niter", Niter, "qdistWGF", qdistWGF,
      "qdistSMC", qdistSMC);
-#
-#     Nparticles = load("smc_vs_wgf5Oct2020.jld", "Nparticles");
-#     tSMC = load("smc_vs_wgf5Oct2020.jld", "tSMC");
-#     tWGF = load("smc_vs_wgf5Oct2020.jld", "tWGF");
-#     diagnosticsSMC = load("smc_vs_wgf5Oct2020.jld", "diagnosticsSMC");
-#     diagnosticsWGF = load("smc_vs_wgf5Oct2020.jld", "diagnosticsWGF");
-#     tSMC = load("smc_vs_wgf5Oct2020.jld", "tSMC");
-#     tWGF = load("smc_vs_wgf5Oct2020.jld", "tWGF");
-#     qdistSMC = load("smc_vs_wgf5Oct2020.jld", "qdistSMC");
-#     qdistWGF = load("smc_vs_wgf5Oct2020.jld", "qdistWGF");
-p1 = histogram(entropySMC[1, :]);
-histogram!(entropyWGF[1, :]);
-p2 = histogram(entropySMC[2, :]);
-histogram!(entropyWGF[2, :]);
-p3 = histogram(entropySMC[3, :]);
-histogram!(entropyWGF[3, :]);
-p4 = histogram(entropySMC[4, :]);
-histogram!(entropyWGF[4, :]);
-p5 = histogram(entropySMC[5, :]);
-histogram!(entropyWGF[5, :]);
-p6 = plot()
-plot(p1, p2, p3, p4, p5, p6, layout=(3, 2))
+
+Nparticles = load("smc_vs_wgf10Oct2020.jld", "Nparticles");
+tSMC = load("smc_vs_wgf10Oct2020.jld", "tSMC");
+tWGF = load("smc_vs_wgf10Oct2020.jld", "tWGF");
+diagnosticsSMC = load("smc_vs_wgf10Oct2020.jld", "diagnosticsSMC");
+diagnosticsWGF = load("smc_vs_wgf10Oct2020.jld", "diagnosticsWGF");
+tSMC = load("smc_vs_wgf10Oct2020.jld", "tSMC");
+tWGF = load("smc_vs_wgf10Oct2020.jld", "tWGF");
+qdistSMC = load("smc_vs_wgf10Oct2020.jld", "qdistSMC");
+qdistWGF = load("smc_vs_wgf10Oct2020.jld", "qdistWGF");
