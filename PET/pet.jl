@@ -47,13 +47,13 @@ xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # dt and number of iterations
 dt = 1e-03;
-Niter = 20000;
+Niter = 30000;
 # samples from h(y)
-M = 1000;
+M = 5000;
 # number of particles
-Nparticles = 1000;
+Nparticles = 5000;
 # regularisation parameter
-alpha = 0.01;
+alpha = 0.001;
 # variance of normal describing alignment
 sigma = 0.02;
 
@@ -114,3 +114,7 @@ R"""
 # ise
 petWGF = reshape(KDEyWGFfinal, (pixels[1], pixels[2]));
 var(petWGF .- phantom)
+
+
+save("pet18Oct2020.jld", "alpha", alpha, "dt", dt, "Nparticles", Nparticles,
+    "Niter", Niter, "KDEyWGF", KDEyWGF);
