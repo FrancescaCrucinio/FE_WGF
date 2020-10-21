@@ -71,7 +71,7 @@ R"""
         theme_void() +
         theme(legend.position = "none", aspect.ratio=1) +
         scale_fill_viridis(discrete=FALSE, option="magma")
-    ggsave("phantom.png", p)
+    ggsave("phantom.eps", p)
 """
 
 # WGF
@@ -96,7 +96,7 @@ KDEyWGF = mapslices(psi, [x y], dims = 2);
 # entropy
 ent = mapslices(psi_ent, KDEyWGF, dims = 2);
 # last time step
-KDEyWGFfinal = KDEyWGF[Niter, :];
+KDEyWGFfinal = KDEyWGF[9150, :];
 plot(1:Niter, ent)
 hline!([phantom_ent])
 
@@ -109,7 +109,7 @@ R"""
         theme_void() +
         theme(legend.position = "none", aspect.ratio=1) +
         scale_fill_viridis(discrete=FALSE, option="magma")
-    # ggsave(paste("pet", $n, ".eps", sep=""), p)
+    # ggsave("pet.eps", p)
 """
 # ise
 petWGF = reshape(KDEyWGFfinal, (pixels[1], pixels[2]));
@@ -118,3 +118,6 @@ var(petWGF .- phantom)
 
 save("pet18Oct2020.jld", "alpha", alpha, "dt", dt, "Nparticles", Nparticles,
     "Niter", Niter, "KDEyWGF", KDEyWGF);
+
+Nparticles = load("pet18Oct2020.jld", "Nparticles");
+KDEyWGF = load("pet18Oct2020.jld", "KDEyWGF");
