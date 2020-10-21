@@ -23,6 +23,8 @@ export wgf_turbolence
 export wgf_C19_tamed
 export wgf_HIV_tamed
 export wgf_flu_tamed
+export wgf_sucrase_tamed
+export wgf_DKDE_tamed
 
 #=
  WGF for analytically tractable example
@@ -670,6 +672,60 @@ function wgf_flu_tamed(N, dt, Niter, alpha, x0, hSample, M, a)
         end
         # update locations
         x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ Niter^(-a) * abs.(drift)) .+ sqrt(2*alpha*dt)*randn(N, 1);
+    end
+    return x
+end
+
+function wgf_sucrase_tamed(Nparticles, dt, Niter, alpha, x0, hSample, M, a)
+    # initialise a matrix x storing the particles
+    x = zeros(Niter, Nparticles);
+    # initial distribution is given as input:
+    x[1, :] = x0;
+    # estimate error variance from data
+    sigma = sqrt(0.25*var(hSample));
+
+    for n=1:(Niter-1)
+        # get samples from h(y)
+        y = sample(hSample, M, replace = true);
+        # Compute h^N_{n}
+        hN = zeros(M, 1);
+        for j=1:M
+            hN[j] = mean(pdf.(Normal.(x[n, :], sigma), y[j]));
+        end
+        # gradient and drift
+        drift = zeros(Nparticles, 1);
+        for i=1:Nparticles
+            gradient = pdf.(Normal.(x[n, i], sigma), y) .* (y .- x[n, i])/(sigma^2);
+            drift[i] = mean(gradient./hN);
+        end
+        # update locations
+        x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ Niter^(-a) * abs.(drift)) .+ sqrt(2*alpha*dt)*randn(Nparticles, 1);
+    end
+    return x
+end
+
+function wgf_DKDE_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, a, sigU)
+    # initialise a matrix x storing the particles
+    x = zeros(Niter, Nparticles);
+    # initial distribution is given as input:
+    x[1, :] = x0;
+
+    for n=1:(Niter-1)
+        # get samples from h(y)
+        y = sample(muSample, M, replace = true);
+        # Compute h^N_{n}
+        hN = zeros(M, 1);
+        for j=1:M
+            hN[j] = mean(pdf.(Laplace.(x[n, :], sigU), y[j]));
+        end
+        # gradient and drift
+        drift = zeros(Nparticles, 1);
+        for i=1:Nparticles
+            gradient = pdf.(Laplace.(x[n, i], sigU), y) .* (-sign.(x[n, i] .- y)/sigU);
+            drift[i] = mean(gradient./hN);
+        end
+        # update locations
+        x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ Niter^(-a) * abs.(drift)) .+ sqrt(2*alpha*dt)*randn(Nparticles, 1);
     end
     return x
 end
