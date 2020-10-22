@@ -1,4 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -7,11 +8,11 @@ using Statistics;
 using StatsBase;
 using Random;
 using Distances;
-using XLSX;
 using RCall;
 @rimport ks as rks;
 # custom packages
 using wgf;
+using diagnostics;
 
 # set seed
 Random.seed!(1234);
@@ -98,7 +99,7 @@ sigU = @rget sigU;
 
 # parameters for WGF
 a = 0.5;
-alpha = 0.1;
+alpha = 0.07;
 Nparticles = 1000;
 dt = 1e-3;
 Niter = 10000;
@@ -127,5 +128,10 @@ R"""
     geom_line(size = 1) +
     scale_color_manual(values = 1:5, labels=c("true f", "fdec, hPI", "fdec, hCV", "naive estimator, hNR", "WGF")) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
-    # ggsave("sucrase.eps", p2,  height=5)
+    # ggsave("simulated_data.eps", p2,  height=5)
+
+    var(tdensity - KDE_wgf$estimate)
+    var(tdensity - outcome$DKDE_nonrescaledPI)
+    var(tdensity - outcome$naive_KDE)
+    var(tdensity - outcome$DKDE_rescaledCV)
 """

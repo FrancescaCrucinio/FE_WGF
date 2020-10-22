@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -9,7 +9,6 @@ using StatsBase;
 using Random;
 using JLD;
 using Distances;
-using XLSX;
 using RCall;
 @rimport ks as rks
 # custom packages
@@ -66,6 +65,7 @@ toc()
 names(outcome)<-c('PI_bandwidth','DKDE_nonrescaledPI','DKDE_rescaledPI','CV_bandwidth','DKDE_rescaledCV','normal_bandwidth','naive_KDE')
 """
 
+a = 1;
 # function computing KDE
 function phi(t)
     RKDE = rks.kde(x = t, var"eval.points" = @rget xx);
@@ -99,14 +99,14 @@ muSample = @rget W;
 sigU = @rget sigU;
 
 # parameters for WGF
-alpha = range(0.001, stop = 0.5, length = 10);
+alpha = range(0.001, stop = 0.2, length = 10);
 Nparticles = 1000;
 dt = 1e-3;
 Niter = 10000;
 M = 1000;
 x0 = sample(muSample, Nparticles, replace = true);
 # divide muSample into groups
-L = 2;
+L = 5;
 muSample = reshape(muSample, (L, Int(length(muSample)/L)));
 
 E = zeros(length(alpha), L);
