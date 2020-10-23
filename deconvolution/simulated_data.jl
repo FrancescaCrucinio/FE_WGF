@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -17,10 +17,11 @@ using diagnostics;
 # set seed
 Random.seed!(1234);
 
-# R example
 R"""
 library(tictoc)
 library(fDKDE)
+# set seed
+set.seed(1234);
 #Noise to signal ratio=varU/varX
 NSR=0.2
 
@@ -124,11 +125,11 @@ R"""
     g <- rep(1:5, , each = length(xx));
     x <- rep(xx, times = 5);
     data <- data.frame(x = x, y = c(tdensity, outcome$DKDE_nonrescaledPI, outcome$DKDE_rescaledCV, outcome$naive_KDE, KDE_wgf$estimate), g = factor(g))
-    p2 <- ggplot(data, aes(x, y, color = g)) +
+    p <- ggplot(data, aes(x, y, color = g)) +
     geom_line(size = 1) +
     scale_color_manual(values = 1:5, labels=c("true f", "fdec, hPI", "fdec, hCV", "naive estimator, hNR", "WGF")) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
-    # ggsave("simulated_data.eps", p2,  height=5)
+    # ggsave("simulated_data.eps", p,  height=5)
 
     var(tdensity - KDE_wgf$estimate)
     var(tdensity - outcome$DKDE_nonrescaledPI)
