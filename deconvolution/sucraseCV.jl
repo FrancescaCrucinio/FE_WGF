@@ -1,4 +1,5 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -8,8 +9,9 @@ using StatsBase;
 using Random;
 using JLD;
 using Distances;
+using XLSX;
 using RCall;
-@rimport ks as rks;
+@rimport ks as rks
 # custom packages
 using wgf;
 
@@ -39,14 +41,9 @@ h=1.06*sqrt(var(W))*n^(-1/5);
 muKDE = kde(W, h = h);
 muKDEy = muKDE$estimate;
 muKDEx = muKDE$eval.points;
-
-#PI bandwidth of Delaigle and Gijbels
-hPI=PI_deconvUknownth4(W,errortype,varU,sigU);
-#DKDE estimator
-dx = muKDEx[2] - muKDEx[1];
-fdec_hPI = fdecUknown(muKDEx,W,hPI,errortype,sigU,dx);
 """
 
+a = 1;
 # function computing KDE
 function phi(t)
     RKDE = rks.kde(x = t, var"eval.points" = @rget muKDEx);
@@ -71,7 +68,7 @@ function psi(t)
         hatH[i] = delta*sum(pdf.(Laplace.(refY, sigU), refY[i]).*t);
     end
     kl = kl_divergence(trueH, hatH);
-    return kl-alpha*ent;
+    return kl-a*ent;
 end
 
 # get sample from μ
@@ -80,34 +77,29 @@ muSample = @rget W;
 sigU = @rget sigU;
 
 # parameters for WGF
-a = 0.5;
-alpha = 7;
+alpha = range(0.001, stop = 50, length = 10);
 Nparticles = 1000;
 dt = 1e-2;
 Niter = 10000;
 M = 1000;
 x0 = sample(muSample, Nparticles, replace = true);
-tWGF = @elapsed begin
-x = wgf_sucrase_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, a, sigU);
+# divide muSample into groups
+L = 24;
+muSample = reshape(muSample, (L, Int(length(muSample)/L)));
+
+
+E = zeros(length(alpha), L);
+Threads.@threads for i=1:length(alpha)
+    @simd for l=1:L
+        # get reduced sample
+        muSampleL = muSample[1:end .!= l, :];
+        # WGF
+        x = wgf_sucrase_tamed(Nparticles, dt, Niter, alpha[i], x0, muSample, M, 0.5, sigU);
+        # KL
+        a = alpha[i];
+        KDE = phi(x[Niter, :]);
+        E[i, l] = psi(KDE);
+        println("$i, $l")
+    end
 end
-println("WGF done, $tWGF")
-
-# check convergence
-KDEyWGF = mapslices(phi, x, dims = 2);
-EWGF = mapslices(psi, KDEyWGF, dims = 2);
-plot(EWGF)
-
-# plot
-R"""
-    # WGF estimator
-    KDE_wgf <- kde($x[$Niter, ], eval.points = muKDEx);
-    library(ggplot2)
-    g <- rep(1:3, , each = length(muKDEx));
-    x <- rep(muKDEx, times = 3);
-    data <- data.frame(x = x, y = c(muKDEy, fdec_hPI, KDE_wgf$estimate), g = factor(g))
-    p <- ggplot(data, aes(x, y, color = g)) +
-    geom_line(size = 1) +
-    scale_color_manual(values = 1:3, labels=c("KDE mu", "fdec, hPI", "WGF")) +
-    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
-    # ggsave("sucrse.eps", p,  height=5)
-"""
+plot(alpha,  mean(E, dims = 2))

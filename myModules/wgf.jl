@@ -676,13 +676,11 @@ function wgf_flu_tamed(N, dt, Niter, alpha, x0, hSample, M, a)
     return x
 end
 
-function wgf_sucrase_tamed(Nparticles, dt, Niter, alpha, x0, hSample, M, a)
+function wgf_sucrase_tamed(Nparticles, dt, Niter, alpha, x0, hSample, M, a, sigU)
     # initialise a matrix x storing the particles
     x = zeros(Niter, Nparticles);
     # initial distribution is given as input:
     x[1, :] = x0;
-    # estimate error variance from data
-    sigma = sqrt(0.25*var(hSample));
 
     for n=1:(Niter-1)
         # get samples from h(y)
@@ -690,12 +688,12 @@ function wgf_sucrase_tamed(Nparticles, dt, Niter, alpha, x0, hSample, M, a)
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M
-            hN[j] = mean(pdf.(Normal.(x[n, :], sigma), y[j]));
+            hN[j] = mean(pdf.(Normal.(x[n, :], sigU), y[j]));
         end
         # gradient and drift
         drift = zeros(Nparticles, 1);
         for i=1:Nparticles
-            gradient = pdf.(Normal.(x[n, i], sigma), y) .* (y .- x[n, i])/(sigma^2);
+            gradient = pdf.(Normal.(x[n, i], sigU), y) .* (y .- x[n, i])/(sigU^2);
             drift[i] = mean(gradient./hN);
         end
         # update locations
