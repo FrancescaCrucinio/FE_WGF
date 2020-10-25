@@ -37,13 +37,13 @@ a = 0.5;
 alpha = 0.07;
 Nparticles = 1000;
 dt = 1e-3;
-Niter = 10000;
+Niter = 5000;
 M = 1000;
 
-Nrep = 2;
+Nrep = 100;
 ise = zeros(3, Nrep);
 runtime = zeros(3, Nrep);
-Threads.@threads for i=1:Nrep
+for i=1:Nrep
     R"""
     #Generate data from a normal mixture
     X=rnorm(n,5,.4);
@@ -112,5 +112,5 @@ Threads.@threads for i=1:Nrep
     ise[3, i] = @rget iseWGF;
 end
 
-mean(ise, dim = 2)
-mean(runtime, dim = 2)
+mean(ise, dims = 2)
+mean(runtime, dims = 2)
