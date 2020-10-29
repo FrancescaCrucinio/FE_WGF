@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+#push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -9,7 +9,6 @@ using StatsBase;
 using Random;
 using JLD;
 using Distances;
-using XLSX;
 using RCall;
 @rimport ks as rks
 # custom packages
@@ -65,7 +64,7 @@ function psi(t)
     # convolution with approximated f
     # this gives the approximated value
     for i=1:length(refY)
-        hatH[i] = delta*sum(pdf.(Laplace.(refY, sigU), refY[i]).*t);
+        hatH[i] = delta*sum(pdf.(Normal.(refY, sigU), refY[i]).*t);
     end
     kl = kl_divergence(trueH, hatH);
     return kl-a*ent;
@@ -77,7 +76,7 @@ muSample = @rget W;
 sigU = @rget sigU;
 
 # parameters for WGF
-alpha = range(0.001, stop = 50, length = 10);
+alpha = range(0.001, stop = 5, length = 2);
 Nparticles = 1000;
 dt = 1e-2;
 Niter = 10000;

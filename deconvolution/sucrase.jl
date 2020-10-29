@@ -81,7 +81,7 @@ sigU = @rget sigU;
 
 # parameters for WGF
 a = 0.5;
-alpha = 7;
+alpha = 3;
 Nparticles = 1000;
 dt = 1e-2;
 Niter = 10000;
