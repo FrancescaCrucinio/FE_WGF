@@ -1,15 +1,11 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 # Julia packages
 using Revise;
-using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
-using KernelEstimator;
 using Random;
-using JLD;
 using Distances;
-using LaTeXStrings;
 using RCall;
 @rimport ks as rks
 # custom packages
@@ -21,10 +17,15 @@ using samplers;
 Random.seed!(1234);
 
 # data for gaussian mixture example
-f(x) = pdf.(Normal(0.3, 0.015), x)/3 + 2*pdf.(Normal(0.5, 0.043), x)/3;
-h(x) = 2*pdf.(Normal(0.3, sqrt(0.043^2 + 0.045^2)), x)/3 +
+rho(x) = pdf.(Normal(0.3, 0.015), x)/3 + 2*pdf.(Normal(0.5, 0.043), x)/3;
+mu(x) = 2*pdf.(Normal(0.3, sqrt(0.043^2 + 0.045^2)), x)/3 +
         pdf.(Normal(0.5, sqrt(0.015^2 + 0.045^2)), x)/3;
-g(x, y) = pdf.(Normal(x, 0.045), y);
+K(x, y) = pdf.(Normal(x, 0.045), y);
+
+# values at which evaluate KDE
+KDEx = range(0, stop = 1, length = 1000);
+# reference values for KL divergence
+refY = range(0, stop = 1, length = 1000);
 
 # function computing KDE
 function phi(t)
@@ -46,7 +47,7 @@ function psi(t)
     # convolution with approximated f
     # this gives the approximated value
     for i=1:length(refY)
-        hatH[i] = delta*sum(g.(KDEx, refY[i]).*t);
+        hatH[i] = delta*sum(K.(KDEx, refY[i]).*t);
     end
     kl = kl_divergence(trueH, hatH);
     return kl-a*ent;
@@ -55,15 +56,10 @@ end
 # dt and number of iterations
 dt = 1e-03;
 Niter = 200;
-
 # samples from h(y)
 M = 1000;
 # sample from h(y)
-hSample = Ysample_gaussian_mixture(100000);
-# values at which evaluate KDE
-KDEx = range(0, stop = 1, length = 1000);
-# reference values for KL divergence
-refY = range(0, stop = 1, length = 1000);
+muSample = Ysample_gaussian_mixture(100000);
 # number of particles
 Nparticles = 1000;
 # regularisation parameter
@@ -74,7 +70,7 @@ f_approx = zeros(length(KDEx), length(alpha));
 for i=1:length(alpha)
     x0 = 0.5 .+ randn(1, Nparticles)/10;
     # run WGF
-    x =  wgf_gaussian_mixture_tamed(Nparticles, dt, Niter, alpha[i], x0, hSample, M, 0.5);
+    x =  wgf_gaussian_mixture_tamed(Nparticles, dt, Niter, alpha[i], x0, muSample, M, 0.5);
     a = alpha[i];
     KDEyWGF = mapslices(phi, x, dims = 2);
     f_approx[:, i] = KDEyWGF[end, :];

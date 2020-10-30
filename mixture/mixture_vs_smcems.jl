@@ -6,7 +6,6 @@ using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
-using KernelEstimator;
 using Random;
 using JLD;
 using RCall;
@@ -22,10 +21,10 @@ Random.seed!(1234);
 
 # data for anaytically tractable example
 # data for gaussian mixture example
-f(x) = pdf.(Normal(0.3, 0.015), x)/3 + 2*pdf.(Normal(0.5, 0.043), x)/3;
-h(x) = 2*pdf.(Normal(0.3, sqrt(0.043^2 + 0.045^2)), x)/3 +
+rho(x) = pdf.(Normal(0.3, 0.015), x)/3 + 2*pdf.(Normal(0.5, 0.043), x)/3;
+mu(x) = 2*pdf.(Normal(0.3, sqrt(0.043^2 + 0.045^2)), x)/3 +
         pdf.(Normal(0.5, sqrt(0.015^2 + 0.045^2)), x)/3;
-g(x, y) = pdf.(Normal(x, 0.045), y);
+K(x, y) = pdf.(Normal(x, 0.045), y);
 
 # parameters
 # dt and number of iterations
@@ -66,26 +65,26 @@ Threads.@threads for i=1:length(Nparticles)
         x0SMC = rand(1, Nparticles[i]);
         x0WGF = 0.5*ones(1, Nparticles[i]);
         # sample from h(y)
-        hSample = Ysample_gaussian_mixture(100000);
+        muSample = Ysample_gaussian_mixture(100000);
         # run SMC
         trepSMC[j] = @elapsed begin
-            xSMC, W = smc_gaussian_mixture(Nparticles[i], Niter, epsilon, x0SMC, hSample, M);
+            xSMC, W = smc_gaussian_mixture(Nparticles[i], Niter, epsilon, x0SMC, muSample, M);
             # kde
             bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
             RKDESMC = rks.kde(x = xSMC[end,:], var"h" = bw, var"eval.points" = KDEx, var"w" = Nparticles[i]*W[end, :]);
             KDEySMC =  abs.(rcopy(RKDESMC[3]));
         end
-        mSMC, vSMC, qSMC, miseSMC, eSMC = diagnosticsF(f, KDEx, KDEySMC);
+        mSMC, vSMC, qSMC, miseSMC, eSMC = diagnosticsF(rho, KDEx, KDEySMC);
         drepSMC[j, :] = [mSMC vSMC miseSMC];
         qdistrepSMC[j, :] = qSMC;
         entropySMC[i, j] = eSMC;
         # run WGF
         trepWGF[j] = @elapsed begin
-            xWGF = wgf_gaussian_mixture_tamed(Nparticles[i], dt, Niter, alpha, x0WGF, hSample, M, 0.5);
+            xWGF = wgf_gaussian_mixture_tamed(Nparticles[i], dt, Niter, alpha, x0WGF, muSample, M, 0.5);
             RKDEWGF = rks.kde(x = xWGF[end,:], var"eval.points" = KDEx);
             KDEyWGF =  abs.(rcopy(RKDEWGF[3]));
         end
-        mWGF, vWGF, qWGF, miseWGF, eWGF = diagnosticsF(f, KDEx, KDEyWGF);
+        mWGF, vWGF, qWGF, miseWGF, eWGF = diagnosticsF(rho, KDEx, KDEyWGF);
         drepWGF[j, :] = [mWGF vWGF miseWGF];
         qdistrepWGF[j, :] = qWGF;
         entropyWGF[i, j] = eWGF;
@@ -146,18 +145,18 @@ R"""
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank())
     # ggsave("mixture_entropy.eps", p3,  height=5)
 """
+# #
+# save("smc_vs_wgf10Oct2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnosticsWGF", diagnosticsWGF,
+#      "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
+#      "Nparticles", Nparticles, "Niter", Niter, "qdistWGF", qdistWGF,
+#      "qdistSMC", qdistSMC);
 #
-save("smc_vs_wgf10Oct2020.jld", "alpha", alpha, "epsilon", epsilon, "diagnosticsWGF", diagnosticsWGF,
-     "diagnosticsSMC", diagnosticsSMC, "dt", dt, "tSMC", tSMC, "tWGF", tWGF,
-     "Nparticles", Nparticles, "Niter", Niter, "qdistWGF", qdistWGF,
-     "qdistSMC", qdistSMC);
-
-Nparticles = load("smc_vs_wgf10Oct2020.jld", "Nparticles");
-tSMC = load("smc_vs_wgf10Oct2020.jld", "tSMC");
-tWGF = load("smc_vs_wgf10Oct2020.jld", "tWGF");
-diagnosticsSMC = load("smc_vs_wgf10Oct2020.jld", "diagnosticsSMC");
-diagnosticsWGF = load("smc_vs_wgf10Oct2020.jld", "diagnosticsWGF");
-tSMC = load("smc_vs_wgf10Oct2020.jld", "tSMC");
-tWGF = load("smc_vs_wgf10Oct2020.jld", "tWGF");
-qdistSMC = load("smc_vs_wgf10Oct2020.jld", "qdistSMC");
-qdistWGF = load("smc_vs_wgf10Oct2020.jld", "qdistWGF");
+# Nparticles = load("smc_vs_wgf10Oct2020.jld", "Nparticles");
+# tSMC = load("smc_vs_wgf10Oct2020.jld", "tSMC");
+# tWGF = load("smc_vs_wgf10Oct2020.jld", "tWGF");
+# diagnosticsSMC = load("smc_vs_wgf10Oct2020.jld", "diagnosticsSMC");
+# diagnosticsWGF = load("smc_vs_wgf10Oct2020.jld", "diagnosticsWGF");
+# tSMC = load("smc_vs_wgf10Oct2020.jld", "tSMC");
+# tWGF = load("smc_vs_wgf10Oct2020.jld", "tWGF");
+# qdistSMC = load("smc_vs_wgf10Oct2020.jld", "qdistSMC");
+# qdistWGF = load("smc_vs_wgf10Oct2020.jld", "qdistWGF");

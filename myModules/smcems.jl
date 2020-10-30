@@ -23,10 +23,10 @@ INPUTS
 'epsilon' standard deviation for Gaussian smoothing kernel
 'x0' initial distribution.
 user selected initial distribution
-'hSample' sample from h(y)
-'M' number of samples from h(y) to be drawn at each iteration
+'muSample' sample from μ(y)
+'M' number of samples from μ(y) to be drawn at each iteration
 =#
-function smc_gaussian_mixture(N, Niter, epsilon, x0, hSample, M)
+function smc_gaussian_mixture(N, Niter, epsilon, x0, muSample, M)
     # initialise a matrix x storing the particles at each time step
     x = zeros(Niter,N);
     # initialise a matrix W storing the weights at each time step
@@ -38,7 +38,7 @@ function smc_gaussian_mixture(N, Niter, epsilon, x0, hSample, M)
 
     for n=2:Niter
         # samples from h(y)
-                y = sample(hSample, M, replace = true);
+                y = sample(muSample, M, replace = true);
         # ESS
         # ESS=1/sum(W[n-1,:].^2);
         # RESAMPLING
@@ -175,86 +175,88 @@ function optimal_bandwidthESS(x, W)
 
     return bw
 end
-
-#=
- Weighted kernel density estimation
-OUTPUTS
-1 - value of kernel density estimator at KDEx
-INPUTS
-'x' data
-'W' weights
-'bw' bandwidth
-'KDEx' position at which evaluate the density
-=#
-function weightedKDE(x, W, bw, KDEx)
-    # number of positions at which evaluate the density
-    n = length(KDEx);
-    # KDE
-    KDEy = zeros(n, 1);
-    for i=1:n
-        # use Gaussian kernel
-        KDEy[i] = sum(W .* pdf.(Normal.(x, bw), KDEx[i]));
-    end
-
-    return KDEy
 end
 
-#= For entropy computation - removes non finite entries =#
-function remove_non_finite(x)
-       return isfinite(x) ? x : zero(x)
-end
 
-#= Find α giving a target entropy for WGF
-OUTPUTS
-1 - alpha
-INPUTS
-'target_entropy' target entropy for the solution
-'interval' domain of α
-'threshold' stopping rule
-'Niter' number of time steps
-'x0' user selected initial distribution
-'M' number of samples from h(y) to be drawn at each iteration
-=#
-function AT_alpha_SMC(target_entropy, interval, threshold, Niter, Nparticles, initial_distribution, M)
-    # values at which evaluate KDE
-    KDEx = range(-0, stop = 1, length = 1000);
-    # upper and lower bound for α
-    liminf = interval[1];
-    limsup = interval[2];
-
-    delta_entropy = Inf;
-    epsilon = (limsup + liminf)/2;
-    Nrep = 10;
-    j=1;
-    while (abs(delta_entropy)>threshold && j<=50)
-        actual_entropy  = zeros(Nrep, 1);
-        Threads.@threads for i=1:Nrep
-        if (initial_distribution == "delta")
-            x0 = rand(1)*ones(1, Nparticles);
-        else
-            x0 = rand(1, Nparticles);
-        end
-        ### SMC
-        xSMC, W = smc_AT_approximated_potential(Nparticles, Niter, epsilon, x0, M);
-        # kde
-        bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
-        KDEySMC = weightedKDE(xSMC[end, :], W[end, :], bw, KDEx);
-        actual_entropy[i] = -mean(remove_non_finite.(KDEySMC .* log.(KDEySMC)));
-        end
-        actual_entropy =  mean(actual_entropy);
-        delta_entropy = actual_entropy - target_entropy;
-        if (delta_entropy > 0)
-            limsup = (limsup + liminf)/2;
-        else
-            liminf = (limsup + liminf)/2;
-        end
-        epsilon = (limsup + liminf)/2;
-        println("$j")
-        println("$limsup , $liminf")
-        println("$actual_entropy")
-        println("$delta_entropy")
-        j=j+1;
-    end
-    return limsup, liminf
-end
-end
+# 
+# #=
+#  Weighted kernel density estimation
+# OUTPUTS
+# 1 - value of kernel density estimator at KDEx
+# INPUTS
+# 'x' data
+# 'W' weights
+# 'bw' bandwidth
+# 'KDEx' position at which evaluate the density
+# =#
+# function weightedKDE(x, W, bw, KDEx)
+#     # number of positions at which evaluate the density
+#     n = length(KDEx);
+#     # KDE
+#     KDEy = zeros(n, 1);
+#     for i=1:n
+#         # use Gaussian kernel
+#         KDEy[i] = sum(W .* pdf.(Normal.(x, bw), KDEx[i]));
+#     end
+#
+#     return KDEy
+# end
+#
+# #= For entropy computation - removes non finite entries =#
+# function remove_non_finite(x)
+#        return isfinite(x) ? x : zero(x)
+# end
+#
+# #= Find α giving a target entropy for WGF
+# OUTPUTS
+# 1 - alpha
+# INPUTS
+# 'target_entropy' target entropy for the solution
+# 'interval' domain of α
+# 'threshold' stopping rule
+# 'Niter' number of time steps
+# 'x0' user selected initial distribution
+# 'M' number of samples from h(y) to be drawn at each iteration
+# =#
+# function AT_alpha_SMC(target_entropy, interval, threshold, Niter, Nparticles, initial_distribution, M)
+#     # values at which evaluate KDE
+#     KDEx = range(-0, stop = 1, length = 1000);
+#     # upper and lower bound for α
+#     liminf = interval[1];
+#     limsup = interval[2];
+#
+#     delta_entropy = Inf;
+#     epsilon = (limsup + liminf)/2;
+#     Nrep = 10;
+#     j=1;
+#     while (abs(delta_entropy)>threshold && j<=50)
+#         actual_entropy  = zeros(Nrep, 1);
+#         Threads.@threads for i=1:Nrep
+#         if (initial_distribution == "delta")
+#             x0 = rand(1)*ones(1, Nparticles);
+#         else
+#             x0 = rand(1, Nparticles);
+#         end
+#         ### SMC
+#         xSMC, W = smc_AT_approximated_potential(Nparticles, Niter, epsilon, x0, M);
+#         # kde
+#         bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
+#         KDEySMC = weightedKDE(xSMC[end, :], W[end, :], bw, KDEx);
+#         actual_entropy[i] = -mean(remove_non_finite.(KDEySMC .* log.(KDEySMC)));
+#         end
+#         actual_entropy =  mean(actual_entropy);
+#         delta_entropy = actual_entropy - target_entropy;
+#         if (delta_entropy > 0)
+#             limsup = (limsup + liminf)/2;
+#         else
+#             liminf = (limsup + liminf)/2;
+#         end
+#         epsilon = (limsup + liminf)/2;
+#         println("$j")
+#         println("$limsup , $liminf")
+#         println("$actual_entropy")
+#         println("$delta_entropy")
+#         j=j+1;
+#     end
+#     return limsup, liminf
+# end
