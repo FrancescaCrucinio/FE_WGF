@@ -1,4 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -68,7 +69,7 @@ function psi(t)
     # convolution with approximated f
     # this gives the approximated value
     for i=1:length(refY)
-        hatH[i] = delta*sum(pdf.(Laplace.(refY, sigU), refY[i]).*t);
+        hatH[i] = delta*sum(pdf.(Normal.(refY, sigU), refY[i]).*t);
     end
     kl = kl_divergence(trueH, hatH);
     return kl-alpha*ent;
@@ -80,15 +81,14 @@ muSample = @rget W;
 sigU = @rget sigU;
 
 # parameters for WGF
-a = 0.5;
-alpha = 3;
+alpha = 0.5;
 Nparticles = 1000;
 dt = 1e-2;
-Niter = 10000;
+Niter = 100000;
 M = 1000;
 x0 = sample(muSample, Nparticles, replace = true);
 tWGF = @elapsed begin
-x = wgf_sucrase_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, a, sigU);
+x = wgf_sucrase_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5, sigU);
 end
 println("WGF done, $tWGF")
 
