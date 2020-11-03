@@ -9,7 +9,6 @@ using StatsBase;
 using Random;
 using LinearAlgebra;
 using DelimitedFiles;
-using KernelDensity;
 using Interpolations;
 using JLD;
 # R
@@ -21,8 +20,10 @@ library(scales)
 library(viridis)
 """
 # custom packages
-using diagnostics;
 using wgf;
+
+# set seed
+Random.seed!(1234);
 
 # entropy function
 function remove_non_finite(x)
@@ -56,7 +57,8 @@ Nparticles = 5000;
 alpha = 0.001;
 # variance of normal describing alignment
 sigma = 0.02;
-
+# sample from μ
+muSample = histogram2D_sampler(sinogram, phi_angle, xi, 10^6);
 
 # grid
 Xbins = range(-0.75+ 1/pixels[1], stop = 0.75 - 1/pixels[1], length = pixels[1]);
@@ -75,7 +77,7 @@ R"""
 """
 
 # WGF
-x, y = wgf_pet_tamed(Nparticles, dt, Niter, alpha, sinogram, M, phi, xi, sigma, 0.5);
+x, y = wgf_pet_tamed(Nparticles, dt, Niter, alpha, muSample, M, phi, xi, sigma, 0.5);
 
 # function computing KDE
 function psi(t)
