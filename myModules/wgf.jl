@@ -121,7 +121,7 @@ function wgf_pet_tamed(N, dt, Niter, alpha, ImageSample, M, phi, xi, sigma, a)
     y[1, :] = x0[2, :];
     for n=1:(Niter-1)
         # get sample from (y)
-        muIndex = sample(1:size(ImageSample), M, replace = true);
+        muIndex = sample(1:size(ImageSample, 1), M, replace = true);
         muSample = ImageSample[muIndex, :];
         # Compute h^N_{n}
         hN = zeros(M, 1);

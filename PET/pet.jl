@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -21,6 +21,7 @@ library(viridis)
 """
 # custom packages
 using wgf;
+using samplers;
 
 # set seed
 Random.seed!(1234);
@@ -41,18 +42,18 @@ sinogram = readdlm("PET/sinogram.txt", ',', Float64);
 # number of angles
 nphi = size(sinogram, 2);
 # angles
-phi = range(0, stop = 2*pi, length = nphi);
+phi_angle = range(0, stop = 2*pi, length = nphi);
 # number of offsets
 offsets = floor(size(sinogram, 1)/2);
 xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # dt and number of iterations
 dt = 1e-03;
-Niter = 30000;
+Niter = 1000;
 # samples from h(y)
-M = 5000;
+M = 500;
 # number of particles
-Nparticles = 5000;
+Nparticles = 500;
 # regularisation parameter
 alpha = 0.001;
 # variance of normal describing alignment
@@ -73,11 +74,11 @@ R"""
         theme_void() +
         theme(legend.position = "none", aspect.ratio=1) +
         scale_fill_viridis(discrete=FALSE, option="magma")
-    ggsave("phantom.eps", p)
+    # ggsave("phantom.eps", p)
 """
 
 # WGF
-x, y = wgf_pet_tamed(Nparticles, dt, Niter, alpha, muSample, M, phi, xi, sigma, 0.5);
+x, y = wgf_pet_tamed(Nparticles, dt, Niter, alpha, muSample, M, phi_angle, xi, sigma, 0.5);
 
 # function computing KDE
 function psi(t)
