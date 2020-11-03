@@ -61,7 +61,7 @@ Niter = 200;
 # number of particles
 Nparticles = 500;
 # regularisation parameters
-alpha = range(0, stop = 1, length = 10);
+alpha = range(0, stop = 1, length = 100);
 # initial distribution
 x0 = 0.5 .+ randn(1, Nparticles)/10;
 # samples from h(y)
