@@ -20,12 +20,12 @@ using wgf;
 Random.seed!(1234);
 
 # data for anaytically tractable example
-sigmaG = 0.045^2;
-sigmaF = 0.043^2;
-sigmaH = sigmaF + sigmaG;
-f(x) = pdf.(Normal(0.5, sqrt(sigmaF)), x);
-h(x) = pdf.(Normal(0.5, sqrt(sigmaH)), x);
-g(x, y) = pdf.(Normal(x, sqrt(sigmaG)), y);
+sigmaK = 0.045^2;
+sigmaRho = 0.043^2;
+sigmaMu = sigmaRho + sigmaK;
+rho(x) = pdf.(Normal(0.5, sqrt(sigmaRho)), x);
+mu(x) = pdf.(Normal(0.5, sqrt(sigmaMu)), x);
+K(x, y) = pdf.(Normal(x, sqrt(sigmaK)), y);
 
 # dt and number of iterations
 dt = 1e-03;
@@ -42,7 +42,7 @@ Nparticles = 500;
 alpha = 0.05;
 
 # exact minimiser
-variance, _  = AT_exact_minimiser(sigmaG, sigmaH, alpha);
+variance, _  = AT_exact_minimiser(sigmaK, sigmaMu, alpha);
 # initial distributions
 x0 = [0.0*ones(1, Nparticles); 0.5*ones(1, Nparticles);
     1*ones(1, Nparticles); rand(1, Nparticles);
@@ -63,16 +63,16 @@ function psi(t)
     end
     ent = -mean(remove_non_finite.(t .* log.(t)));
     # kl
-    trueH = h.(refY);
+    trueMu = mu.(refY);
     # approximated value
     delta = refY[2] - refY[1];
-    hatH = zeros(1, length(refY));
+    hatMu = zeros(1, length(refY));
     # convolution with approximated f
     # this gives the approximated value
     for i=1:length(refY)
-        hatH[i] = delta*sum(g.(KDEx, refY[i]).*t);
+        hatMu[i] = delta*sum(K.(KDEx, refY[i]).*t);
     end
-    kl = kl_divergence(trueH, hatH);
+    kl = kl_divergence(trueMu, hatMu);
     return kl-alpha*ent;
 end
 for i=1:size(x0, 1)
@@ -99,17 +99,5 @@ R"""
     scale_y_log10(labels = trans_format("log10", math_format(10^.x))) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), legend.position="bottom", aspect.ratio = 2/4) +
     guides(colour = guide_legend(nrow = 1))
-    # legend
-    plegend <- get_legend(p)
-    p1 <- ggplot(subset(data, x %in% c(101, 1000)), aes(x, y, group = factor(g), color = factor(g))) +
-    geom_line(size = 2) +
-    scale_colour_discrete(labels=glabels) +
-    scale_y_log10(labels = trans_format("log10", math_format(10^.x))) +
-    theme(axis.title=element_blank(), text = element_text(size=20), legend.position='none', aspect.ratio = 2/3)
-    p2 <- ggplot(subset(data, x %in% c(2, 100)), aes(x, y, group = factor(g), color = factor(g))) +
-    geom_line(size = 2) +
-    scale_colour_discrete(labels=glabels) +
-    scale_y_log10(labels = trans_format("log10", math_format(10^.x))) +
-    theme(axis.title=element_blank(), text = element_text(size=20), legend.position='none', aspect.ratio = 2/3)
     ggsave("initial_distribution_E.eps", p, height=5)
 """

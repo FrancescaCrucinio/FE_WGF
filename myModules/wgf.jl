@@ -157,15 +157,15 @@ OUTPUTS
 1 - variance
 2 - KL divergence
 INPUTS
-'sigmaG' variance of kernel g
-'sigmaH' variance of data function h
-'lambda' regularisation parameter
+'sigmaK' variance of kernel K
+'sigmaMu' variance of data function μ
+'alpha' regularisation parameter
 =#
-function AT_exact_minimiser(sigmaG, sigmaH, alpha)
-    variance  = (sigmaH - sigmaG .+ 2*alpha*sigmaG .+
-                sqrt.(sigmaG^2 + sigmaH^2 .- 2*sigmaG*sigmaH*(1 .- 2*alpha)))./
+function AT_exact_minimiser(sigmaK, sigmaMu, alpha)
+    variance  = (sigmaMu - sigmaK .+ 2*alpha*sigmaK .+
+                sqrt.(sigmaK^2 + sigmaMu^2 .- 2*sigmaK*sigmaMu*(1 .- 2*alpha)))./
                 (2*(1 .- alpha));
-    KL = 0.5*log.((sigmaG .+ variance)/sigmaH) .+ 0.5*sigmaH./(sigmaG .+ variance) .- 0.5 .-
+    KL = 0.5*log.((sigmaK .+ variance)/sigmaMu) .+ 0.5*sigmaMu./(sigmaK .+ variance) .- 0.5 .-
         0.5*alpha .* (1 .+ log.(2*pi*variance));
     return variance, KL
 end
@@ -210,7 +210,7 @@ function wgf_sucrase_tamed(N, dt, Niter, alpha, x0, muSample, M, a, sigU)
     return x
 end
 
-#= WGF for deconvolution with Laplace error
+#= WGF for deconvolution with simulated data and Laplace error
 OUTPUTS
 1 - particle locations
 INPUTS
@@ -240,7 +240,7 @@ function wgf_DKDE_tamed(N, dt, Niter, alpha, x0, muSample, M, a, sigU)
         end
         # gradient and drift
         drift = zeros(N, 1);
-        for i=1:Nparticles
+        for i=1:N
             gradient = pdf.(Laplace.(x[n, i], sigU), y) .* (-sign.(x[n, i] .- y)/sigU);
             drift[i] = mean(gradient./hN);
         end

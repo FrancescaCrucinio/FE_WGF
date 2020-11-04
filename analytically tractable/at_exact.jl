@@ -6,14 +6,10 @@ using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
-using KernelEstimator;
 using Random;
-using JLD;
-using LaTeXStrings;
 using RCall;
 @rimport ks as rks
 # custom packages
-using diagnostics;
 using wgf;
 
 # Plot AT example and exact minimiser
@@ -21,12 +17,12 @@ using wgf;
 Random.seed!(1234);
 
 # data for anaytically tractable example
-sigmaG = 0.045^2;
-sigmaF = 0.043^2;
-sigmaH = sigmaF + sigmaG;
-f(x) = pdf.(Normal(0.5, sqrt(sigmaF)), x);
-h(x) = pdf.(Normal(0.5, sqrt(sigmaH)), x);
-g(x, y) = pdf.(Normal(x, sqrt(sigmaG)), y);
+sigmaK = 0.045^2;
+sigmaRho = 0.043^2;
+sigmaMu = sigmaRho + sigmaK;
+rho(x) = pdf.(Normal(0.5, sqrt(sigmaRho)), x);
+mu(x) = pdf.(Normal(0.5, sqrt(sigmaMu)), x);
+K(x, y) = pdf.(Normal(x, sqrt(sigmaK)), y);
 
 # function computing KDE
 function phi(t)
@@ -52,14 +48,14 @@ x0 = 0.5 .+ randn(1, Nparticles)/10;
 x, _ =  wgf_AT_tamed(Nparticles, dt, Niter, alpha, x0, M, 0.5);
 # KDE
 # optimal bandwidth Gaussian
-KDEyWGF =  KernelEstimator.kerneldensity(x[end,:], xeval=KDEx, h=bwnormal(x[end,:]));
-
+RKDE =  rks.kde(x[Niter, :], var"eval.points" = KDEx);
+KDEyWGF = abs.(rcopy(RKDE[3]));
 # exact minimiser
-variance, _  = AT_exact_minimiser(sigmaG, sigmaH, alpha);
+variance, _  = AT_exact_minimiser(sigmaK, sigmaMu, alpha);
 ExactMinimiser = pdf.(Normal(0.5, sqrt(variance)), KDEx);
 
 # solution
-solution = f.(KDEx);
+solution = rho.(KDEx);
 R"""
     library(ggplot2)
     glabels <- c(expression(rho), expression(rho[alpha]), expression(rho[alpha]^N));
@@ -70,5 +66,5 @@ R"""
     geom_line(size = 2) +
     scale_colour_manual(values = c("black", "red", "blue"), labels=glabels) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
-    ggsave("at_exact_min.eps", p, height=5)
+    # ggsave("at_exact_min.eps", p, height=5)
 """
