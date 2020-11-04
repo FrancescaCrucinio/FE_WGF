@@ -12,7 +12,6 @@ using RCall;
 @rimport ks as rks;
 # custom packages
 using wgf;
-using diagnostics;
 
 # set seed
 Random.seed!(1234);
@@ -99,7 +98,6 @@ muSample = @rget W;
 sigU = @rget sigU;
 
 # parameters for WGF
-a = 0.5;
 alpha = 0.07;
 Nparticles = 1000;
 dt = 1e-3;
@@ -107,7 +105,7 @@ Niter = 10000;
 M = 1000;
 x0 = sample(muSample, Nparticles, replace = true);
 tWGF = @elapsed begin
-x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, a, sigU);
+x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5, sigU);
 end
 println("WGF done, $tWGF")
 
@@ -127,7 +125,7 @@ R"""
     data <- data.frame(x = x, y = c(tdensity, outcome$DKDE_nonrescaledPI, outcome$DKDE_rescaledCV, outcome$naive_KDE, KDE_wgf$estimate), g = factor(g))
     p <- ggplot(data, aes(x, y, color = g)) +
     geom_line(size = 1) +
-    scale_color_manual(values = 1:5, labels=c("true f", "fdec, hPI", "fdec, hCV", "naive estimator, hNR", "WGF")) +
+    scale_color_manual(values = 1:5, labels=c("true f", "fdec, hPI", "fdec, hCV", expression(paste("KDE ", mu)), "WGF")) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
     # ggsave("simulated_data.eps", p,  height=5)
 

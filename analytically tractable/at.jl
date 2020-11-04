@@ -5,27 +5,23 @@ using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
-using KernelEstimator;
 using Random;
-using JLD;
 using Distances;
-using LaTeXStrings;
 using RCall;
 @rimport ks as rks
 # custom packages
-using diagnostics;
 using wgf;
 
 # set seed
 Random.seed!(1234);
 
 # data for anaytically tractable example
-sigmaG = 0.045^2;
-sigmaF = 0.043^2;
-sigmaH = sigmaF + sigmaG;
-f(x) = pdf.(Normal(0.5, sqrt(sigmaF)), x);
-h(x) = pdf.(Normal(0.5, sqrt(sigmaH)), x);
-g(x, y) = pdf.(Normal(x, sqrt(sigmaG)), y);
+sigmaK = 0.045^2;
+sigmaRho = 0.043^2;
+sigmaMu = sigmaRho + sigmaK;
+rho(x) = pdf.(Normal(0.5, sqrt(sigmaRho)), x);
+mu(x) = pdf.(Normal(0.5, sqrt(sigmaMu)), x);
+K(x, y) = pdf.(Normal(x, sqrt(sigmaK)), y);
 
 # function computing KDE
 function phi(t)
@@ -40,16 +36,16 @@ function psi(t)
     end
     ent = -mean(remove_non_finite.(t .* log.(t)));
     # kl
-    trueH = h.(refY);
+    trueMu = mu.(refY);
     # approximated value
     delta = refY[2] - refY[1];
-    hatH = zeros(1, length(refY));
+    hatMu = zeros(1, length(refY));
     # convolution with approximated f
     # this gives the approximated value
     for i=1:length(refY)
-        hatH[i] = delta*sum(g.(KDEx, refY[i]).*t);
+        hatMu[i] = delta*sum(K.(KDEx, refY[i]).*t);
     end
-    kl = kl_divergence(trueH, hatH);
+    kl = kl_divergence(trueMu, hatMu);
     return kl-a*ent;
 end
 
@@ -81,7 +77,7 @@ for i=1:length(alpha)
 end
 
 iterations = repeat(1:Niter, outer=[6, 1]);
-solution = f.(KDEx);
+solution = rho.(KDEx);
 # plot
 R"""
     library(ggplot2)
@@ -102,6 +98,6 @@ R"""
     geom_line(size = 2) +
     scale_colour_manual(values = c("black", "#F8766D", "#B79F00", "#00BA38", "#00BFC4", "#619CFF", "#F564E3"), labels=glabels) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
-    ggsave("at_E.eps", p1,  height=5)
-    ggsave("at_rho.eps", p2,  height=5)
+    # ggsave("at_E.eps", p1,  height=5)
+    # ggsave("at_rho.eps", p2,  height=5)
 """

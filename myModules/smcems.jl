@@ -38,7 +38,7 @@ function smc_gaussian_mixture(N, Niter, epsilon, x0, muSample, M)
 
     for n=2:Niter
         # samples from h(y)
-                y = sample(muSample, M, replace = true);
+        y = sample(muSample, M, replace = true);
         # ESS
         # ESS=1/sum(W[n-1,:].^2);
         # RESAMPLING
@@ -61,73 +61,14 @@ function smc_gaussian_mixture(N, Niter, epsilon, x0, muSample, M)
 
         # update weights
         for i=1:N
-            g = pdf.(Normal.(x[n, i], 0.045), y);
-            potential = sum(g ./ hN);
+            K = pdf.(Normal.(x[n, i], 0.045), y);
+            potential = sum(K ./ hN);
             # update weight
             W[n, i] = potential;
         end
         # normalise weights
         W[n, :] = W[n, :] ./ sum(W[n, :]);
     end
-    return x, W
-end
-
-#=
- SMC for analytically tractable example (approximated potential)
-OUTPUTS
-1 - particle locations
-2 - particle weights
-INPUTS
-'N' number of particles
-'Niter' number of time steps
-'epsilon' standard deviation for Gaussian smoothing kernel
-'x0' user selected initial distribution
-'M' number of samples from h(y) to be drawn at each iteration
-=#
-function smc_AT_approximated_potential(N, Niter, epsilon, x0, M)
-    # initialise a matrix x storing the particles
-    x = zeros(Niter,N);
-    # initialise a matrix W storing the weights
-    W = zeros(Niter,N);
-    # initial distribution is given as input:
-    x[1, :] = x0;
-    # uniform weights at time n = 1
-    W[1, :] = ones(1, N)/N;
-
-    for n=2:Niter
-        # get samples from h(y)
-        y = rand(Normal(0.5, sqrt(0.043^2 + 0.045^2)), M);
-        # ESS
-        ESS=1/sum(W[n-1,:].^2);
-        # RESAMPLING
-        if(ESS < N/2)
-            indices = trunc.(Int, mult_resample(W[n-1,:], N));
-            x[n,:] = x[n-1, indices];
-            W[n,:] .= 1/N;
-        else
-            x[n,:] = x[n-1,:];
-            W[n,:] = W[n-1,:];
-        end
-
-        # Compute h^N_{n}
-        hN = zeros(M,1);
-        for j=1:M
-            hN[j] = mean(pdf.(Normal.(x[n, :], 0.045), y[j]));
-        end
-        # Markov kernel: Random walk step
-        x[n, :] = x[n, :] + epsilon*randn(N, 1);
-
-        # update weights
-        for i=1:N
-            g = pdf.(Normal.(x[n, i], 0.045), y);
-            potential = sum(g ./ hN);
-            # update weight
-            W[n, i] = potential;
-        end
-        # normalise weights
-        W[n, :] = W[n, :] ./ sum(W[n, :]);
-    end
-
     return x, W
 end
 
@@ -177,8 +118,66 @@ function optimal_bandwidthESS(x, W)
 end
 end
 
+# #=
+#  SMC for analytically tractable example (approximated potential)
+# OUTPUTS
+# 1 - particle locations
+# 2 - particle weights
+# INPUTS
+# 'N' number of particles
+# 'Niter' number of time steps
+# 'epsilon' standard deviation for Gaussian smoothing kernel
+# 'x0' user selected initial distribution
+# 'M' number of samples from h(y) to be drawn at each iteration
+# =#
+# function smc_AT_approximated_potential(N, Niter, epsilon, x0, M)
+#     # initialise a matrix x storing the particles
+#     x = zeros(Niter,N);
+#     # initialise a matrix W storing the weights
+#     W = zeros(Niter,N);
+#     # initial distribution is given as input:
+#     x[1, :] = x0;
+#     # uniform weights at time n = 1
+#     W[1, :] = ones(1, N)/N;
+#
+#     for n=2:Niter
+#         # get samples from h(y)
+#         y = rand(Normal(0.5, sqrt(0.043^2 + 0.045^2)), M);
+#         # ESS
+#         ESS=1/sum(W[n-1,:].^2);
+#         # RESAMPLING
+#         if(ESS < N/2)
+#             indices = trunc.(Int, mult_resample(W[n-1,:], N));
+#             x[n,:] = x[n-1, indices];
+#             W[n,:] .= 1/N;
+#         else
+#             x[n,:] = x[n-1,:];
+#             W[n,:] = W[n-1,:];
+#         end
+#
+#         # Compute h^N_{n}
+#         hN = zeros(M,1);
+#         for j=1:M
+#             hN[j] = mean(pdf.(Normal.(x[n, :], 0.045), y[j]));
+#         end
+#         # Markov kernel: Random walk step
+#         x[n, :] = x[n, :] + epsilon*randn(N, 1);
+#
+#         # update weights
+#         for i=1:N
+#             g = pdf.(Normal.(x[n, i], 0.045), y);
+#             potential = sum(g ./ hN);
+#             # update weight
+#             W[n, i] = potential;
+#         end
+#         # normalise weights
+#         W[n, :] = W[n, :] ./ sum(W[n, :]);
+#     end
+#
+#     return x, W
+# end
 
-# 
+#
 # #=
 #  Weighted kernel density estimation
 # OUTPUTS
