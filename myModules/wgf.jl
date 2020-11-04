@@ -102,14 +102,14 @@ INPUTS
 'dt' discretisation step
 'Niter' number of iterations
 'lambda' regularisation parameter
-'noisyI' data image (Radon transform)
+'ImageSample' sample from noisy image μ(y)
 'M' number of samples from h(y) to be drawn at each iteration
 'phi' degrees at which projections are taken
 'xi' offset of projections
 'sigma' standard deviation for Normal describing alignment
 'a' parameter for tamed Euler scheme
 =#
-function wgf_pet_tamed(N, dt, Niter, alpha, noisyI, M, phi, xi, sigma, a)
+function wgf_pet_tamed(N, dt, Niter, alpha, ImageSample, M, phi, xi, sigma, a)
     # normalise xi
     xi = xi./maximum(xi);
     # initialise two matrices x, y storing the particles
@@ -121,12 +121,13 @@ function wgf_pet_tamed(N, dt, Niter, alpha, noisyI, M, phi, xi, sigma, a)
     y[1, :] = x0[2, :];
     for n=1:(Niter-1)
         # get sample from (y)
-        hSample = histogram2D_sampler(noisyI, phi, xi, M);
+        muIndex = sample(1:size(ImageSample, 1), M, replace = true);
+        muSample = ImageSample[muIndex, :];
         # Compute h^N_{n}
         hN = zeros(M, 1);
         Threads.@threads for j=1:M
-            hN[j] = mean(pdf.(Normal.(0, sigma), x[n, :] * cos(hSample[j, 1]) .+
-                    y[n, :] * sin(hSample[j, 1]) .- hSample[j, 2])
+            hN[j] = mean(pdf.(Normal.(0, sigma), x[n, :] * cos(muSample[j, 1]) .+
+                    y[n, :] * sin(muSample[j, 1]) .- muSample[j, 2])
                     );
         end
         # gradient and drift
@@ -134,12 +135,12 @@ function wgf_pet_tamed(N, dt, Niter, alpha, noisyI, M, phi, xi, sigma, a)
         driftY = zeros(N, 1);
         Threads.@threads for i=1:N
             # precompute common quantities for gradient
-            prec = -pdf.(Normal.(0, sigma), x[n, i] * cos.(hSample[:, 1]) .+
-                    y[n, i] * sin.(hSample[:, 1]) .- hSample[:, 2]) .*
-                    (x[n, i] * cos.(hSample[:, 1]) .+
-                    y[n, i] * sin.(hSample[:, 1]) .- hSample[:, 2])/sigma^2;
-            gradientX = prec .* cos.(hSample[:, 1]);
-            gradientY = prec .* sin.(hSample[:, 1]);
+            prec = -pdf.(Normal.(0, sigma), x[n, i] * cos.(muSample[:, 1]) .+
+                    y[n, i] * sin.(muSample[:, 1]) .- muSample[:, 2]) .*
+                    (x[n, i] * cos.(muSample[:, 1]) .+
+                    y[n, i] * sin.(muSample[:, 1]) .- muSample[:, 2])/sigma^2;
+            gradientX = prec .* cos.(muSample[:, 1]);
+            gradientY = prec .* sin.(muSample[:, 1]);
             driftX[i] = mean(gradientX./hN);
             driftY[i] = mean(gradientY./hN);
         end

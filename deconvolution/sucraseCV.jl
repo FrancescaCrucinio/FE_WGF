@@ -101,4 +101,5 @@ Threads.@threads for i=1:length(alpha)
         println("$i, $l")
     end
 end
-plot(alpha,  mean(E, dims = 2))
+save("sucraseCV_03Nov2020.jld", "alpha", alpha, "E", E, "dt", dt,
+    "Nparticles", Nparticles, "Niter", Niter);
