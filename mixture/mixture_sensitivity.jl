@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+#push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -68,16 +68,34 @@ x0 = 0.5 .+ randn(1, Nparticles)/10;
 M = 500;
 muSample = Ysample_gaussian_mixture(100000);
 
-E = zeros(length(alpha), 1);
-ise = zeros(length(alpha), 1);
+Nrep = 100;
+E = zeros(length(alpha), Nrep);
+ise = zeros(length(alpha), Nrep);
 for i=1:length(alpha)
+    for j=1:Nrep
     x = wgf_gaussian_mixture_tamed(Nparticles, dt, Niter, alpha[i], x0, muSample, M, 0.5);
     # KL
     a = alpha[i];
     KDE = phi(x[Niter, :]);
-    E[i] = psi(KDE);
-    ise[i] = var(trueH .- KDE);
-    println("$i")
+    E[i, j] = psi(KDE);
+    ise[i, j] = var(trueH .- KDE);
+    println("$i, $j")
+    end
 end
-plot(alpha,  E)
-plot(alpha, ise)
+
+Eavg = mean(E, dims = 2);
+iseavg = mean(ise, dims = 2);
+# plot
+R"""
+
+    library(ggplot2)
+    data <- data.frame(x = $alpha, y = $Eavg, z = $iseavg)
+    p1 <- ggplot(data, aes(x, y)) +
+    geom_line(size = 1) +
+    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
+    # ggsave("mixture_sensitivity_E.eps", p1,  height=5)
+    p2 <- ggplot(data, aes(x, z)) +
+    geom_line(size = 1) +
+    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
+    # ggsave("mixture_sensitivity_ise.eps", p2,  height=5)
+"""
