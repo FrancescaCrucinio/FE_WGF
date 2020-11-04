@@ -37,22 +37,19 @@ function psi(t)
     end
     ent = -mean(remove_non_finite.(t .* log.(t)));
     # kl
-    trueH = 2*pdf.(Normal(0.3, sqrt(0.043^2 + 0.045^2)), KDEx)/3 +
+    trueMu = 2*pdf.(Normal(0.3, sqrt(0.043^2 + 0.045^2)), KDEx)/3 +
             pdf.(Normal(0.5, sqrt(0.015^2 + 0.045^2)), KDEx)/3;
     # approximated value
     delta = refY[2] - refY[1];
-    hatH = zeros(1, length(refY));
+    hatMu = zeros(1, length(refY));
     # convolution with approximated f
     # this gives the approximated value
     for i=1:length(refY)
-        hatH[i] = delta*sum(pdf.(Normal.(refY, 0.045), refY[i]).*t);
+        hatMu[i] = delta*sum(pdf.(Normal.(refY, 0.045), refY[i]).*t);
     end
-    kl = kl_divergence(trueH, hatH);
+    kl = kl_divergence(trueMu, hatMu);
     return kl-a*ent;
 end
-# true density
-trueH = 2*pdf.(Normal(0.3, sqrt(0.043^2 + 0.045^2)), KDEx)/3 +
-        pdf.(Normal(0.5, sqrt(0.015^2 + 0.045^2)), KDEx)/3;
 
 # parameters for WGF
 # dt and number of iterations
