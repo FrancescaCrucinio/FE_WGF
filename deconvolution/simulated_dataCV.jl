@@ -79,17 +79,17 @@ function psi(t)
     end
     ent = -mean(remove_non_finite.(t .* log.(t)));
     # kl
-    trueH = @rget muKDE;
+    truemU = @rget muKDE;
     refY = @rget xx;
     # approximated value
     delta = refY[2] - refY[1];
-    hatH = zeros(1, length(refY));
+    hatmU = zeros(1, length(refY));
     # convolution with approximated f
     # this gives the approximated value
     for i=1:length(refY)
-        hatH[i] = delta*sum(pdf.(Laplace.(refY, sigU), refY[i]).*t);
+        hatmU[i] = delta*sum(pdf.(Laplace.(refY, sigU), refY[i]).*t);
     end
-    kl = kl_divergence(trueH, hatH);
+    kl = kl_divergence(trueMu, hatMu);
     return kl-a*ent;
 end
 

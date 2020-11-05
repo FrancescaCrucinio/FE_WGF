@@ -79,7 +79,6 @@ R"""
     # ggsave("mixture_N.eps", p,  height=5)
 """
 
-diagnosticsF(rho, KDEx, solution)
-diagnosticsF(rho, KDEx, KDEySMC1)
-diagnosticsF(rho, KDEx, KDEySMC2)
-diagnosticsF(rho, KDEx, KDEyWGF)
+var(solution .- KDEySMC1)
+var(solution .- KDEySMC2)
+var(solution .- KDEyWGF)
