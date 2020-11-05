@@ -82,7 +82,7 @@ for i=1:length(alpha)
         muSampleL = muSample[1:end .!= l, :];
         muSampleL = muSampleL[:];
         # WGF
-        x = wgf_gaussian_mixture_tamed(Nparticles, dt, Niter, alpha, x0, muSampleL, M, 0.5);
+        x = wgf_gaussian_mixture_tamed(Nparticles, dt, Niter, alpha[i], x0, muSampleL, M, 0.5);
         # KL
         a = alpha[i];
         KDE = phi(x[Niter, :]);
