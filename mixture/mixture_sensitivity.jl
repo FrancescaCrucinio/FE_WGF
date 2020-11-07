@@ -75,7 +75,7 @@ for i=1:length(alpha)
     a = alpha[i];
     KDE = phi(x[Niter, :]);
     E[i, j] = psi(KDE);
-    ise[i, j] = var(trueH .- KDE);
+    ise[i, j] = var(rho.(KDEx) .- KDE);
     println("$i, $j")
     end
 end

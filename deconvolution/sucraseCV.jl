@@ -1,8 +1,6 @@
 #push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
-using Revise;
-using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
@@ -19,7 +17,6 @@ Random.seed!(1234);
 
 R"""
 library(tictoc)
-library(fDKDE)
 library(readxl)
 library(ks)
 
@@ -33,9 +30,7 @@ errortype="norm";
 sigU = sqrt(var(W)/4);
 varU=sigU^2;
 
-# DKDE
-# Delaigle's estimators
-# KDE for mu
+# KDE for μ
 h=1.06*sqrt(var(W))*n^(-1/5);
 muKDE = kde(W, h = h);
 muKDEy = muKDE$estimate;

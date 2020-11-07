@@ -49,11 +49,11 @@ xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # dt and number of iterations
 dt = 1e-03;
-Niter = 1000;
+Niter = 10;
 # samples from h(y)
-M = 500;
+M = 10000;
 # number of particles
-Nparticles = 500;
+Nparticles = 10000;
 # regularisation parameter
 alpha = 0.001;
 # variance of normal describing alignment
