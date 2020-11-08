@@ -125,7 +125,7 @@ function wgf_pet_tamed(N, dt, Niter, alpha, ImageSample, M, phi, xi, sigma, a)
         muSample = ImageSample[muIndex, :];
         # Compute h^N_{n}
         hN = zeros(M, 1);
-        Threads.@threads for j=1:M
+        for j=1:M
             hN[j] = mean(pdf.(Normal.(0, sigma), x[n, :] * cos(muSample[j, 1]) .+
                     y[n, :] * sin(muSample[j, 1]) .- muSample[j, 2])
                     );
@@ -133,7 +133,7 @@ function wgf_pet_tamed(N, dt, Niter, alpha, ImageSample, M, phi, xi, sigma, a)
         # gradient and drift
         driftX = zeros(N, 1);
         driftY = zeros(N, 1);
-        Threads.@threads for i=1:N
+        for i=1:N
             # precompute common quantities for gradient
             prec = -pdf.(Normal.(0, sigma), x[n, i] * cos.(muSample[:, 1]) .+
                     y[n, i] * sin.(muSample[:, 1]) .- muSample[:, 2]) .*
@@ -141,8 +141,8 @@ function wgf_pet_tamed(N, dt, Niter, alpha, ImageSample, M, phi, xi, sigma, a)
                     y[n, i] * sin.(muSample[:, 1]) .- muSample[:, 2])/sigma^2;
             gradientX = prec .* cos.(muSample[:, 1]);
             gradientY = prec .* sin.(muSample[:, 1]);
-            driftX[i] = mean(gradientX./hN);
-            driftY[i] = mean(gradientY./hN);
+            driftX[i] = mean(replace!(gradientX./hN, NaN=>0));
+            driftY[i] = mean(replace!(gradientY./hN, NaN=>0));
         end
         # update locations
         drift_norm = sqrt.(sum([driftX driftY].^2, dims = 2));

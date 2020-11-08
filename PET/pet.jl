@@ -49,11 +49,11 @@ xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # dt and number of iterations
 dt = 1e-03;
-Niter = 10;
+Niter = 100000;
 # samples from h(y)
-M = 10000;
+M = 5000;
 # number of particles
-Nparticles = 10000;
+Nparticles = 5000;
 # regularisation parameter
 alpha = 0.001;
 # variance of normal describing alignment
@@ -99,7 +99,7 @@ KDEyWGF = mapslices(psi, [x y], dims = 2);
 # entropy
 ent = mapslices(psi_ent, KDEyWGF, dims = 2);
 # last time step
-KDEyWGFfinal = KDEyWGF[9150, :];
+KDEyWGFfinal = KDEyWGF[end, :];
 plot(1:Niter, ent)
 hline!([phantom_ent])
 
