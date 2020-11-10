@@ -71,6 +71,4 @@ plot!(p2, muKDEx, muKDEy);
 p = plot(p1, p2, layout =(2, 1));
 p
 
-theta = 1/2.6;
-kappa = 2.6^2;
-reconstruction = x[Niter, :] .+ rand(Gamma(kappa, theta), Nparticles);
+tmp <- glm($KDEy ~ $KDEx, family = poisson())
