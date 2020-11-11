@@ -38,7 +38,7 @@ M = 1000;
 dt = 1e-2;
 Niter = 10000;
 x0 = sample(muSample, M, replace = true);
-alpha = 1;
+alpha = 5;
 x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5);
 
 # function computing KDE
@@ -70,5 +70,3 @@ p2 = plot(KDEx, KDEy);
 plot!(p2, muKDEx, muKDEy);
 p = plot(p1, p2, layout =(2, 1));
 p
-
-tmp <- glm($KDEy ~ $KDEx, family = poisson())
