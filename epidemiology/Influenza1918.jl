@@ -35,10 +35,10 @@ muKDEx = rcopy(RKDE[2]);
 
 Nparticles = 1000;
 M = 1000;
-dt = 1e-2;
-Niter = 10000;
+dt = 1e-1;
+Niter = 1000;
 x0 = sample(muSample, M, replace = true);
-alpha = 5;
+alpha = 0.1;
 x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5);
 
 # function computing KDE
@@ -70,3 +70,13 @@ p2 = plot(KDEx, KDEy);
 plot!(p2, muKDEx, muKDEy);
 p = plot(p1, p2, layout =(2, 1));
 p
+
+R"""
+time <- seq(from = -9, to = 132, by = 3)
+incidence <- hist($x[$Niter, ], breaks = time)
+tmp <- glm(incidence$counts ~ incidence$mids, family = poisson())
+r <- coefficients(tmp)[2]
+GT <- generation.time("gamma", c(10.34, 35.3))
+
+est.R0.EG(incidence$counts, GT)
+"""

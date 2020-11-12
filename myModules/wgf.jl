@@ -268,8 +268,8 @@ function wgf_flu_tamed(N, dt, Niter, alpha, x0, muSample, M, a)
    # initial distribution is given as input:
    x[1, :] = x0;
 
-   scale = 1/0.29;
-   shape = 3.03;
+   Gamma_scale = 1/0.29;
+   Gamma_shape = 3.03;
 
    for n=1:(Niter-1)
        # get samples from h(y)
@@ -277,13 +277,13 @@ function wgf_flu_tamed(N, dt, Niter, alpha, x0, muSample, M, a)
        # Compute h^N_{n}
        hN = zeros(M, 1);
        for j=1:M
-           hN[j] = mean(pdf.(Gamma(shape, scale), x[n, :] .- y[j]));
+           hN[j] = mean(pdf.(Gamma(Gamma_shape, Gamma_scale), x[n, :] .- y[j]));
        end
        # gradient and drift
        drift = zeros(N, 1);
        for i=1:N
-           gradient = pdf.(Gamma(shape, scale),  x[n, i] .- y) .*
-               ((shape-1)./(x[n, i] .- y) .- 1/scale);
+           gradient = pdf.(Gamma(Gamma_shape, Gamma_scale),  x[n, i] .- y) .*
+               ((Gamma_shape-1)./(x[n, i] .- y) .- 1/Gamma_scale);
            ratio = gradient./hN;
            ratio[isnan.(ratio)] .= 0;
            drift[i] = mean(ratio);
