@@ -264,7 +264,7 @@ INPUTS
 'gamma_shape' shape of Gamma delay distribution
 'gamma_scale' scale of Gamma delay distribution
 =#
-function wgf_flu_tamed(N, dt, Niter, alpha, x0, muSample, M, a, gamma_shape, gamma_scale)
+function wgf_flu_tamed(N, dt, Niter, alpha, x0, muSample, M, a, ln_meanlog, ln_sdlog)
    # initialise a matrix x storing the particles
    x = zeros(Niter, N);
    # initial distribution is given as input:
@@ -276,13 +276,15 @@ function wgf_flu_tamed(N, dt, Niter, alpha, x0, muSample, M, a, gamma_shape, gam
        # Compute h^N_{n}
        hN = zeros(M, 1);
        for j=1:M
-           hN[j] = mean(pdf.(Gamma(gamma_shape, gamma_scale), x[n, :] .- y[j]));
+           hN[j] = mean(pdf.(LogNormal(ln_meanlog, ln_sdlog), y[j] .- x[n, :]));
        end
        # gradient and drift
        drift = zeros(N, 1);
        for i=1:N
-           gradient = pdf.(Gamma(gamma_shape, gamma_scale),  x[n, i] .- y) .*
-               ((gamma_shape-1)./(x[n, i] .- y) .- 1/gamma_scale);
+           gradient = zeros(M, 1);
+           positive = (y .- x[n, i]).>0;
+           gradient[positive] = pdf.(LogNormal(ln_meanlog, ln_sdlog), y[positive] .- x[n, i]) ./
+               (x[n, i] .- y[positive])  .* (1 .- (log.(y[positive] .- x[n, i]) .- ln_meanlog)/ln_sdlog^2);
            ratio = gradient./hN;
            ratio[isnan.(ratio)] .= 0;
            drift[i] = mean(ratio);

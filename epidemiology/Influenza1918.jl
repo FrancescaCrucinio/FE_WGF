@@ -20,15 +20,15 @@ R"""
 library(incidental)
 # death counts
 death_counts <- spanish_flu$Philadelphia
-# fit Gamma to delay distribution
+# fit lognormal to delay distribution
 x <- sample(spanish_flu_delay_dist$days, 1000000, replace = TRUE, prob = spanish_flu_delay_dist$proportion)
-fit.gamma <- MASS::fitdistr(x, "gamma")
-gamma_shape <- fit.gamma$estimate[1]
-gamma_rate <- 1/fit.gamma$estimate[2]
+fit.lognormal <- MASS::fitdistr(x, "log-normal")
+ln_meanlog <- fit.lognormal$estimate[1]
+ln_sdlog <- fit.lognormal$estimate[2]
 """
 # get Gamma parameters
-gamma_shape = @rget gamma_shape;
-gamma_scale =  @rget gamma_rate;
+ln_meanlog = @rget ln_meanlog;
+ln_sdlog =  @rget ln_sdlog;
 # get counts from μ
 muCounts = Int.(@rget death_counts);
 # get sample from μ
@@ -60,12 +60,21 @@ function psi(t)
     # convolution with approximated f
     # this gives the approximated value
     for i=1:length(refY)
-        hatMu[i] = delta*sum(pdf.(Gamma.(gamma_shape, gamma_rate), refY[i] .- KDEx).*t);
+        hatMu[i] = delta*sum(pdf.(LogNormal(ln_meanlog, ln_sdlog), refY[i] .- KDEx).*t);
     end
+    hatMu[iszero.(hatMu)] .= eps();
     kl = kl_divergence(trueMu, hatMu);
     return kl-alpha*ent;
 end
-
+# function computing entropy
+function psi_ent(t)
+    # entropy
+    function remove_non_finite(x)
+	       return isfinite(x) ? x : 0
+    end
+    ent = -mean(remove_non_finite.(t .* log.(t)));
+    return ent
+end
 # parameters for WGF
 # number of particles
 Nparticles = 1000;
@@ -80,21 +89,23 @@ x0 = sample(muSample, M, replace = true) .- 9;
 # regularisation parameter
 alpha = 0.001;
 # run WGF
-x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5, gamma_shape, gamma_scale);
+x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5, ln_meanlog, ln_sdlog);
 
 # check convergence
 KDEyWGF = mapslices(phi, x, dims = 2);
 EWGF = mapslices(psi, KDEyWGF, dims = 2);
+entWGF = mapslices(psi_ent, KDEyWGF, dims = 2);
 p1 = plot(EWGF);
+p2 = plot(entWGF);
 # result
-p2 = plot(KDEx, KDEyWGF[Niter, :]);
+p3 = plot(KDEx, KDEyWGF[Niter, :]);
 # deaths distribution
-plot!(p2, KDEx .- 9, muKDEy);
-p = plot(p1, p2, layout =(2, 1));
+plot!(p3, KDEx .- 9, muKDEy);
+p = plot(p1, p2, p3, layout =(3, 1));
 p
 
 # recovolve
-muSampleReconstructed = x[Niter, :] +  rand(Gamma(gamma_shape, gamma_rate), Nparticles);
+muSampleReconstructed = x[Niter, :] +  rand(LogNormal(ln_meanlog, ln_sdlog), Nparticles);
 RKDE = rks.kde(muSampleReconstructed, var"eval.points" = KDEx);
 KDEyRec = abs.(rcopy(RKDE[3]));
 R"""
