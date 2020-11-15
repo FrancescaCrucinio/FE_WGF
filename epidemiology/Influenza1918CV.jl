@@ -1,4 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+#push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -15,6 +16,7 @@ using wgf;
 
 # set seed
 Random.seed!(1234);
+
 
 R"""
 library(incidental)
@@ -41,6 +43,7 @@ KDEx = 1:length(muCounts);
 RKDE = rks.kde(muSample, var"eval.points" = KDEx);
 muKDEy = abs.(rcopy(RKDE[3]));
 
+a = 1;
 # function computing KDE
 function phi(t)
     RKDE = rks.kde(x = t, var"eval.points" = KDEx);
@@ -66,17 +69,9 @@ function psi(t)
     end
     hatMu[iszero.(hatMu)] .= eps();
     kl = kl_divergence(trueMu, hatMu);
-    return kl-alpha*ent;
+    return kl-a*ent;
 end
-# function computing entropy
-function psi_ent(t)
-    # entropy
-    function remove_non_finite(x)
-	       return isfinite(x) ? x : 0
-    end
-    ent = -mean(remove_non_finite.(t .* log.(t)));
-    return ent
-end
+
 # parameters for WGF
 # number of particles
 Nparticles = 1000;
@@ -89,34 +84,26 @@ Niter = 1000;
 # initial distribution
 x0 = sample(muSample, M, replace = true) .- 9;
 # regularisation parameter
-alpha = 0.001;
-# run WGF
-x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5, ln_meanlog, ln_sdlog);
+alpha = range(0.001, stop = 1, length = 10);
 
-# check convergence
-KDEyWGF = mapslices(phi, x, dims = 2);
-EWGF = mapslices(psi, KDEyWGF, dims = 2);
-entWGF = mapslices(psi_ent, KDEyWGF, dims = 2);
-p1 = plot(EWGF);
-p2 = plot(entWGF);
-# result
-p3 = plot(KDEx, KDEyWGF[Niter, :]);
-# deaths distribution
-plot!(p3, KDEx .- 9, muKDEy);
-p = plot(p1, p2, p3, layout =(3, 1));
-p
+# divide muSample into groups
+L = 5;
+# add one element at random to allow division
+muSample = [muSample; sample(muSample, 1)];
+muSample = reshape(muSample, (L, Int64(length(muSample)/L)));
 
-# recovolve
-muSampleReconstructed = x[Niter, :] +  rand(LogNormal(ln_meanlog, ln_sdlog), Nparticles);
-RKDE = rks.kde(muSampleReconstructed, var"eval.points" = KDEx);
-KDEyRec = abs.(rcopy(RKDE[3]));
-R"""
-Philadelphia_model <- fit_incidence(
-  reported = spanish_flu$Philadelphia,
-  delay_dist = spanish_flu_delay_dist$proportion)
-plot(spanish_flu$Date, Philadelphia_model$Ihat/sum(Philadelphia_model$Ihat), type="l", col = "red")
-lines(spanish_flu$Date, $KDEyWGF[$Niter, ], col = "blue")
-lines(spanish_flu$Date, $KDEyRec, col = "cyan")
-lines(spanish_flu$Date, Philadelphia_model$Chat/sum(Philadelphia_model$Chat), col = "orange")
-points(spanish_flu$Date, Philadelphia_model$reported/sum(Philadelphia_model$reported), pch = 16, col = "black")
-"""
+
+E = zeros(length(alpha), L);
+Threads.@threads for i=1:length(alpha)
+    @simd for l=1:L
+        # get reduced sample
+        muSampleL = muSample[1:end .!= l, :];
+        # WGF
+        x = wgf_flu_tamed(Nparticles, dt, Niter, alpha[i], x0, muSample, M, 0.5, ln_meanlog, ln_sdlog);
+        # KL
+        a = alpha[i];
+        KDE = phi(x[Niter, :]);
+        E[i, l] = psi(KDE);
+        println("$i, $l")
+    end
+end
