@@ -1,7 +1,6 @@
 #push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
-using Revise;
 using StatsPlots;
 using Distributions;
 using Statistics;
@@ -84,7 +83,7 @@ Niter = 1000;
 # initial distribution
 x0 = sample(muSample, M, replace = true) .- 9;
 # regularisation parameter
-alpha = range(0.001, stop = 1, length = 10);
+alpha = range(0.00001, stop = 0.01, length = 100);
 
 # divide muSample into groups
 L = 5;
@@ -107,3 +106,5 @@ Threads.@threads for i=1:length(alpha)
         println("$i, $l")
     end
 end
+
+plot(alpha, mean(E, dims = 2))

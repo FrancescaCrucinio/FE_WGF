@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -48,8 +48,8 @@ offsets = floor(size(sinogram, 1)/2);
 xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 
 # dt and number of iterations
-dt = 1e-03;
-Niter = 100000;
+dt = 1e-02;
+Niter = 1000;
 # samples from h(y)
 M = 5000;
 # number of particles
@@ -119,8 +119,8 @@ petWGF = reshape(KDEyWGFfinal, (pixels[1], pixels[2]));
 var(petWGF .- phantom)
 
 
-save("pet18Oct2020.jld", "alpha", alpha, "dt", dt, "Nparticles", Nparticles,
+save("pet13Nov2020.jld", "alpha", alpha, "dt", dt, "Nparticles", Nparticles,
     "Niter", Niter, "KDEyWGF", KDEyWGF);
 
-Nparticles = load("pet18Oct2020.jld", "Nparticles");
-KDEyWGF = load("pet18Oct2020.jld", "KDEyWGF");
+# Nparticles = load("pet18Oct2020.jld", "Nparticles");
+# KDEyWGF = load("pet18Oct2020.jld", "KDEyWGF");
