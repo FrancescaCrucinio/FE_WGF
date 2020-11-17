@@ -98,7 +98,7 @@ muSample = @rget W;
 sigU = @rget sigU;
 
 # parameters for WGF
-alpha = 0.07;
+alpha = 0.085;
 Nparticles = 500;
 dt = 1e-2;
 Niter = 1000;

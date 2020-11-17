@@ -34,11 +34,11 @@ muKDEx <- seq(-2,8,0.1);
 Random.seed!(1234);
 # parameters for WGF
 a = 0.5;
-alpha = 0.07;
-Nparticles = 1000;
-dt = 1e-3;
-Niter = 5000;
-M = 1000;
+alpha = 0.085;
+Nparticles = 500;
+dt = 1e-2;
+Niter = 1000;
+M = 500;
 
 Nrep = 100;
 ise = zeros(3, Nrep);

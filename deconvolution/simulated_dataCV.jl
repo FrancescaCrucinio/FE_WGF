@@ -99,7 +99,7 @@ muSample = @rget W;
 sigU = @rget sigU;
 
 # parameters for WGF
-alpha = range(0.001, stop = 0.2, length = 10);
+alpha = range(0.05, stop = 0.2, length = 10);
 Nparticles = 500;
 dt = 1e-2;
 Niter = 1000;
@@ -110,8 +110,8 @@ L = 5;
 muSample = reshape(muSample, (L, Int(length(muSample)/L)));
 
 E = zeros(length(alpha), L);
-Threads.@threads for i=1:length(alpha)
-    @simd for l=1:L
+for i=1:length(alpha)
+    for l=1:L
         # get reduced sample
         muSampleL = muSample[1:end .!= l, :];
         # WGF
