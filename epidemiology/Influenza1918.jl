@@ -25,6 +25,11 @@ x <- sample(spanish_flu_delay_dist$days, 1000000, replace = TRUE, prob = spanish
 fit.lognormal <- MASS::fitdistr(x, "log-normal")
 ln_meanlog <- fit.lognormal$estimate[1]
 ln_sdlog <- fit.lognormal$estimate[2]
+
+# RIDE estimator
+Philadelphia_model <- fit_incidence(
+  reported = spanish_flu$Philadelphia,
+  delay_dist = spanish_flu_delay_dist$proportion)
 """
 # get Gamma parameters
 ln_meanlog = @rget ln_meanlog;
@@ -68,55 +73,54 @@ function psi(t)
     kl = kl_divergence(trueMu, hatMu);
     return kl-alpha*ent;
 end
-# function computing entropy
-function psi_ent(t)
-    # entropy
-    function remove_non_finite(x)
-	       return isfinite(x) ? x : 0
-    end
-    ent = -mean(remove_non_finite.(t .* log.(t)));
-    return ent
-end
 # parameters for WGF
 # number of particles
 Nparticles = 1000;
 # number of samples from μ to draw at each iteration
 M = 1000;
 # time discretisation
-dt = 1e-2;
+dt = 1e-3;
 # number of iterations
-Niter = 1000;
+Niter = 10000;
 # initial distribution
 x0 = sample(muSample, M, replace = true) .- 9;
 # regularisation parameter
-alpha = 0.001;
+alpha = 0.01;
 # run WGF
 x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5, ln_meanlog, ln_sdlog);
 
 # check convergence
 KDEyWGF = mapslices(phi, x, dims = 2);
 EWGF = mapslices(psi, KDEyWGF, dims = 2);
-entWGF = mapslices(psi_ent, KDEyWGF, dims = 2);
 p1 = plot(EWGF);
-p2 = plot(entWGF);
 # result
-p3 = plot(KDEx, KDEyWGF[Niter, :]);
+p2 = plot(KDEx, KDEyWGF[Niter, :]);
 # deaths distribution
-plot!(p3, KDEx .- 9, muKDEy);
-p = plot(p1, p2, p3, layout =(3, 1));
+plot!(p2, KDEx .- 9, muKDEy);
+p = plot(p1, p2, layout =(2, 1));
 p
 
 # recovolve
 muSampleReconstructed = x[Niter, :] +  rand(LogNormal(ln_meanlog, ln_sdlog), Nparticles);
 RKDE = rks.kde(muSampleReconstructed, var"eval.points" = KDEx);
 KDEyRec = abs.(rcopy(RKDE[3]));
+
+# plot
 R"""
-Philadelphia_model <- fit_incidence(
-  reported = spanish_flu$Philadelphia,
-  delay_dist = spanish_flu_delay_dist$proportion)
-plot(spanish_flu$Date, Philadelphia_model$Ihat/sum(Philadelphia_model$Ihat), type="l", col = "red")
-lines(spanish_flu$Date, $KDEyWGF[$Niter, ], col = "blue")
-lines(spanish_flu$Date, $KDEyRec, col = "cyan")
-lines(spanish_flu$Date, Philadelphia_model$Chat/sum(Philadelphia_model$Chat), col = "orange")
-points(spanish_flu$Date, Philadelphia_model$reported/sum(Philadelphia_model$reported), pch = 16, col = "black")
+library(ggplot2)
+g <- rep(1:2, , each = length(spanish_flu$Date));
+data <- data.frame(x = rep(spanish_flu$Date, times = 2), y = c(Philadelphia_model$Ihat/sum(Philadelphia_model$Ihat), $KDEyWGF[$Niter, ]), g = factor(g))
+p1 <- ggplot(data, aes(x, y, color = g)) +
+geom_line(size = 2) +
+scale_color_manual(values = c("red", "blue"), labels=c("RIDE", "WGF")) +
+theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
+
+# reconstructed death counts
+g <- rep(1:3, , each = length(spanish_flu$Date));
+data <- data.frame(x = rep(spanish_flu$Date, times = 3), y = c(Philadelphia_model$reported, Philadelphia_model$Chat, $KDEyRec*sum(Philadelphia_model$reported)), g = factor(g))
+p2 <- ggplot(data, aes(x, y, color = g)) +
+geom_point(data = data[data$g==1, ], size = 2) +
+geom_line(data = data[data$g!=1, ], size = 2) +
+scale_color_manual(values = c("black", "red", "blue"), labels=c("death_count", "RIDE", "WGF")) +
+theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
 """
