@@ -99,10 +99,10 @@ sigU = @rget sigU;
 
 # parameters for WGF
 alpha = 0.07;
-Nparticles = 1000;
-dt = 1e-3;
-Niter = 10000;
-M = 1000;
+Nparticles = 500;
+dt = 1e-2;
+Niter = 1000;
+M = 500;
 x0 = sample(muSample, Nparticles, replace = true);
 tWGF = @elapsed begin
 x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5, sigU);

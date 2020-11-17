@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -82,10 +82,10 @@ sigU = @rget sigU;
 
 # parameters for WGF
 alpha = 0.5;
-Nparticles = 1000;
+Nparticles = 500;
 dt = 1e-2;
 Niter = 100000;
-M = 1000;
+M = 500;
 x0 = sample(muSample, Nparticles, replace = true);
 tWGF = @elapsed begin
 x = wgf_sucrase_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5, sigU);

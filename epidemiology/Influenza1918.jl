@@ -75,17 +75,17 @@ function psi(t)
 end
 # parameters for WGF
 # number of particles
-Nparticles = 1000;
+Nparticles = 500;
 # number of samples from μ to draw at each iteration
-M = 1000;
+M = 500;
 # time discretisation
 dt = 1e-3;
 # number of iterations
-Niter = 10000;
+Niter = 100000;
 # initial distribution
 x0 = sample(muSample, M, replace = true) .- 9;
 # regularisation parameter
-alpha = 0.01;
+alpha = 0.004;
 # run WGF
 x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5, ln_meanlog, ln_sdlog);
 
@@ -101,7 +101,7 @@ p = plot(p1, p2, layout =(2, 1));
 p
 
 # recovolve
-muSampleReconstructed = x[Niter, :] +  rand(LogNormal(ln_meanlog, ln_sdlog), Nparticles);
+muSampleReconstructed = x[Niter, :] + rand(LogNormal(ln_meanlog, ln_sdlog), Nparticles);
 RKDE = rks.kde(muSampleReconstructed, var"eval.points" = KDEx);
 KDEyRec = abs.(rcopy(RKDE[3]));
 
