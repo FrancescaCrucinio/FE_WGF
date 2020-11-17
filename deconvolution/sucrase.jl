@@ -81,10 +81,10 @@ muSample = @rget W;
 sigU = @rget sigU;
 
 # parameters for WGF
-alpha = 0.5;
+alpha = 0.1;
 Nparticles = 500;
-dt = 1e-2;
-Niter = 100000;
+dt = 1e-1;
+Niter = 1000;
 M = 500;
 x0 = sample(muSample, Nparticles, replace = true);
 tWGF = @elapsed begin
