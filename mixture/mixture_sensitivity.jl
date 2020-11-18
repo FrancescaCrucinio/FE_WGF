@@ -18,6 +18,9 @@ using samplers;
 # set seed
 Random.seed!(1234);
 
+# data for gaussian mixture example
+rho(x) = pdf.(Normal(0.3, 0.015), x)/3 + 2*pdf.(Normal(0.5, 0.043), x)/3;
+
 # values at which evaluate KDE
 KDEx = range(0, stop = 1, length = 1000);
 # reference values for KL divergence
@@ -70,10 +73,10 @@ E = zeros(length(alpha), Nrep);
 ise = zeros(length(alpha), Nrep);
 variance = zeros(length(alpha), Nrep);
 for i=1:length(alpha)
-    for j=1:Nrep
-    x = wgf_gaussian_mixture_tamed(Nparticles, dt, Niter, alpha[i], x0, muSample, M, 0.5);
-    # KL
     a = alpha[i];
+    for j=1:Nrep
+    x = wgf_gaussian_mixture_tamed(Nparticles, dt, Niter, a, x0, muSample, M, 0.5);
+    # KL
     KDE, h = phi(x[Niter, :]);
     E[i, j] = psi(KDE);
     ise[i, j] = var(rho.(KDEx) .- KDE);
