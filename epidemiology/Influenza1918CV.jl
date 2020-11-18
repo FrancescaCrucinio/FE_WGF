@@ -16,20 +16,15 @@ using wgf;
 # set seed
 Random.seed!(1234);
 
+# fitted Gaussian approximating K
+K(x, y) = 0.595*pdf.(Normal(8.63, 2.56), y .- x) +
+        0.405*pdf.(Normal(15.24, 5.39), y .- x);
 
 R"""
 library(incidental)
 # death counts
 death_counts <- spanish_flu$Philadelphia
-# fit lognormal to delay distribution
-x <- sample(spanish_flu_delay_dist$days, 1000000, replace = TRUE, prob = spanish_flu_delay_dist$proportion)
-fit.lognormal <- MASS::fitdistr(x, "log-normal")
-ln_meanlog <- fit.lognormal$estimate[1]
-ln_sdlog <- fit.lognormal$estimate[2]
 """
-# get Gamma parameters
-ln_meanlog = @rget ln_meanlog;
-ln_sdlog =  @rget ln_sdlog;
 # get counts from μ
 muCounts = Int.(@rget death_counts);
 # get sample from μ
@@ -64,9 +59,8 @@ function psi(t)
     # convolution with approximated f
     # this gives the approximated value
     for i=1:length(refY)
-        hatMu[i] = delta*sum(pdf.(LogNormal(ln_meanlog, ln_sdlog), refY[i] .- KDEx).*t);
+        hatMu[i] = delta*sum(K.(KDEx, refY[i]).*t);
     end
-    hatMu[iszero.(hatMu)] .= eps();
     kl = kl_divergence(trueMu, hatMu);
     return kl-a*ent;
 end
@@ -77,13 +71,13 @@ Nparticles = 1000;
 # number of samples from μ to draw at each iteration
 M = 1000;
 # time discretisation
-dt = 1e-2;
+dt = 1e-1;
 # number of iterations
-Niter = 1000;
+Niter = 5000;
 # initial distribution
 x0 = sample(muSample, M, replace = true) .- 9;
 # regularisation parameter
-alpha = range(0.00001, stop = 0.01, length = 100);
+alpha = range(0.001, stop = 1, length = 10);
 
 # divide muSample into groups
 L = 5;
@@ -98,7 +92,7 @@ Threads.@threads for i=1:length(alpha)
         # get reduced sample
         muSampleL = muSample[1:end .!= l, :];
         # WGF
-        x = wgf_flu_tamed(Nparticles, dt, Niter, alpha[i], x0, muSample, M, 0.5, ln_meanlog, ln_sdlog);
+        x = wgf_flu_tamed(Nparticles, dt, Niter, alpha[i], x0, muSample, M, 0.5);
         # KL
         a = alpha[i];
         KDE = phi(x[Niter, :]);
