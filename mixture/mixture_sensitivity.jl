@@ -27,7 +27,7 @@ a = 1;
 # function computing KDE
 function phi(t)
     RKDE = rks.kde(x = t, var"eval.points" = KDEx);
-    return abs.(rcopy(RKDE[3]));
+    return abs.(rcopy(RKDE[3])), rcopy(RKDE[4]);
 end
 # function computing E
 function psi(t)
@@ -68,25 +68,28 @@ muSample = Ysample_gaussian_mixture(100000);
 Nrep = 100;
 E = zeros(length(alpha), Nrep);
 ise = zeros(length(alpha), Nrep);
+variance = zeros(length(alpha), Nrep);
 for i=1:length(alpha)
     for j=1:Nrep
     x = wgf_gaussian_mixture_tamed(Nparticles, dt, Niter, alpha[i], x0, muSample, M, 0.5);
     # KL
     a = alpha[i];
-    KDE = phi(x[Niter, :]);
+    KDE, h = phi(x[Niter, :]);
     E[i, j] = psi(KDE);
     ise[i, j] = var(rho.(KDEx) .- KDE);
+    variance[i, j] = h + mean(x[Niter, :].^2) - mean(x[Niter, :])^2;
     println("$i, $j")
     end
 end
 
 Eavg = mean(E, dims = 2);
 iseavg = mean(ise, dims = 2);
+varavg = mean(variance, dims = 2);
 # plot
 R"""
 
     library(ggplot2)
-    data <- data.frame(x = $alpha, y = $Eavg, z = $iseavg)
+    data <- data.frame(x = $alpha, y = $Eavg, z = $iseavg, t = $varavg)
     p1 <- ggplot(data, aes(x, y)) +
     geom_line(size = 1) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
@@ -95,4 +98,8 @@ R"""
     geom_line(size = 1) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
     # ggsave("mixture_sensitivity_ise.eps", p2,  height=5)
+    p3 <- ggplot(data, aes(x, t)) +
+    geom_line(size = 1) +
+    theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
+    # ggsave("mixture_sensitivity_var.eps", p2,  height=5)
 """
