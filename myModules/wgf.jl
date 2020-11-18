@@ -261,10 +261,8 @@ INPUTS
 'muSample' sample from μ
 'M' number of samples from μ(y) to be drawn at each iteration
 'a' parameter for tamed Euler scheme
-'gamma_shape' shape of Gamma delay distribution
-'gamma_scale' scale of Gamma delay distribution
 =#
-function wgf_flu_tamed(N, dt, Niter, alpha, x0, muSample, M, a, ln_meanlog, ln_sdlog)
+function wgf_flu_tamed(N, dt, Niter, alpha, x0, muSample, M, a)
    # initialise a matrix x storing the particles
    x = zeros(Niter, N);
    # initial distribution is given as input:
@@ -276,18 +274,16 @@ function wgf_flu_tamed(N, dt, Niter, alpha, x0, muSample, M, a, ln_meanlog, ln_s
        # Compute h^N_{n}
        hN = zeros(M, 1);
        for j=1:M
-           hN[j] = mean(pdf.(LogNormal(ln_meanlog, ln_sdlog), y[j] .- x[n, :]));
+           hN[j] = mean(0.595*pdf.(Normal(8.63, 2.56), y[j] .- x[n, :]) +
+                   0.405*pdf.(Normal(15.24, 5.39), y[j] .- x[n, :]))
        end
+
        # gradient and drift
        drift = zeros(N, 1);
        for i=1:N
-           gradient = zeros(M, 1);
-           positive = (y .- x[n, i]).>0;
-           gradient[positive] = pdf.(LogNormal(ln_meanlog, ln_sdlog), y[positive] .- x[n, i]) ./
-               (x[n, i] .- y[positive])  .* (1 .- (log.(y[positive] .- x[n, i]) .- ln_meanlog)/ln_sdlog^2);
-           ratio = gradient./hN;
-           ratio[isnan.(ratio)] .= 0;
-           drift[i] = mean(ratio);
+           gradient = 0.595*pdf.(Normal(8.63, 2.56), y .- x[n, i]) .* (y .- x[n, i] .- 8.63)/(2.56^2) +
+                   0.405*pdf.(Normal(15.24, 5.39), y .- x[n, i]) .* (y .- x[n, i] .- 15.24)/(5.39^2);
+           drift[i] = mean(gradient./hN);
        end
        # update locations
        x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ Niter^(-a) * abs.(drift)) .+ sqrt(2*alpha*dt)*randn(N, 1);
