@@ -104,5 +104,5 @@ R"""
     p3 <- ggplot(data, aes(x, t)) +
     geom_line(size = 1) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
-    # ggsave("mixture_sensitivity_var.eps", p2,  height=5)
+    # ggsave("mixture_sensitivity_var.eps", p3,  height=5)
 """

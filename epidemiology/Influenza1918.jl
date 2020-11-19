@@ -80,7 +80,7 @@ Niter = 5000;
 # initial distribution
 x0 = sample(muSample, M, replace = true) .- 9;
 # regularisation parameter
-alpha = 0.05;
+alpha = 0.016;
 # run WGF
 x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5);
 
@@ -135,18 +135,20 @@ end
 R"""
 library(ggplot2)
 g <- rep(1:3, , each = length(spanish_flu$Date));
-data <- data.frame(x = rep(spanish_flu$Date, times = 3), y = c(Philadelphia_model$Ihat/sum(Philadelphia_model$Ihat), $KDEyWGF[$Niter, ], $rhoCounts[100,]/sum($rhoCounts[100,])), g = factor(g))
+data <- data.frame(x = rep(spanish_flu$Date, times = 3), y = c($rhoCounts[100,]/sum($rhoCounts[100,]), Philadelphia_model$Ihat/sum(Philadelphia_model$Ihat), $KDEyWGF[$Niter, ]), g = factor(g))
 p1 <- ggplot(data, aes(x, y, color = g)) +
-geom_line(size = 2) +
-scale_color_manual(values = c("red", "blue", "green"), labels=c("RIDE", "WGF", "RL")) +
+geom_line(size = 1) +
+scale_color_manual(values = c("red", "blue", "green"), labels=c("RL", "RIDE", "WGF")) +
 theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
+# ggsave("flu1918_reconstruction.eps", p1,  height=5)
 
 # reconstructed death counts
 g <- rep(1:4, , each = length(spanish_flu$Date));
-data <- data.frame(x = rep(spanish_flu$Date, times = 4), y = c(Philadelphia_model$reported, Philadelphia_model$Chat, $KDEyRec*sum(Philadelphia_model$reported), $RLyRec), g = factor(g))
+data <- data.frame(x = rep(spanish_flu$Date, times = 4), y = c($RLyRec, Philadelphia_model$reported, Philadelphia_model$Chat, $KDEyRec*sum(Philadelphia_model$reported)), g = factor(g))
 p2 <- ggplot(data, aes(x, y, color = g)) +
-geom_point(data = data[data$g==1, ], size = 2) +
-geom_line(data = data[data$g!=1, ], size = 2) +
-scale_color_manual(values = c("black", "red", "blue", "green"), labels=c("death_count", "RIDE", "WGF", "RL")) +
+geom_point(data = data[data$g==1, ], size = 3) +
+geom_line(data = data[data$g!=1, ], size = 1) +
+scale_color_manual(values = c("black", "red", "blue", "green"), labels=c("death_count", "RL", "RIDE", "WGF")) +
 theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
+# ggsave("flu1918_reconv.eps", p2,  height=5)
 """

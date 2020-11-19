@@ -67,9 +67,9 @@ end
 
 # parameters for WGF
 # number of particles
-Nparticles = 1000;
+Nparticles = 500;
 # number of samples from μ to draw at each iteration
-M = 1000;
+M = 500;
 # time discretisation
 dt = 1e-1;
 # number of iterations
@@ -77,7 +77,7 @@ Niter = 5000;
 # initial distribution
 x0 = sample(muSample, M, replace = true) .- 9;
 # regularisation parameter
-alpha = range(0.001, stop = 1, length = 10);
+alpha = range(0.001, stop = 0.07, length = 10);
 
 # divide muSample into groups
 L = 5;
