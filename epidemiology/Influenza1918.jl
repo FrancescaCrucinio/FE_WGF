@@ -21,13 +21,16 @@ K(x, y) = 0.595*pdf.(Normal(8.63, 2.56), y .- x) +
         0.405*pdf.(Normal(15.24, 5.39), y .- x);
 R"""
 library(incidental)
+library(tictoc)
 # death counts
 death_counts <- spanish_flu$Philadelphia
 
 # RIDE estimator
+tic()
 Philadelphia_model <- fit_incidence(
   reported = spanish_flu$Philadelphia,
   delay_dist = spanish_flu_delay_dist$proportion)
+toc()
 """
 # get counts from μ
 muCounts = Int.(@rget death_counts);
@@ -81,9 +84,10 @@ Niter = 5000;
 x0 = sample(muSample, M, replace = true) .- 9;
 # regularisation parameter
 alpha = 0.016;
+runtimeWGF = @elapsed begin
 # run WGF
 x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5);
-
+end
 # check convergence
 KDEyWGF = mapslices(phi, x, dims = 2);
 EWGF = mapslices(psi, KDEyWGF, dims = 2);
@@ -114,8 +118,9 @@ for i=1:length(muCounts)
         end
     end
 end
+runtimeRL = @elapsed begin
 rhoCounts = RL(KDisc, muCounts, 100, rho0);
-
+end
 # recovolve WGF
 refY = KDEx;
 delta = refY[2] - refY[1];
@@ -140,15 +145,15 @@ p1 <- ggplot(data, aes(x, y, color = g)) +
 geom_line(size = 1) +
 scale_color_manual(values = c("red", "blue", "green"), labels=c("RL", "RIDE", "WGF")) +
 theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
-# ggsave("flu1918_reconstruction.eps", p1,  height=5)
+# ggsave("flu1918_reconstruction.eps", p1,  height=4)
 
 # reconstructed death counts
 g <- rep(1:4, , each = length(spanish_flu$Date));
 data <- data.frame(x = rep(spanish_flu$Date, times = 4), y = c($RLyRec, Philadelphia_model$reported, Philadelphia_model$Chat, $KDEyRec*sum(Philadelphia_model$reported)), g = factor(g))
 p2 <- ggplot(data, aes(x, y, color = g)) +
-geom_point(data = data[data$g==1, ], size = 3) +
+geom_point(data = data[data$g==1, ], size = 2, shape = 3) +
 geom_line(data = data[data$g!=1, ], size = 1) +
-scale_color_manual(values = c("black", "red", "blue", "green"), labels=c("death_count", "RL", "RIDE", "WGF")) +
+scale_color_manual(values = c("black", "red", "blue", "green"), labels=c("recorded", "RL", "RIDE", "WGF")) +
 theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
-# ggsave("flu1918_reconv.eps", p2,  height=5)
+# ggsave("flu1918_reconv.eps", p2,  height=4)
 """
