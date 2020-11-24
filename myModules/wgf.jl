@@ -196,12 +196,14 @@ function wgf_sucrase_tamed(N, dt, Niter, alpha, x0, muSample, M, a, sigU)
         # Compute h^N_{n}
         hN = zeros(M, 1);
         for j=1:M
-            hN[j] = mean(pdf.(Normal.(x[n, :], sigU), y[j]));
+            # hN[j] = mean(pdf.(Normal.(x[n, :], sigU), y[j]));
+            hN[j] = mean(pdf.(Laplace.(x[n, :], sigU), y[j]));
         end
         # gradient and drift
         drift = zeros(N, 1);
         for i=1:N
-            gradient = pdf.(Normal.(x[n, i], sigU), y) .* (y .- x[n, i])/(sigU^2);
+            # gradient = pdf.(Normal.(x[n, i], sigU), y) .* (y .- x[n, i])/(sigU^2);
+            gradient = pdf.(Laplace.(x[n, i], sigU), y) .* (-sign.(x[n, i] .- y)/sigU);
             drift[i] = mean(gradient./hN);
         end
         # update locations
