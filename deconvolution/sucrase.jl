@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -28,10 +28,10 @@ sucrase_Carter1981 <- read_excel("deconvolution/sucrase_Carter1981.xlsx");
 W <- sucrase_Carter1981$Pellet;
 n <- length(W);
 
-# normal error distribution
-errortype="norm";
-sigU = sqrt(var(W)/4);
-varU=sigU^2;
+# Laplace error distribution
+errortype="Lap";
+varU = var(W)/4;
+sigU = sqrt(varU/2);
 
 # DKDE
 # Delaigle's estimators
@@ -40,6 +40,7 @@ h=1.06*sqrt(var(W))*n^(-1/5);
 muKDE = kde(W, h = h);
 muKDEy = muKDE$estimate;
 muKDEx = muKDE$eval.points;
+bw = muKDE$h;
 
 #PI bandwidth of Delaigle and Gijbels
 hPI=PI_deconvUknownth4(W,errortype,varU,sigU);
@@ -69,7 +70,7 @@ function psi(t)
     # convolution with approximated f
     # this gives the approximated value
     for i=1:length(refY)
-        hatMu[i] = delta*sum(pdf.(Normal.(refY, sigU), refY[i]).*t);
+        hatMu[i] = delta*sum(pdf.(Laplace.(refY, sigU), refY[i]).*t);
     end
     kl = kl_divergence(trueMu, hatMu);
     return kl-alpha*ent;
@@ -81,12 +82,17 @@ muSample = @rget W;
 sigU = @rget sigU;
 
 # parameters for WGF
-alpha = 5;
-Nparticles = 500;
+alpha = 0.1;
+Nparticles = 100;
 dt = 1e-01;
-Niter = 10000;
-M = 500;
-x0 = sample(muSample, Nparticles, replace = true);
+Niter = 100000;
+M = 100;
+R"""
+# use KDE to sample initial distribution
+means <- sample(W, $Nparticles, replace = TRUE)
+initial_dist <- rnorm($Nparticles, mean = means, sd = bw)
+"""
+x0 = @rget initial_dist;
 tWGF = @elapsed begin
 x = wgf_sucrase_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5, sigU);
 end
