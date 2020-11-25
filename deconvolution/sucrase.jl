@@ -43,10 +43,12 @@ muKDEx = muKDE$eval.points;
 bw = muKDE$h;
 
 #PI bandwidth of Delaigle and Gijbels
+tic()
 hPI=PI_deconvUknownth4(W,errortype,varU,sigU);
 #DKDE estimator
 dx = muKDEx[2] - muKDEx[1];
 fdec_hPI = fdecUknown(muKDEx,W,hPI,errortype,sigU,dx);
+toc()
 """
 
 # function computing KDE
@@ -82,11 +84,11 @@ muSample = @rget W;
 sigU = @rget sigU;
 
 # parameters for WGF
-alpha = 0.1;
-Nparticles = 100;
+alpha = 0.22;
+Nparticles = 200;
 dt = 1e-01;
-Niter = 100000;
-M = 100;
+Niter = 50000;
+M = 200;
 R"""
 # use KDE to sample initial distribution
 means <- sample(W, $Nparticles, replace = TRUE)
@@ -106,14 +108,14 @@ plot(EWGF)
 # plot
 R"""
     # WGF estimator
-    KDE_wgf <- kde($x[$Niter, ], eval.points = muKDEx);
+    KDE_wgf <- kde($x[50000, ], eval.points = muKDEx);
     library(ggplot2)
     g <- rep(1:3, , each = length(muKDEx));
     x <- rep(muKDEx, times = 3);
     data <- data.frame(x = x, y = c(muKDEy, fdec_hPI, KDE_wgf$estimate), g = factor(g))
     p <- ggplot(data, aes(x, y, color = g)) +
     geom_line(size = 2) +
-    scale_color_manual(values = c("black", "red", "blue"), labels=c(expression(paste("KDE ", mu)), "fdec-hPI", "WGF")) +
+    scale_color_manual(values = c("gray", "red", "blue"), labels=c(expression(paste("KDE ", mu)), "fdec-hPI", "WGF")) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3)
-    # ggsave("sucrase.eps", p, height = 5)
+    # ggsave("sucrase.eps", p, height = 4)
 """
