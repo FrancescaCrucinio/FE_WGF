@@ -1,5 +1,5 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -83,10 +83,10 @@ sigU = @rget sigU;
 
 # parameters for WGF
 alpha = 0.1;
-Nparticles = 100;
+Nparticles = 200;
 dt = 1e-01;
-Niter = 100000;
-M = 100;
+Niter = 50000;
+M = 200;
 R"""
 # use KDE to sample initial distribution
 means <- sample(W, $Nparticles, replace = TRUE)

@@ -6,6 +6,7 @@ using Statistics;
 using StatsBase;
 using Random;
 using JLD;
+using StatsPlots;
 using Distances;
 using RCall;
 @rimport ks as rks
@@ -25,16 +26,19 @@ sucrase_Carter1981 <- read_excel("deconvolution/sucrase_Carter1981.xlsx");
 W <- sucrase_Carter1981$Pellet;
 n <- length(W);
 
-# normal error distribution
-errortype="norm";
-sigU = sqrt(var(W)/4);
-varU=sigU^2;
+# Laplace error distribution
+errortype="Lap";
+varU = var(W)/4;
+sigU = sqrt(varU/2);
 
-# KDE for μ
+# DKDE
+# Delaigle's estimators
+# KDE for mu
 h=1.06*sqrt(var(W))*n^(-1/5);
 muKDE = kde(W, h = h);
 muKDEy = muKDE$estimate;
 muKDEx = muKDE$eval.points;
+bw = muKDE$h;
 """
 
 a = 1;
@@ -59,7 +63,7 @@ function psi(t)
     # convolution with approximated f
     # this gives the approximated value
     for i=1:length(refY)
-        hatMu[i] = delta*sum(pdf.(Normal.(refY, sigU), refY[i]).*t);
+        hatMu[i] = delta*sum(pdf.(Laplace.(refY, sigU), refY[i]).*t);
     end
     kl = kl_divergence(trueMu, hatMu);
     return kl-a*ent;
@@ -71,12 +75,17 @@ muSample = @rget W;
 sigU = @rget sigU;
 
 # parameters for WGF
-alpha = range(0.001, stop = 5, length = 2);
-Nparticles = 1000;
-dt = 1e-2;
-Niter = 10000;
-M = 1000;
-x0 = sample(muSample, Nparticles, replace = true);
+alpha = range(0.001, stop = 0.25, length = 10);
+Nparticles = 200;
+dt = 1e-1;
+Niter = 50000;
+M = 200;
+R"""
+# use KDE to sample initial distribution
+means <- sample(W, $Nparticles, replace = TRUE)
+initial_dist <- rnorm($Nparticles, mean = means, sd = bw)
+"""
+x0 = @rget initial_dist;
 # divide muSample into groups
 L = 24;
 muSample = reshape(muSample, (L, Int(length(muSample)/L)));
@@ -98,3 +107,4 @@ Threads.@threads for i=1:length(alpha)
 end
 save("sucraseCV_03Nov2020.jld", "alpha", alpha, "E", E, "dt", dt,
     "Nparticles", Nparticles, "Niter", Niter);
+plot(alpha,  mean(E, dims = 2))
