@@ -1,5 +1,5 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using StatsPlots;
 using Distributions;
@@ -72,15 +72,12 @@ x0 = rand(mu, Nparticles);
 
 L = 20;
 muSample = rand(mu, 100000);
-muSample = reshape(muSample, (L, Int(length(muSample)/L)));
-
 
 E = zeros(length(alpha), L);
 Threads.@threads for i=1:length(alpha)
     @simd for l=1:L
         # get reduced sample
-        muSampleL = muSample[1:end .!= l, :];
-        muSampleL = muSampleL[:];
+        muSampleL = muSample[:, setdiff(1:100000, Tuple(((1:5000) .+ (l-1)*5000)))];
         # WGF
         x = wgf_mvnormal_tamed(Nparticles, dt, Niter, alpha[i], x0, muSampleL, M, 0.5)
         # KL
