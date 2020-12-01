@@ -79,10 +79,10 @@ Threads.@threads for i=1:length(alpha)
         # get reduced sample
         muSampleL = muSample[:, setdiff(1:100000, Tuple(((1:5000) .+ (l-1)*5000)))];
         # WGF
-        x = wgf_mvnormal_tamed(Nparticles, dt, Niter, alpha[i], x0, muSampleL, M, 0.5)
+        x1, x2 = wgf_mvnormal_tamed(Nparticles, dt, Niter, alpha[i], x0, muSampleL, M, 0.5);
         # KL
         a = alpha[i];
-        KDE = phi(x[Niter, :]);
+        KDE = phi([x1[Niter, :]; x2[Niter, :]]);
         E[i, l] = psi(KDE);
         println("$i, $l")
     end
