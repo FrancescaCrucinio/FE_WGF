@@ -56,7 +56,7 @@ Ybins = range(-0.75 + 1/pixels[2], stop = 0.75 - 1/pixels[2], length = pixels[2]
 gridX = repeat(Xbins, inner=[pixels[2], 1]);
 gridY = repeat(Ybins, outer=[pixels[1] 1]);
 KDEeval = [gridX gridY];
-function psi(t)
+function phi(t)
     RKDE = rks.kde(x = [t[1:Nparticles] t[(Nparticles+1):(2Nparticles)]], var"eval.points" = KDEeval);
     return abs.(rcopy(RKDE[3]));
 end

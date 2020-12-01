@@ -13,6 +13,7 @@ export AT_exact_minimiser
 export wgf_sucrase_tamed
 export wgf_DKDE_tamed
 export wgf_flu_tamed
+export wgf_mvnormal_tamed
 
 #= WGF for analytically tractable example
 OUTPUTS
@@ -120,7 +121,7 @@ function wgf_pet_tamed(N, dt, Niter, alpha, ImageSample, M, phi, xi, sigma, a)
     x[1, :] = x0[1, :];
     y[1, :] = x0[2, :];
     for n=1:(Niter-1)
-        # get sample from (y)
+        # get sample from μ(y)
         muIndex = sample(1:size(ImageSample, 1), M, replace = true);
         muSample = ImageSample[muIndex, :];
         # Compute h^N_{n}
@@ -291,6 +292,58 @@ function wgf_flu_tamed(N, dt, Niter, alpha, x0, muSample, M, a)
        x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ Niter^(-a) * abs.(drift)) .+ sqrt(2*alpha*dt)*randn(N, 1);
    end
    return x
+end
+
+#=
+ WGF for gaussian mixture 2D
+OUTPUTS
+1 - particle locations (2D)
+INPUTS
+'N' number of particles
+'dt' discretisation step
+'Niter' number of time steps
+'alpha' regularisation parameter
+'x0' user selected initial distribution
+'muSample' sample from μ(y)
+'M' number of samples from μ(y) to be drawn at each iteration
+'a' parameter for tamed Euler scheme
+=#
+function wgf_mvnormal_tamed(N, dt, Niter, alpha, x0, muSample, M, a)
+    # initialise two matrices x, y storing the particles
+    x1 = zeros(Niter, N);
+    x2 = zeros(Niter, N);
+    # initial distribution is given as input:
+    x1[1, :] = x0[1, :];
+    x2[1, :] = x0[2, :];
+    # covariance for K
+    sigmaK = [0.1 0; 0 1];
+
+    for n=1:(Niter-1)
+        # get sample from μ(y)
+        muIndex = sample(1:size(muSample, 2), M, replace = true);
+        y = muSample[:, muIndex];
+        # Compute h^N_{n}
+        hN = zeros(M, 1);
+        for j=1:M
+            hN[j] = mean(pdf(MvNormal(y[:, j], sigmaK), transpose([x1[n, :] x2[n, :]])));
+        end
+        # gradient and drift
+        driftX1 = zeros(N, 1);
+        driftX2 = zeros(N, 1);
+        for i=1:N
+            # precompute common quantities for gradient
+            prec = pdf(MvNormal([x1[n, i]; x2[n, i]], sigmaK), y);
+            gradientX1 = prec .* (y[1, :] .- x1[n, i])/sigmaK[1, 1];
+            gradientX2 = prec .* (y[2, :] .- x2[n, i])/sigmaK[2, 2];
+            driftX1[i] = mean(gradientX1./hN);
+            driftX2[i] = mean(gradientX2./hN);
+        end
+        # update locations
+        drift_norm = sqrt.(sum([driftX1 driftX2].^2, dims = 2));
+        x1[n+1, :] = x1[n, :] .+ dt * driftX1./(1 .+ Niter^(-a) * drift_norm) .+ sqrt(2*alpha*dt)*randn(N, 1);
+        x2[n+1, :] = x2[n, :] .+ dt * driftX2./(1 .+ Niter^(-a) * drift_norm) .+ sqrt(2*alpha*dt)*randn(N, 1);
+    end
+    return x1, x2
 end
 end
 
