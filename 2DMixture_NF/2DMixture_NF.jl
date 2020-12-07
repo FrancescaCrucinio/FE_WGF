@@ -69,7 +69,7 @@ muSample = rand(mu, 100000);
 # number of particles
 Nparticles = 1000;
 # regularisation parameter
-alpha = 0.01;
+alpha = 0.0007;
 
 x0 = rand(mu, Nparticles);
 x1, x2 = wgf_mvnormal_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5);

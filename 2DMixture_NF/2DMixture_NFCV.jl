@@ -66,7 +66,7 @@ M = 1000;
 # number of particles
 Nparticles = 1000;
 # regularisation parameters
-alpha = range(0, stop = 0.1, length = 10);
+alpha = range(0.0005, stop = 0.0011, length = 20);
 
 x0 = rand(mu, Nparticles);
 
@@ -74,8 +74,8 @@ L = 20;
 muSample = rand(mu, 100000);
 
 E = zeros(length(alpha), L);
-Threads.@threads for i=1:length(alpha)
-    @simd for l=1:L
+for i=1:length(alpha)
+    for l=1:L
         # get reduced sample
         muSampleL = muSample[:, setdiff(1:100000, Tuple(((1:5000) .+ (l-1)*5000)))];
         # WGF
