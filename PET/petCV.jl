@@ -1,5 +1,5 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -38,8 +38,8 @@ xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 # sample from μ
 muSample = histogram2D_sampler(sinogram, phi_angle, xi, 10^6);
 # dt and number of iterations
-dt = 1e-03;
-Niter = 30000;
+dt = 1e-02;
+Niter = 200;
 # samples from h(y)
 M = 5000;
 # number of particles
