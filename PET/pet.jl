@@ -46,10 +46,11 @@ phi_angle = range(0, stop = 2*pi, length = nphi);
 # number of offsets
 offsets = floor(size(sinogram, 1)/2);
 xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
+xi = xi/maximum(xi);
 
 # dt and number of iterations
 dt = 1e-02;
-Niter = 1000;
+Niter = 100;
 # samples from h(y)
 M = 5000;
 # number of particles
@@ -78,7 +79,7 @@ R"""
 """
 
 # WGF
-x, y = wgf_pet_tamed(Nparticles, dt, Niter, alpha, muSample, M, phi_angle, xi, sigma, 0.5);
+x, y = wgf_pet_tamed(Nparticles, dt, Niter, alpha, muSample, M, sigma, 0.5);
 
 # function computing KDE
 function psi(t)
@@ -99,7 +100,7 @@ KDEyWGF = mapslices(psi, [x y], dims = 2);
 # entropy
 ent = mapslices(psi_ent, KDEyWGF, dims = 2);
 # last time step
-KDEyWGFfinal = KDEyWGF[end, :];
+KDEyWGFfinal = psi([x[end, :] y[end, :]]);
 plot(1:Niter, ent)
 hline!([phantom_ent])
 
@@ -119,8 +120,8 @@ petWGF = reshape(KDEyWGFfinal, (pixels[1], pixels[2]));
 var(petWGF .- phantom)
 
 
-save("pet13Nov2020.jld", "alpha", alpha, "dt", dt, "Nparticles", Nparticles,
-    "Niter", Niter, "KDEyWGF", KDEyWGF);
+# save("pet13Nov2020.jld", "alpha", alpha, "dt", dt, "Nparticles", Nparticles,
+#     "Niter", Niter, "KDEyWGF", KDEyWGF);
 
 # Nparticles = load("pet18Oct2020.jld", "Nparticles");
 # KDEyWGF = load("pet18Oct2020.jld", "KDEyWGF");
