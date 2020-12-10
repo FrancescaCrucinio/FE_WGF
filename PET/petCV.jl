@@ -21,12 +21,14 @@ library(viridis)
 """
 # custom packages
 using wgf;
+using samplers;
 
 # set seed
 Random.seed!(1234);
 
 # data image
 sinogram = readdlm("PET/sinogram.txt", ',', Float64);
+pixels = size(sinogram, 2);
 # number of angles
 nphi = size(sinogram, 2);
 # angles
@@ -37,8 +39,8 @@ xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 xi = xi/maximum(xi);
 
 # grid (use only 2500 points to compute KL)
-X1bins = range(-0.75+ 1/pixels[1], stop = 0.75 - 1/pixels[1], length = 50);
-X2bins = range(-0.75 + 1/pixels[2], stop = 0.75 - 1/pixels[2], length = 50);
+X1bins = range(-0.75+ 1/pixels, stop = 0.75 - 1/pixels, length = 50);
+X2bins = range(-0.75 + 1/pixels, stop = 0.75 - 1/pixels, length = 50);
 gridX1 = repeat(X1bins, inner=[50, 1]);
 gridX2 = repeat(X2bins, outer=[50 1]);
 KDEeval = [gridX1 gridX2];
@@ -101,12 +103,12 @@ muSample = histogram2D_sampler(sinogram, phi_angle, xi, 10^6);
 L = 10;
 
 E = zeros(length(alpha), L);
-for i=1:length(alpha)
-    for l=1:L
+Threads.@threads for i=1:length(alpha)
+    @simd for l=1:L
         # get reduced sample
-        muSampleL = muSample[:, setdiff(1:100000, Tuple(((1:10000) .+ (l-1)*10000)))];
+        muSampleL = muSample[setdiff(1:10^6, Tuple(((1:10000) .+ (l-1)*10000))), :];
         # WGF
-        x1, x2 = wx1, x2 = wgf_pet_tamed(Nparticles, dt, Niter, alpha[i], muSampleL, M, sigma, 0.5);
+        x1, x2 = wgf_pet_tamed(Nparticles, dt, Niter, alpha[i], muSampleL, M, sigma, 0.5);
         # KL
         KDE = phi([x1[Niter, :]; x2[Niter, :]]);
         E[i, l] = psi_kl(KDE) - alpha[i]*psi_ent(KDE);

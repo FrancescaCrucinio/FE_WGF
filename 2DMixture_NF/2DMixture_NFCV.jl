@@ -71,13 +71,13 @@ alpha = range(0.0005, stop = 0.0011, length = 20);
 x0 = rand(mu, Nparticles);
 
 L = 20;
-muSample = rand(mu, 100000);
+muSample = rand(mu, 10^5);
 
 E = zeros(length(alpha), L);
 for i=1:length(alpha)
     for l=1:L
         # get reduced sample
-        muSampleL = muSample[:, setdiff(1:100000, Tuple(((1:5000) .+ (l-1)*5000)))];
+        muSampleL = muSample[:, setdiff(1:10^5, Tuple(((1:5000) .+ (l-1)*5000)))];
         # WGF
         x1, x2 = wgf_mvnormal_tamed(Nparticles, dt, Niter, alpha[i], x0, muSampleL, M, 0.5);
         # KL
