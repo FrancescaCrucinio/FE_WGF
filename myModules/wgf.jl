@@ -113,7 +113,7 @@ function wgf_pet_tamed(N, dt, Niter, alpha, muSample, M, sigma, a)
     x1 = zeros(Niter, N);
     x2 = zeros(Niter, N);
     # intial distribution
-    x0 = rand(MvNormal([0, 0], 0.1*Diagonal(ones(2))), N);
+    x0 = rand(MvNormal([0, 0], 0.01*Diagonal(ones(2))), N);
     x1[1, :] = x0[1, :];
     x2[1, :] = x0[2, :];
     for n=1:(Niter-1)

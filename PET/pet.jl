@@ -62,13 +62,13 @@ function psi_ent(t)
     end
     ent = -mean(remove_non_finite.(t .* log.(t)));
 end
-# function computing E
-function psi(t)
-    # entropy
-    function remove_non_finite(x)
-	       return isfinite(x) ? x : 0
-    end
-    ent = -mean(remove_non_finite.(t .* log.(t)));
+# function computing KL
+function psi_kl(t)
+    # # entropy
+    # function remove_non_finite(x)
+	#        return isfinite(x) ? x : 0
+    # end
+    # ent = -mean(remove_non_finite.(t .* log.(t)));
     # kl
     trueMu = sinogram;
     refY1 = phi_angle;
@@ -86,19 +86,19 @@ function psi(t)
         end
     end
     kl = kl_divergence(trueMu[:], hatMu[:]);
-    return kl-alpha*ent;
+    return kl;
 end
 
 # WGF
 # dt and number of iterations
 dt = 1e-02;
-Niter = 200;
+Niter = 100;
 # samples from h(y)
-M = 5000;
+M = 10000;
 # number of particles
-Nparticles = 5000;
+Nparticles = 10000;
 # regularisation parameter
-alpha = 0.001;
+alpha = 0.01;
 # variance of normal describing alignment
 sigma = 0.02;
 # sample from μ
@@ -111,12 +111,13 @@ KDEyWGF = mapslices(phi, [x1 x2], dims = 2);
 # entropy
 ent = mapslices(psi_ent, KDEyWGF, dims = 2);
 # E
-EWGF = mapslices(psi, KDEyWGF, dims = 2);
+KLWGF = mapslices(psi_kl, KDEyWGF, dims = 2);
 # plot
-plot(EWGF)
+plot(KLWGF)
 phantom_ent = psi_ent(phantom);
 plot(ent)
 hline!([phantom_ent])
+plot(KLWGF .- alpha *ent)
 # last time step
 # grid (same size as original image)
 X1bins = range(-0.75+ 1/pixels[1], stop = 0.75 - 1/pixels[1], length = pixels[1]);
