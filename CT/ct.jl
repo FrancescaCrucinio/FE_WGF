@@ -45,15 +45,15 @@ xi = xi/maximum(xi);
 
 # dt and number of iterations
 dt = 1e-02;
-Niter = 200;
+Niter = 100;
 # samples from h(y)
-M = 5000;
+M = 10000;
 # number of particles
-Nparticles = 5000;
+Nparticles = 10000;
 # regularisation parameter
 alpha = 0.001;
 # variance of normal describing alignment
-sigma = 0.02;
+sigma = 0.01;
 # sample from μ
 muSample = histogram2D_sampler(sinogram, phi_angle, xi, 10^6);
 
@@ -97,9 +97,9 @@ R"""
         geom_raster(aes(fill = z), interpolate=TRUE) +
         theme_void() +
         theme(legend.position = "none", aspect.ratio=1) +
-        scale_fill_viridis(discrete=FALSE, option="magma")
+        scale_fill_gradient(low = "black", high = "white")
     # ggsave("ct.eps", p)
 """
-ctWGF = reshape(KDEyWGFfinal, (pixels, pixels));
-res = map(clamp01nan, Gray.(ctWGF))
-save("ct.png", Gray.(ctWGF))
+# ctWGF = reshape(KDEyWGFfinal, (pixels, pixels));
+# res = map(clamp01nan, Gray.(ctWGF))
+# save("ct.png", Gray.(ctWGF))
