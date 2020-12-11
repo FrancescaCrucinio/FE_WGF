@@ -1,4 +1,4 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
@@ -98,7 +98,7 @@ M = 10000;
 # number of particles
 Nparticles = 10000;
 # regularisation parameter
-alpha = 0.01;
+alpha = 0.06;
 # variance of normal describing alignment
 sigma = 0.02;
 # sample from μ
@@ -148,4 +148,5 @@ R"""
 """
 # ise
 petWGF = reshape(KDEyWGFfinal, (pixels[1], pixels[2]));
+petWGF = reverse(petWGF, dims=1);
 var(petWGF .- phantom)
