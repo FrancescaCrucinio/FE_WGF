@@ -60,7 +60,9 @@ function psi_ent(t)
     function remove_non_finite(x)
 	       return isfinite(x) ? x : 0
     end
-    ent = -mean(remove_non_finite.(t .* log.(t)));
+    dx1 = X1bins[2] - X1bins[1];
+    dx2 = X2bins[2] - X2bins[1];
+    ent = -dx1*dx2*sum(remove_non_finite.(t .* log.(t)));
 end
 # function computing KL
 function psi_kl(t)
@@ -94,11 +96,11 @@ end
 dt = 1e-02;
 Niter = 100;
 # samples from h(y)
-M = 10000;
+M = 5000;
 # number of particles
-Nparticles = 10000;
+Nparticles = 5000;
 # regularisation parameter
-alpha = 0.06;
+alpha = 0.05;
 # variance of normal describing alignment
 sigma = 0.02;
 # sample from μ
@@ -112,12 +114,7 @@ KDEyWGF = mapslices(phi, [x1 x2], dims = 2);
 ent = mapslices(psi_ent, KDEyWGF, dims = 2);
 # E
 KLWGF = mapslices(psi_kl, KDEyWGF, dims = 2);
-# plot
-plot(KLWGF)
-phantom_ent = psi_ent(phantom);
-plot(ent)
-hline!([phantom_ent])
-plot(KLWGF .- alpha *ent)
+
 # last time step
 # grid (same size as original image)
 X1bins = range(-0.75+ 1/pixels[1], stop = 0.75 - 1/pixels[1], length = pixels[1]);
@@ -125,6 +122,14 @@ X2bins = range(-0.75 + 1/pixels[2], stop = 0.75 - 1/pixels[2], length = pixels[2
 gridX1 = repeat(X1bins, inner=[pixels[2], 1]);
 gridX2 = repeat(X2bins, outer=[pixels[1] 1]);
 KDEeval = [gridX1 gridX2];
+
+# plot
+plot(KLWGF)
+phantom_ent = psi_ent(phantom);
+plot(ent)
+hline!([phantom_ent)
+plot(KLWGF .- alpha * ent)
+
 KDEyWGFfinal = rks.kde(x = [x1[end, :] x2[end, :]], var"eval.points" = KDEeval);
 KDEyWGFfinal = abs.(rcopy(KDEyWGFfinal[3]));
 # plot
