@@ -56,7 +56,9 @@ function psi_ent(t)
     function remove_non_finite(x)
 	       return isfinite(x) ? x : 0
     end
-    ent = -mean(remove_non_finite.(t .* log.(t)));
+    dx1 = X1bins[2] - X1bins[1];
+    dx2 = X2bins[2] - X2bins[1];
+    ent = -dx1*dx2*sum(remove_non_finite.(t .* log.(t)));
 end
 # function computing KL
 function psi_kl(t)
@@ -90,11 +92,11 @@ end
 dt = 1e-02;
 Niter = 100;
 # samples from h(y)
-M = 10000;
+M = 5000;
 # number of particles
-Nparticles = 10000;
+Nparticles = 5000;
 # regularisation parameter
-alpha = range(0.0001, stop = 1, length = 10);
+alpha = range(0.0001, stop = 0.1, length = 10);
 # variance of normal describing alignment
 sigma = 0.02;
 # sample from μ
@@ -102,7 +104,8 @@ muSample = histogram2D_sampler(sinogram, phi_angle, xi, 10^6);
 
 L = 10;
 
-E = zeros(length(alpha), L);
+ent = zeros(length(alpha), L);
+kl = zeros(length(alpha), L);
 Threads.@threads for i=1:length(alpha)
     @simd for l=1:L
         # get reduced sample
@@ -111,8 +114,17 @@ Threads.@threads for i=1:length(alpha)
         x1, x2 = wgf_pet_tamed(Nparticles, dt, Niter, alpha[i], muSampleL, M, sigma, 0.5);
         # KL
         KDE = phi([x1[Niter, :]; x2[Niter, :]]);
-        E[i, l] = psi_kl(KDE) - alpha[i]*psi_ent(KDE);
+        ent[i, l] = psi_ent(KDE);
+        kl[i, l] = psi_kl(KDE);
         println("$i, $l")
     end
 end
+
+E = zeros(length(alpha), L);
+for i=1:length(alpha)
+    for j=1:L
+        E[i, j] = kl[i, j] - alpha[i]*dx1^2*ent[i, j];
+    end
+end
+
 plot(alpha,  mean(E, dims = 2))
