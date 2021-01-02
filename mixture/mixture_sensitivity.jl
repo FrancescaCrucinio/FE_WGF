@@ -38,8 +38,7 @@ function psi(t)
     function remove_non_finite(x)
 	       return isfinite(x) ? x : 0
     end
-    dx = KDEx[2] - KDEx[1];
-    ent = -dx * sum(remove_non_finite.(t .* log.(t)));
+    ent = -mean(remove_non_finite.(t .* log.(t)));
     # kl
     trueMu = 2*pdf.(Normal(0.3, sqrt(0.043^2 + 0.045^2)), KDEx)/3 +
             pdf.(Normal(0.5, sqrt(0.015^2 + 0.045^2)), KDEx)/3;
