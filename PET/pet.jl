@@ -60,17 +60,10 @@ function psi_ent(t)
     function remove_non_finite(x)
 	       return isfinite(x) ? x : 0
     end
-    dx1 = X1bins[2] - X1bins[1];
-    dx2 = X2bins[2] - X2bins[1];
-    ent = -dx1*dx2*sum(remove_non_finite.(t .* log.(t)));
+    ent = -mean(remove_non_finite.(t .* log.(t)));
 end
 # function computing KL
 function psi_kl(t)
-    # # entropy
-    # function remove_non_finite(x)
-	#        return isfinite(x) ? x : 0
-    # end
-    # ent = -mean(remove_non_finite.(t .* log.(t)));
     # kl
     trueMu = sinogram;
     refY1 = phi_angle;
@@ -127,7 +120,7 @@ KDEeval = [gridX1 gridX2];
 plot(KLWGF)
 phantom_ent = psi_ent(phantom);
 plot(ent)
-hline!([phantom_ent)
+hline!([phantom_ent])
 plot(KLWGF .- alpha * ent)
 
 KDEyWGFfinal = rks.kde(x = [x1[end, :] x2[end, :]], var"eval.points" = KDEeval);
