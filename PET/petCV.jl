@@ -52,11 +52,14 @@ function phi(t)
 end
 # function computing entropy
 function psi_ent(t)
+    t = t./maximum(t);
     # entropy
     function remove_non_finite(x)
 	       return isfinite(x) ? x : 0
     end
-    ent = -mean(remove_non_finite.(t .* log.(t)));
+    dx1 = X1bins[2] - X1bins[1];
+    dx2 = X1bins[2] - X1bins[1];
+    ent = -dx1*dx2*sum(remove_non_finite.(t .* log.(t)));
 end
 # function computing KL
 function psi_kl(t)
@@ -72,10 +75,11 @@ function psi_kl(t)
     # this gives the approximated value
     for i=1:length(refY2)
         for j=1:length(refY1)
-            hatMu[i, j] = delta1*delta2*sum(pdf.(Normal.(0, sigma), KDEeval[:, 1] * cos(refY1[j]) .+
-                KDEeval[:, 2] * sin(refY1[j]) .- refY2[i]).*t);
+            hatMu[i, j] = sum(pdf.(Normal.(0, sigma), KDEeval[:, 1] * cos(refY1[j]) .+
+                KDEeval[:, 2] * sin(refY1[j]) .- refY2[i]).*v);
         end
     end
+    hatMu = hatMu/maximum(hatMu);
     kl = kl_divergence(trueMu[:], hatMu[:]);
     return kl;
 end
@@ -83,13 +87,13 @@ end
 # WGF
 # dt and number of iterations
 dt = 1e-02;
-Niter = 100;
+Niter = 30;
 # samples from h(y)
 M = 5000;
 # number of particles
 Nparticles = 5000;
 # regularisation parameter
-alpha = range(0.0001, stop = 0.1, length = 10);
+alpha = range(0.0001, stop = 0.05, length = 10);
 # variance of normal describing alignment
 sigma = 0.02;
 # sample from μ
@@ -99,8 +103,8 @@ L = 10;
 
 ent = zeros(length(alpha), L);
 kl = zeros(length(alpha), L);
-Threads.@threads for i=1:length(alpha)
-    @simd for l=1:L
+for i=1:length(alpha)
+    for l=1:L
         # get reduced sample
         muSampleL = muSample[setdiff(1:10^6, Tuple(((1:10000) .+ (l-1)*10000))), :];
         # WGF
@@ -116,7 +120,7 @@ end
 E = zeros(length(alpha), L);
 for i=1:length(alpha)
     for j=1:L
-        E[i, j] = kl[i, j] - alpha[i]*dx1^2*ent[i, j];
+        E[i, j] = kl[i, j] - alpha[i]*ent[i, j];
     end
 end
 
