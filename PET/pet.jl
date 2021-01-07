@@ -81,7 +81,7 @@ function psi_kl(t)
     for i=1:length(refY2)
         for j=1:length(refY1)
             hatMu[i, j] = sum(pdf.(Normal.(0, sigma), KDEeval[:, 1] * cos(refY1[j]) .+
-                KDEeval[:, 2] * sin(refY1[j]) .- refY2[i]).*v);
+                KDEeval[:, 2] * sin(refY1[j]) .- refY2[i]).*t);
         end
     end
     hatMu = hatMu/maximum(hatMu);
@@ -144,4 +144,5 @@ R"""
 # ise
 petWGF = reshape(KDEyWGFfinal, (pixels[1], pixels[2]));
 petWGF = reverse(petWGF, dims=1);
+petWGF = petWGF/maximum(petWGF);
 var(petWGF .- phantom)
