@@ -96,7 +96,7 @@ M = 5000;
 # number of particles
 Nparticles = 5000;
 # regularisation parameter
-alpha = 0.0001;
+alpha = 0.01;
 # variance of normal describing alignment
 sigma = 0.02;
 # sample from μ
