@@ -57,9 +57,7 @@ function psi_ent(t)
     function remove_non_finite(x)
 	       return isfinite(x) ? x : 0
     end
-    dx1 = X1bins[2] - X1bins[1];
-    dx2 = X1bins[2] - X1bins[1];
-    ent = -dx1*dx2*sum(remove_non_finite.(t .* log.(t)));
+    ent = -mean(remove_non_finite.(t .* log.(t)));
 end
 # function computing KL
 function psi_kl(t)
@@ -76,7 +74,7 @@ function psi_kl(t)
     for i=1:length(refY2)
         for j=1:length(refY1)
             hatMu[i, j] = sum(pdf.(Normal.(0, sigma), KDEeval[:, 1] * cos(refY1[j]) .+
-                KDEeval[:, 2] * sin(refY1[j]) .- refY2[i]).*v);
+                KDEeval[:, 2] * sin(refY1[j]) .- refY2[i]).*t);
         end
     end
     hatMu = hatMu/maximum(hatMu);
@@ -93,7 +91,7 @@ M = 5000;
 # number of particles
 Nparticles = 5000;
 # regularisation parameter
-alpha = range(0.1, stop = 0.5, length = 10);
+alpha = range(0.00001, stop = 0.1, length = 10);
 # variance of normal describing alignment
 sigma = 0.02;
 # sample from μ

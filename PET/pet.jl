@@ -62,9 +62,7 @@ function psi_ent(t)
     function remove_non_finite(x)
 	       return isfinite(x) ? x : 0
     end
-    dx1 = X1bins[2] - X1bins[1];
-    dx2 = X1bins[2] - X1bins[1];
-    ent = -dx1*dx2*sum(remove_non_finite.(t .* log.(t)));
+    ent = -mean(remove_non_finite.(t .* log.(t)));
 end
 # function computing KL
 function psi_kl(t)
