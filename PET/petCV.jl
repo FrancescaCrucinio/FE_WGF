@@ -28,7 +28,7 @@ Random.seed!(1234);
 
 # data image
 sinogram = readdlm("PET/sinogram.txt", ',', Float64);
-pixels = size(sinogram, 2);
+pixels = size(phantom);
 # number of angles
 nphi = size(sinogram, 2);
 # angles
@@ -38,11 +38,11 @@ offsets = floor(size(sinogram, 1)/2);
 xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 xi = xi/maximum(xi);
 
-# grid (use only 2500 points to compute KL)
-X1bins = range(-0.75+ 1/pixels, stop = 0.75 - 1/pixels, length = 50);
-X2bins = range(-0.75 + 1/pixels, stop = 0.75 - 1/pixels, length = 50);
-gridX1 = repeat(X1bins, inner=[50, 1]);
-gridX2 = repeat(X2bins, outer=[50 1]);
+# grid
+X1bins = range(-0.75+ 1/pixels[1], stop = 0.75 - 1/pixels[1], length = pixels[1]);
+X2bins = range(-0.75 + 1/pixels[2], stop = 0.75 - 1/pixels[2], length = pixels[2]);
+gridX1 = repeat(X1bins, inner=[pixels[2], 1]);
+gridX2 = repeat(X2bins, outer=[pixels[1] 1]);
 KDEeval = [gridX1 gridX2];
 
 # function computing KDE
@@ -93,7 +93,7 @@ M = 5000;
 # number of particles
 Nparticles = 5000;
 # regularisation parameter
-alpha = range(0.0001, stop = 0.05, length = 10);
+alpha = range(0.001, stop = 0.1, length = 10);
 # variance of normal describing alignment
 sigma = 0.02;
 # sample from μ
