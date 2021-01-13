@@ -89,14 +89,14 @@ end
 
 # WGF
 # dt and number of iterations
-dt = 1e-02;
+dt = 1e-03;
 Niter = 50;
 # samples from h(y)
-M = 5000;
+M = 1000;
 # number of particles
-Nparticles = 5000;
+Nparticles = 1000;
 # regularisation parameter
-alpha = 0.01;
+alpha = 0.001;
 # variance of normal describing alignment
 sigma = 0.02;
 # sample from μ
