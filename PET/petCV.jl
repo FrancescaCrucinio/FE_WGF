@@ -28,21 +28,20 @@ Random.seed!(1234);
 
 # data image
 sinogram = readdlm("PET/sinogram.txt", ',', Float64);
-pixels = size(phantom);
 # number of angles
-nphi = size(sinogram, 2);
+pixels = size(sinogram, 2);
 # angles
-phi_angle = range(0, stop = 2*pi, length = nphi);
+phi_angle = range(0, stop = 2*pi, length = pixels);
 # number of offsets
 offsets = floor(size(sinogram, 1)/2);
 xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 xi = xi/maximum(xi);
 
 # grid
-X1bins = range(-0.75+ 1/pixels[1], stop = 0.75 - 1/pixels[1], length = pixels[1]);
-X2bins = range(-0.75 + 1/pixels[2], stop = 0.75 - 1/pixels[2], length = pixels[2]);
-gridX1 = repeat(X1bins, inner=[pixels[2], 1]);
-gridX2 = repeat(X2bins, outer=[pixels[1] 1]);
+X1bins = range(-0.75+ 1/pixels, stop = 0.75 - 1/pixels, length = pixels);
+X2bins = range(-0.75 + 1/pixels, stop = 0.75 - 1/pixels, length = pixels);
+gridX1 = repeat(X1bins, inner=[pixels, 1]);
+gridX2 = repeat(X2bins, outer=[pixels 1]);
 KDEeval = [gridX1 gridX2];
 
 # function computing KDE
@@ -91,7 +90,7 @@ M = 5000;
 # number of particles
 Nparticles = 5000;
 # regularisation parameter
-alpha = range(0.00001, stop = 0.1, length = 10);
+alpha = range(0.0002, stop = 0.0009, length = 10);
 # variance of normal describing alignment
 sigma = 0.02;
 # sample from μ
@@ -104,7 +103,7 @@ kl = zeros(length(alpha), L);
 for i=1:length(alpha)
     for l=1:L
         # get reduced sample
-        muSampleL = muSample[setdiff(1:10^6, Tuple(((1:10000) .+ (l-1)*10000))), :];
+        muSampleL = muSample[setdiff(1:10^6, Tuple(((1:10^5) .+ (l-1)*10^5))), :];
         # WGF
         x1, x2 = wgf_pet_tamed(Nparticles, dt, Niter, alpha[i], muSampleL, M, sigma, 0.5);
         # KL

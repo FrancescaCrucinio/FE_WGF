@@ -89,8 +89,8 @@ end
 
 # WGF
 # dt and number of iterations
-dt = 1e-03;
-Niter = 50;
+dt = 1e-02;
+Niter = 30;
 # samples from h(y)
 M = 1000;
 # number of particles
