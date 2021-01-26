@@ -12,9 +12,9 @@ using DelimitedFiles;
 using Interpolations;
 using Distances;
 using Images;
+using KernelDensity;
 # R
 using RCall;
-@rimport ks as rks;
 R"""
 library(ggplot2)
 library(scales)
@@ -52,8 +52,9 @@ KDEeval = [gridX1 gridX2];
 
 # function computing KDE
 function phi(t)
-    RKDE = rks.kde(x = [t[1:Nparticles] t[(Nparticles+1):(2Nparticles)]], var"eval.points" = KDEeval);
-    return abs.(rcopy(RKDE[3]));
+    B = kde((t[1:Nparticles], t[(Nparticles+1):(2Nparticles)]));
+    Bpdf = pdf(B, X1bins, X2bins);
+    return abs.(Bpdf[:]);
 end
 # function computing entropy
 function psi_ent(t)
@@ -89,14 +90,14 @@ end
 
 # WGF
 # dt and number of iterations
-dt = 1e-03;
+dt = 1e-02;
 Niter = 100;
 # samples from h(y)
 M = 5000;
 # number of particles
 Nparticles = 5000;
 # regularisation parameter
-alpha = 0.01;
+alpha = 1;
 # variance of normal describing alignment
 sigma = 0.02;
 # sample from μ
@@ -105,7 +106,7 @@ muSample = histogram2D_sampler(sinogram, phi_angle, xi, 10^6);
 x1, x2 = wgf_pet_tamed(Nparticles, dt, Niter, alpha, muSample, M, sigma, 0.5);
 
 # KDE
-KDEyWGF = mapslices(phi, [x1 x2], dims = 2);
+KDEyWGF = mapslices(phi, [x2 x1], dims = 2);
 # entropy
 ent = mapslices(psi_ent, KDEyWGF, dims = 2);
 # KL
@@ -118,8 +119,8 @@ plot(ent)
 hline!([phantom_ent])
 plot(KLWGF .- alpha * ent)
 
-KDEyWGFfinal = rks.kde(x = [x1[18, :] x2[18, :]], var"eval.points" = KDEeval);
-KDEyWGFfinal = abs.(rcopy(KDEyWGFfinal[3]));
+KDEyWGFfinal = KDEyWGF[end, :];
+
 # plot
 R"""
     # phantom

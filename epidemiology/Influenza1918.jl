@@ -7,12 +7,11 @@ using Distributions;
 using Statistics;
 using StatsBase;
 using Random;
-using JLD;
 using Distances;
 using RCall;
 @rimport ks as rks;
 # custom packages
-using wgf;
+using wgf_prior;
 include("RL.jl")
 # set seed
 Random.seed!(1234);
@@ -78,16 +77,19 @@ Nparticles = 500;
 # number of samples from μ to draw at each iteration
 M = 500;
 # time discretisation
-dt = 1e-1;
+dt = 1e-3;
 # number of iterations
 Niter = 5000;
 # initial distribution
 x0 = sample(muSample, M, replace = true) .- 9;
+# prior mean = mean of μ shifted back by 9 days
+m0 = 0;
+sigma0 = 1;
 # regularisation parameter
 alpha = 0.016;
 runtimeWGF = @elapsed begin
 # run WGF
-x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5);
+x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M, 0.5);
 end
 # check convergence
 KDEyWGF = mapslices(phi, x, dims = 2);

@@ -8,14 +8,7 @@ using StatsBase;
 using Random;
 using DelimitedFiles;
 using Distances;
-# R
-using RCall;
-@rimport ks as rks;
-R"""
-library(ggplot2)
-library(scales)
-library(viridis)
-"""
+using KernelDensity;
 # custom packages
 using wgf;
 using samplers;
@@ -43,8 +36,9 @@ KDEeval = [gridX1 gridX2];
 
 # function computing KDE
 function phi(t)
-    RKDE = rks.kde(x = [t[1:Nparticles] t[(Nparticles+1):(2Nparticles)]], var"eval.points" = KDEeval);
-    return abs.(rcopy(RKDE[3]));
+    B = kde((t[1:Nparticles], t[(Nparticles+1):(2Nparticles)]));
+    Bpdf = pdf(B, X1bins, X2bins);
+    return abs.(Bpdf[:]);
 end
 # function computing entropy
 function psi_ent(t)
@@ -81,7 +75,7 @@ end
 # WGF
 # dt and number of iterations
 dt = 1e-02;
-Niter = 10;
+Niter = 100;
 # samples from h(y)
 M = 5000;
 # number of particles
@@ -104,7 +98,7 @@ for i=1:length(alpha)
         # WGF
         x1, x2 = wgf_pet_tamed(Nparticles, dt, Niter, alpha[i], muSampleL, M, sigma, 0.5);
         # KL
-        KDE = phi([x1[Niter, :]; x2[Niter, :]]);
+        KDE = phi([x2[Niter, :]; x1[Niter, :]]);
         ent[i, l] = psi_ent(KDE);
         kl[i, l] = psi_kl(KDE);
         println("$i, $l")
@@ -118,4 +112,9 @@ for i=1:length(alpha)
     end
 end
 
+read = readdlm("PET/resCV.txt", ',', Float64);
+alpha = read[:, 1];
+kl = read[:, 2:11];
+ent = read[:, 12:21];
+E = read[:, 22:31];
 plot(alpha,  mean(E, dims = 2))
