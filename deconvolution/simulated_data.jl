@@ -94,6 +94,19 @@ function psi(t)
     kl = delta*kl_divergence(trueMu, hatMu);
     return kl+alpha*kl_prior;
 end
+function psi2(piSample)
+    loglik = zeros(1, length(muSample));
+    for i=1:length(muSample)
+        loglik[i] = mean(pdf.(Laplace.(muSample[i], sigU), piSample));
+    end
+    loglik = -log.(loglik);
+    kl = mean(loglik);
+    prior = pdf.(Normal(m0, sigma0), piSample);
+    Rpihat = rks.kde(x = piSample, var"eval.points" = piSample);
+    pihat = abs.(rcopy(Rpihat[3]));
+    kl_prior = mean(prior./pihat .- 1 .- log.(prior./pihat));
+    return kl+alpha*kl_prior;
+end
 
 # get sample from μ
 muSample = @rget W;
@@ -125,8 +138,9 @@ println("WGF done, $tWGF")
 # check convergence
 KDEyWGF = mapslices(phi, x, dims = 2);
 EWGF = mapslices(psi, KDEyWGF, dims = 2);
+EWGF2 = mapslices(psi2, x, dims = 2);
 plot(EWGF)
-
+plot!(EWGF2)
 # plot
 R"""
     # WGF estimator
