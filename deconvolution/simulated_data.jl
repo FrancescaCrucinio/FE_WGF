@@ -65,36 +65,8 @@ toc()
 names(outcome)<-c('PI_bandwidth','DKDE_nonrescaledPI','DKDE_rescaledPI','CV_bandwidth','DKDE_rescaledCV','normal_bandwidth','naive_KDE')
 """
 
-KDEx = @rget xx;
-dx = KDEx[2] - KDEx[1];
-# function computing KDE
-function phi(t)
-    RKDE = rks.kde(x = t, var"eval.points" = @rget xx);
-    return abs.(rcopy(RKDE[3]));
-end
-function psi(t)
-    # entropy
-    function remove_non_finite(x)
-	       return isfinite(x) ? x : 0
-    end
-    prior = pdf.(Normal(m0, sigma0), KDEx);
-    kl_prior = dx*kl_divergence(t, prior);
-    # kl
-    trueMu = @rget muKDE;
-    refY = KDEx;
-    # approximated value
-    delta = refY[2] - refY[1];
-    hatMu = zeros(1, length(refY));
-    # convolution with approximated f
-    # this gives the approximated value
-    for i=1:length(refY)
-        hatMu[i] = dx*sum(pdf.(Laplace.(refY, sigU), refY[i]).*t);
-    end
-#    hatMu[iszero.(hatMu)] .= eps();
-    kl = delta*kl_divergence(trueMu, hatMu);
-    return kl+alpha*kl_prior;
-end
-function psi2(piSample)
+# functional approximation
+function psi(piSample)
     loglik = zeros(1, length(muSample));
     for i=1:length(muSample)
         loglik[i] = mean(pdf.(Laplace.(muSample[i], sigU), piSample));
@@ -104,7 +76,7 @@ function psi2(piSample)
     prior = pdf.(Normal(m0, sigma0), piSample);
     Rpihat = rks.kde(x = piSample, var"eval.points" = piSample);
     pihat = abs.(rcopy(Rpihat[3]));
-    kl_prior = mean(prior./pihat .- 1 .- log.(prior./pihat));
+    kl_prior = mean(log.(pihat./prior));
     return kl+alpha*kl_prior;
 end
 
@@ -119,11 +91,11 @@ Nparticles = 500;
 # number of samples from μ to draw at each iteration
 M = 500;
 # time discretisation
-dt = 1e-3;
+dt = 1e-2;
 # number of iterations
-Niter = 1000;
+Niter = 500;
 # regularisation parameter
-alpha = 0.011;
+alpha = 0.0017;
 # initial distribution
 x0 = sample(muSample, M, replace = true);
 # prior mean = mean of μ
@@ -136,11 +108,8 @@ end
 println("WGF done, $tWGF")
 
 # check convergence
-KDEyWGF = mapslices(phi, x, dims = 2);
-EWGF = mapslices(psi, KDEyWGF, dims = 2);
-EWGF2 = mapslices(psi2, x, dims = 2);
+EWGF = mapslices(psi, x, dims = 2);
 plot(EWGF)
-plot!(EWGF2)
 # plot
 R"""
     # WGF estimator

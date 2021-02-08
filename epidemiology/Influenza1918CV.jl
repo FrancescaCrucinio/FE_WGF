@@ -49,7 +49,8 @@ function psi(t)
     function remove_non_finite(x)
 	       return isfinite(x) ? x : 0
     end
-    ent = -mean(remove_non_finite.(t .* log.(t)));
+    prior = pdf.(Normal(m0, sigma0), KDEx);
+    kl_prior = dx*kl_divergence(t, prior);
     # kl
     trueMu = muKDEy;
     refY = KDEx;
@@ -59,10 +60,11 @@ function psi(t)
     # convolution with approximated f
     # this gives the approximated value
     for i=1:length(refY)
-        hatMu[i] = delta*sum(K.(KDEx, refY[i]).*t);
+        hatMu[i] = dx*sum(K.(KDEx, refY[i]).*t);
     end
-    kl = kl_divergence(trueMu, hatMu);
-    return kl-a*ent;
+#    hatMu[iszero.(hatMu)] .= eps();
+    kl = delta*kl_divergence(trueMu, hatMu);
+    return kl+alpha*kl_prior;
 end
 
 # parameters for WGF
@@ -76,7 +78,10 @@ dt = 1e-1;
 Niter = 5000;
 # initial distribution
 x0 = sample(muSample, M, replace = true) .- 9;
-# regularisation parameter
+# prior mean = mean of μ shifted back by 9 days
+m0 = mean(muSample) - 9;
+sigma0 = std(muSample);
+
 alpha = range(0.001, stop = 0.07, length = 10);
 
 # divide muSample into groups
@@ -92,7 +97,7 @@ Threads.@threads for i=1:length(alpha)
         # get reduced sample
         muSampleL = muSample[1:end .!= l, :];
         # WGF
-        x = wgf_flu_tamed(Nparticles, dt, Niter, alpha[i], x0, muSample, M, 0.5);
+        x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M, 0.5);
         # KL
         a = alpha[i];
         KDE = phi(x[Niter, :]);

@@ -9,6 +9,7 @@ using samplers;
 export wgf_prior_gaussian_mixture_tamed
 export pda_gaussian_mixture_tamed
 export wgf_flu_tamed
+export wgf_DKDE_tamed
 
 #= WGF for gaussian mixture
 OUTPUTS
@@ -124,5 +125,46 @@ function wgf_flu_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, M, a)
        x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ Niter^(-a) * abs.(drift)) .+  sqrt(2*alpha*dt)*randn(N, 1);
    end
    return x
+end
+#= WGF for deconvolution with simulated data and Laplace error
+OUTPUTS
+1 - particle locations
+INPUTS
+'N' number of particles
+'dt' discretisation step
+'Niter' number of iterations
+'alpha' regularisation parameter
+'x0' user selected initial distribution
+'m0' mean of prior
+'sigma0' standard deviation of prior
+'muSample' sample from μ
+'M' number of samples from μ(y) to be drawn at each iteration
+'a' parameter for tamed Euler scheme
+'sigU' parameter for error distribution
+=#
+function wgf_DKDE_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, M, a, sigU)
+    # initialise a matrix x storing the particles
+    x = zeros(Niter, N);
+    # initial distribution is given as input:
+    x[1, :] = x0;
+
+    for n=1:(Niter-1)
+        # get samples from h(y)
+        y = sample(muSample, M, replace = true);
+        # Compute h^N_{n}
+        hN = zeros(M, 1);
+        for j=1:M
+            hN[j] = mean(pdf.(Laplace.(x[n, :], sigU), y[j]));
+        end
+        # gradient and drift
+        drift = zeros(N, 1);
+        for i=1:N
+            gradient = pdf.(Laplace.(x[n, i], sigU), y) .* (-sign.(x[n, i] .- y)/sigU);
+            drift[i] = mean(gradient./hN) + alpha*(x[n, i] .- m0)/sigma0^2;
+        end
+        # update locations
+        x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ Niter^(-a) * abs.(drift)) .+ sqrt(2*alpha*dt)*randn(N, 1);
+    end
+    return x
 end
 end

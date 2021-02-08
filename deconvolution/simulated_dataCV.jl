@@ -65,28 +65,18 @@ toc()
 names(outcome)<-c('PI_bandwidth','DKDE_nonrescaledPI','DKDE_rescaledPI','CV_bandwidth','DKDE_rescaledCV','normal_bandwidth','naive_KDE')
 """
 
-KDEx = @rget xx;
-dx = KDEx[2] - KDEx[1];
-# function computing KDE
-function phi(t)
-    RKDE = rks.kde(x = t, var"eval.points" = @rget xx);
-    return abs.(rcopy(RKDE[3]));
-end
-function psi(t, a, m0, sigma0)
-    prior = pdf.(Normal(m0, sigma0), KDEx);
-    kl_prior = dx*kl_divergence(t, prior);
-    # kl
-    trueMu = @rget muKDE;
-    refY = KDEx;
-    # approximated value
-    delta = refY[2] - refY[1];
-    hatMu = zeros(1, length(refY));
-    # convolution with approximated f
-    # this gives the approximated value
-    for i=1:length(refY)
-        hatMu[i] = dx*sum(pdf.(Laplace.(refY, sigU), refY[i]).*t);
+# functional approximation
+function psi(piSample, a, m0, sigma0)
+    loglik = zeros(1, length(muSample));
+    for i=1:length(muSample)
+        loglik[i] = mean(pdf.(Laplace.(muSample[i], sigU), piSample));
     end
-    kl = delta*kl_divergence(trueMu, hatMu);
+    loglik = -log.(loglik);
+    kl = mean(loglik);
+    prior = pdf.(Normal(m0, sigma0), piSample);
+    Rpihat = rks.kde(x = piSample, var"eval.points" = piSample);
+    pihat = abs.(rcopy(Rpihat[3]));
+    kl_prior = mean(prior./pihat .- 1 .- log.(prior./pihat));
     return kl+a*kl_prior;
 end
 
@@ -101,11 +91,11 @@ Nparticles = 500;
 # number of samples from μ to draw at each iteration
 M = 500;
 # time discretisation
-dt = 1e-3;
+dt = 1e-2;
 # number of iterations
-Niter = 1000;
+Niter = 500;
 # regularisation parameter
-alpha = range(0.008, stop = 0.02, length = 10);
+alpha = range(0.0001, stop = 0.005, length = 10);
 
 # divide muSample into groups
 L = 5;
@@ -125,8 +115,7 @@ for i=1:length(alpha)
         # WGF
         x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSampleL, M, 0.5, sigU);
         # KL
-        KDE = phi(x[Niter, :]);
-        E[i, l] = psi(KDE, alpha[i], m0, sigma0);
+        E[i, l] = psi(x[Niter, :], alpha[i], m0, sigma0);
         println("$i, $l")
     end
 end
