@@ -60,14 +60,14 @@ M = 500;
 # time discretisation
 dt = 1e-1;
 # number of iterations
-Niter = 5000;
+Niter = 3000;
 # initial distribution
 x0 = sample(muSample, M, replace = true) .- 9;
 # prior mean = mean of μ shifted back by 9 days
 m0 = mean(muSample) - 9;
 sigma0 = std(muSample);
 
-alpha = range(0.001, stop = 0.07, length = 10);
+alpha = range(0.001, stop = 0.1, length = 10);
 
 # divide muSample into groups
 L = 5;

@@ -9,6 +9,7 @@ using StatsBase;
 using Random;
 using Distances;
 using RCall;
+using JLD;
 # custom packages
 using wgf_prior;
 
@@ -139,10 +140,19 @@ R"""
     runtime <- round(runtime, 2)
     data <- data.frame(x = runtime, y = c($distpi, $distcv, $distWGF))
     data$g <- factor(g, labels = c("DKDEpi", "DKDEcv", "WGF"))
-    p <- ggplot(data, aes(x = x, y = y)) +
-    geom_boxplot(lwd = 1, aes(x = x, y = y, fill = g), width = 8) +
+    # quantiles
+    f <- function(x) {
+      r <- quantile(x, probs = c(0, 0.25, 0.5, 0.75, 1))
+      names(r) <- c("ymin", "lower", "middle", "upper", "ymax")
+      r
+    }
+    p <- ggplot(data, aes(x = x, y = y, group = g, fill = g)) +
+    stat_summary(fun.data=f, aes(fill = g), geom="boxplot", position="dodge") +
     scale_y_log10(breaks = scales::trans_breaks("log10", function(x) 10^x), labels = scales::trans_format("log10", scales::math_format(10^.x))) +
     theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(),
         aspect.ratio = 2/3, legend.key.size = unit(1, "cm"), plot.margin=grid::unit(c(0,0,0,0), "mm"))
     # ggsave("dkde_vs_wgf.eps", p, height = 4)
 """
+
+save("wgf_vs_dec9Feb2021.jld", "tpi", tpi, "tcv", tcv, "tWGF", tWGF,
+     "distpi", distpi, "distcv", distcv, "distWGF", distWGF);
