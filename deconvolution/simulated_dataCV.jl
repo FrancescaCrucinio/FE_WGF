@@ -114,7 +114,7 @@ for i=1:length(alpha)
         sigma0 = std(muSampleL);
         # WGF
         x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSampleL, M, 0.5, sigU);
-        # KL
+        # functional
         E[i, l] = psi(x[Niter, :], alpha[i], m0, sigma0);
         println("$i, $l")
     end

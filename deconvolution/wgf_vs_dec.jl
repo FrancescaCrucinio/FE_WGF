@@ -43,9 +43,6 @@ dt = 1e-3;
 Niter = 1000;
 # regularisation parameter
 alpha = 0.011;
-# prior mean = mean of μ
-m0 = mean(muSample);
-sigma0 = std(muSample);
 
 Nrep = 100;
 ise = zeros(3, Nrep);
@@ -104,6 +101,9 @@ for i=1:Nrep
     ise[2, i] = @rget iseCV;
     # get sample from μ
     muSample = @rget W;
+    # prior mean = mean of μ
+    m0 = mean(muSample);
+    sigma0 = std(muSample);
     # get parameter for K
     sigU = @rget sigU;
     # initial distribution

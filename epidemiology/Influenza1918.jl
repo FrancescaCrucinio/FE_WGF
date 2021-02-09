@@ -123,7 +123,7 @@ end
 R"""
 library(ggplot2)
 g <- rep(1:3, , each = length(spanish_flu$Date));
-data <- data.frame(x = rep(spanish_flu$Date, times = 3), y = c($rhoCounts[100,]/sum($rhoCounts[100,]), Philadelphia_model$Ihat/sum(Philadelphia_model$Ihat), $KDEyWGF, g = factor(g))
+data <- data.frame(x = rep(spanish_flu$Date, times = 3), y = c($rhoCounts[100,]/sum($rhoCounts[100,]), Philadelphia_model$Ihat/sum(Philadelphia_model$Ihat), $KDEyWGF), g = factor(g))
 p1 <- ggplot(data, aes(x, y, color = g)) +
 geom_line(size = 2) +
 scale_color_manual(values = c("gray", "red", "blue"), labels=c("RL", "RIDE", "WGF")) +

@@ -37,33 +37,18 @@ KDEx = 1:length(muCounts);
 RKDE = rks.kde(muSample, var"eval.points" = KDEx);
 muKDEy = abs.(rcopy(RKDE[3]));
 
-a = 1;
-# function computing KDE
-function phi(t)
-    RKDE = rks.kde(x = t, var"eval.points" = KDEx);
-    return abs.(rcopy(RKDE[3]));
-end
-# function computing E
-function psi(t)
-    # entropy
-    function remove_non_finite(x)
-	       return isfinite(x) ? x : 0
+# functional approximation
+function psi(piSample, a, m0, sigma0)
+    loglik = zeros(1, length(muSample));
+    for i=1:length(muSample)
+        loglik[i] = mean(K.(piSample, muSample[i]));
     end
-    prior = pdf.(Normal(m0, sigma0), KDEx);
-    kl_prior = dx*kl_divergence(t, prior);
-    # kl
-    trueMu = muKDEy;
-    refY = KDEx;
-    # approximated value
-    delta = refY[2] - refY[1];
-    hatMu = zeros(1, length(refY));
-    # convolution with approximated f
-    # this gives the approximated value
-    for i=1:length(refY)
-        hatMu[i] = dx*sum(K.(KDEx, refY[i]).*t);
-    end
-#    hatMu[iszero.(hatMu)] .= eps();
-    kl = delta*kl_divergence(trueMu, hatMu);
+    loglik = -log.(loglik);
+    kl = mean(loglik);
+    prior = pdf.(Normal(m0, sigma0), piSample);
+    Rpihat = rks.kde(x = piSample, var"eval.points" = piSample);
+    pihat = abs.(rcopy(Rpihat[3]));
+    kl_prior = mean(log.(pihat./prior));
     return kl+alpha*kl_prior;
 end
 
@@ -96,12 +81,11 @@ Threads.@threads for i=1:length(alpha)
     @simd for l=1:L
         # get reduced sample
         muSampleL = muSample[1:end .!= l, :];
+        muSampleL = muSampleL[:];
         # WGF
         x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M, 0.5);
-        # KL
-        a = alpha[i];
-        KDE = phi(x[Niter, :]);
-        E[i, l] = psi(KDE);
+        # functional
+        E[i, l] = psi(x[Niter, :], alpha[i], m0, sigma0);
         println("$i, $l")
     end
 end
