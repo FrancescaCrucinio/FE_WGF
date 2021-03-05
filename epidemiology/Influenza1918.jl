@@ -22,6 +22,9 @@ K(x, y) = 0.595*pdf.(Normal(8.63, 2.56), y .- x) +
 R"""
 library(incidental)
 library(tictoc)
+Sys.setenv("LANGUAGE"="En")
+Sys.setlocale("LC_ALL", "English")
+
 # death counts
 death_counts <- spanish_flu$Philadelphia
 
@@ -58,23 +61,23 @@ end
 
 # parameters for WGF
 # number of particles
-Nparticles = 500;
+Nparticles = 100;
 # number of samples from μ to draw at each iteration
-M = 500;
+M = 100;
 # time discretisation
 dt = 1e-1;
 # number of iterations
 Niter = 3000;
 # initial distribution
-x0 = sample(muSample, M, replace = true) .- 9;
+x0 = sample(muSample, M, replace = false) .- 9;
 # prior mean = mean of μ shifted back by 9 days
 m0 = mean(muSample) - 9;
 sigma0 = std(muSample);
 # regularisation parameter
-alpha = 0.01;
+alpha = 0.002;
 runtimeWGF = @elapsed begin
 # run WGF
-x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M, 0.5);
+x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);
 end
 RKDEyWGF = rks.kde(x = x[Niter, :], var"eval.points" = KDEx);
 KDEyWGF = abs.(rcopy(RKDEyWGF[3]));

@@ -1,4 +1,4 @@
-#push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using StatsPlots;
@@ -11,7 +11,7 @@ using Distances;
 using RCall;
 @rimport ks as rks;
 # custom packages
-using wgf;
+using wgf_prior;
 
 # set seed
 Random.seed!(1234);
@@ -49,7 +49,7 @@ function psi(piSample, a, m0, sigma0)
     Rpihat = rks.kde(x = piSample, var"eval.points" = piSample);
     pihat = abs.(rcopy(Rpihat[3]));
     kl_prior = mean(log.(pihat./prior));
-    return kl+alpha*kl_prior;
+    return kl+a*kl_prior;
 end
 
 # parameters for WGF
@@ -61,13 +61,8 @@ M = 500;
 dt = 1e-1;
 # number of iterations
 Niter = 3000;
-# initial distribution
-x0 = sample(muSample, M, replace = true) .- 9;
-# prior mean = mean of μ shifted back by 9 days
-m0 = mean(muSample) - 9;
-sigma0 = std(muSample);
-
-alpha = range(0.001, stop = 0.1, length = 10);
+# regularisation parameters
+alpha = range(0.001, stop = 0.01, length = 10);
 
 # divide muSample into groups
 L = 5;
@@ -82,8 +77,13 @@ Threads.@threads for i=1:length(alpha)
         # get reduced sample
         muSampleL = muSample[1:end .!= l, :];
         muSampleL = muSampleL[:];
+        # prior mean = mean of μ shifted back by 9 days
+        # initial distribution
+        x0 = sample(muSampleL, M, replace = true) .- 9;
+        m0 = mean(muSampleL) - 9;
+        sigma0 = std(muSampleL);
         # WGF
-        x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M, 0.5);
+        x = wgf_flu_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSample, M, 0.5);
         # functional
         E[i, l] = psi(x[Niter, :], alpha[i], m0, sigma0);
         println("$i, $l")
