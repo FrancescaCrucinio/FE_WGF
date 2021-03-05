@@ -30,14 +30,14 @@ It = round.(It, digits = 0);
 misspecified = true;
 if(misspecified)
     # misspecified
-    It_miss = zeros(5000, 1);
+    It_miss = copy(It);
     for i in t[1:98]
         if((mod(i, 6)==0) | (mod(i, 7)==0))
-            u = 0.2*rand(1) .+ 0.3;
+            #u = 0.2*rand(1) .+ 0.3;
+             u=0.1;
             proportion = floor.(u[1].*It[i]);
-            It_miss[i] = It[i] .- proportion;
-            It_miss[i+2] = It[i+2] .+ proportion;
-        else
+            It_miss[i] = It_miss[i] .- proportion;
+            It_miss[i+2] = It_miss[i+2] .+ proportion;
         end
     end
     Isample = vcat(fill.(1:length(It_miss), Int.(It_miss))...);
@@ -72,19 +72,19 @@ M = 500;
 # time discretisation
 dt = 1e-1;
 # number of iterations
-Niter = 3000;
+Niter = 1000;
 # initial distribution
 x0 = sample(muSample, M, replace = false) .- 10;
 # prior mean = mean of μ shifted back by 10 days
 m0 = mean(muSample) - 10;
 sigma0 = std(muSample);
 # regularisation parameter
-alpha = 0.001;
+alpha = 0.01;
 runtimeWGF = @elapsed begin
 # run WGF
 x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);
 end
-RKDEyWGF = rks.kde(x = x[1, :], var"eval.points" = t);
+RKDEyWGF = rks.kde(x = x[end, :], var"eval.points" = t);
 KDEyWGF = abs.(rcopy(RKDEyWGF[3]));
 # check convergence
 EWGF = mapslices(psi, x, dims = 2);
@@ -109,6 +109,8 @@ delay = 0.595*pdf.(Normal(8.63, 2.56), t) +
         0.405*pdf.(Normal(15.24, 5.39), t);
 delay = delay./(sum(delay));
 R"""
+library(tictoc)
+library(incidental)
 tic()
 RIDE_model <- fit_incidence(
   reported = $muCounts,

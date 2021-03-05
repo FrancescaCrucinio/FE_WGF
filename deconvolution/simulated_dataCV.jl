@@ -108,12 +108,12 @@ for i=1:length(alpha)
         muSampleL = muSample[1:end .!= l, :];
         muSampleL = muSampleL[:];
         # initial distribution
-        x0 = sample(muSampleL, M, replace = true);
+        x0 = sample(muSampleL, M, replace = false);
         # prior mean = mean of μ
         m0 = mean(muSampleL);
         sigma0 = std(muSampleL);
         # WGF
-        x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSampleL, M, 0.5, sigU);
+        x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSampleL, M, sigU);
         # functional
         E[i, l] = psi(x[Niter, :], alpha[i], m0, sigma0);
         println("$i, $l")

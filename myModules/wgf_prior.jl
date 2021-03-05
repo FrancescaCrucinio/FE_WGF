@@ -65,10 +65,9 @@ INPUTS
 'sigma0' standard deviation of prior
 'muSample' sample from μ
 'M' number of samples from μ(y) to be drawn at each iteration
-'a' parameter for tamed Euler scheme
 'sigU' parameter for error distribution
 =#
-function wgf_DKDE_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, M, a, sigU)
+function wgf_DKDE_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, M, sigU)
     # initialise a matrix x storing the particles
     x = zeros(Niter, N);
     # initial distribution is given as input:
@@ -76,7 +75,7 @@ function wgf_DKDE_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, M, a, sig
 
     for n=1:(Niter-1)
         # get samples from μ(y)
-        y = sample(muSample, M, replace = true);
+        y = sample(muSample, M, replace = false);
         # Compute denominator
         muN = zeros(M, 1);
         for j=1:M
@@ -89,7 +88,7 @@ function wgf_DKDE_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, M, a, sig
             drift[i] = mean(gradient./muN) + alpha*(x[n, i] .- m0)/sigma0^2;
         end
         # update locations
-        x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ Niter^(-a) * abs.(drift)) .+ sqrt(2*alpha*dt)*randn(N, 1);
+        x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ dt * abs.(drift)) .+ sqrt(2*alpha*dt)*randn(N, 1);
     end
     return x
 end

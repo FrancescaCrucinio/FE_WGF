@@ -97,13 +97,13 @@ Niter = 500;
 # regularisation parameter
 alpha = 0.0017;
 # initial distribution
-x0 = sample(muSample, M, replace = true);
+x0 = sample(muSample, M, replace = false);
 # prior mean = mean of μ
 m0 = mean(muSample);
 sigma0 = std(muSample);
 
 tWGF = @elapsed begin
-x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M, 0.5, sigU);
+x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M, sigU);
 end
 println("WGF done, $tWGF")
 

@@ -108,10 +108,10 @@ for i=1:Nrep
     # get parameter for K
     sigU = @rget sigU;
     # initial distribution
-    x0 = sample(muSample, Nparticles, replace = true);
+    x0 = sample(muSample, Nparticles, replace = false);
 
     runtime[3, i] = @elapsed begin
-    x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M, 0.5, sigU);
+    x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M sigU);
     end
     # KDE
     R"""
