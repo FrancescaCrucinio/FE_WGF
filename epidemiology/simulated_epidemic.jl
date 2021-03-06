@@ -17,7 +17,6 @@ include("RL.jl")
 Random.seed!(1234);
 
 # pathological example
-# K(x, y) = pdf.(Gamma(10, 1), y .- x);
 K(x, y) = 0.595*pdf.(Normal(8.63, 2.56), y .- x) +
         0.405*pdf.(Normal(15.24, 5.39), y .- x);
 t = 1:100;
@@ -33,8 +32,7 @@ if(misspecified)
     It_miss = copy(It);
     for i in t[1:98]
         if((mod(i, 6)==0) | (mod(i, 7)==0))
-            #u = 0.2*rand(1) .+ 0.3;
-             u=0.1;
+            u = 0.2*rand(1) .+ 0.3;
             proportion = floor.(u[1].*It[i]);
             It_miss[i] = It_miss[i] .- proportion;
             It_miss[i+2] = It_miss[i+2] .+ proportion;
@@ -72,14 +70,14 @@ M = 500;
 # time discretisation
 dt = 1e-1;
 # number of iterations
-Niter = 1000;
+Niter = 3000;
 # initial distribution
 x0 = sample(muSample, M, replace = false) .- 10;
 # prior mean = mean of μ shifted back by 10 days
 m0 = mean(muSample) - 10;
 sigma0 = std(muSample);
 # regularisation parameter
-alpha = 0.01;
+alpha = 0.001;
 runtimeWGF = @elapsed begin
 # run WGF
 x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);

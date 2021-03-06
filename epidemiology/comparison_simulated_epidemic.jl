@@ -11,7 +11,7 @@ using RCall;
 @rimport ks as rks;
 # custom packages
 using wgf_prior;
-include("epidemiology/RL.jl")
+include("RL.jl")
 R"""
 library(tictoc)
 library(incidental)
@@ -20,11 +20,11 @@ library(incidental)
 Random.seed!(1234);
 
 # pathological example
-# K(x, y) = pdf.(Gamma(10, 1), y .- x);
 K(x, y) = 0.595*pdf.(Normal(8.63, 2.56), y .- x) +
         0.405*pdf.(Normal(15.24, 5.39), y .- x);
 t = 1:100;
 It = ifelse.(t.<=8, exp.(-0.05*(8 .- t).^2), exp.(-0.001*(t .- 8).^2))/31.942;
+It_normalised = copy(It);
 # renormalise
 It = It * 5000/sum(It);
 It = round.(It, digits = 0);
@@ -62,8 +62,7 @@ for i=1:Nrep
     It_miss = copy(It);
     for i in t[1:98]
         if((mod(i, 6)==0) | (mod(i, 7)==0))
-            #u = 0.2*rand(1) .+ 0.3;
-             u=0.1;
+            u = 0.2*rand(1) .+ 0.3;
             proportion = floor.(u[1].*It[i]);
             It_miss[i] = It_miss[i] .- proportion;
             It_miss[i+2] = It_miss[i+2] .+ proportion;
