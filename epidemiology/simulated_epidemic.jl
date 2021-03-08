@@ -21,6 +21,7 @@ K(x, y) = 0.595*pdf.(Normal(8.63, 2.56), y .- x) +
         0.405*pdf.(Normal(15.24, 5.39), y .- x);
 t = 1:100;
 It = ifelse.(t.<=8, exp.(-0.05*(8 .- t).^2), exp.(-0.001*(t .- 8).^2));
+It_normalised = ifelse.(t.<=8, exp.(-0.05*(8 .- t).^2), exp.(-0.001*(t .- 8).^2))/31.942;
 # renormalise
 It = It * 5000/sum(It);
 It = round.(It, digits = 0);
@@ -77,7 +78,7 @@ x0 = sample(muSample, M, replace = false) .- 10;
 m0 = mean(muSample) - 10;
 sigma0 = std(muSample);
 # regularisation parameter
-alpha = 0.001;
+alpha = 0.0008;
 runtimeWGF = @elapsed begin
 # run WGF
 x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);
@@ -90,7 +91,7 @@ plot(EWGF)
 
 # RL
 # initial distribution
-pi0 = [muCounts[10:end]; zeros(9, 1)];
+pi0 = 100*rand(1, length(muCounts));
 
 KDisc = zeros(length(muCounts), length(muCounts));
 for i=1:length(muCounts)
@@ -134,7 +135,13 @@ p1=plot(t, It)
 plot!(p1, t, KDEyWGF*5000)
 plot!(p1, t, rhoCounts[100, :])
 plot!(p1, t, @rget(RIDE_incidence))
+
 p2=scatter(t, muCounts)
 plot!(p2, t, KDEyRec*5000)
 plot!(p2, t, RLyRec[:])
 plot!(p2, t, @rget(RIDE_reconstruction))
+
+p3=plot(t, It_normalised)
+plot!(p3, t, KDEyWGF)
+plot!(p3, t, rhoCounts[100, :]/5000)
+plot!(p3, t, @rget(RIDE_incidence)/5000)

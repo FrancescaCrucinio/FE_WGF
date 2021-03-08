@@ -54,7 +54,7 @@ Niter = 3000;
 # regularisation parameter
 alpha = 0.001;
 
-Nrep = 2;
+Nrep = 100;
 ise = zeros(3, Nrep);
 runtime = zeros(3, Nrep);
 for i=1:Nrep
@@ -77,11 +77,11 @@ for i=1:Nrep
 
     # RL
     # initial distribution
-    pi0 = [muCounts[10:end]; zeros(9, 1)];
+    pi0 = 100*rand(1, length(muCounts));
     runtime[1, i] = @elapsed begin
     rhoCounts = RL(KDisc, muCounts, 100, pi0);
     end
-    ise[1, i] = mean((rhoCounts[100, :]/5000 .- It).^2);
+    ise[1, i] = sum((rhoCounts[100, :]/5000 .- It_normalised).^2);
 
     # RIDE
     R"""
@@ -92,11 +92,10 @@ for i=1:Nrep
     exectime <- toc()
     RIDE_exectime <- exectime$toc - exectime$tic
     RIDE_incidence <- RIDE_model$Ihat
-    RIDE_reconstruction <- RIDE_model$Chat
     """
     runtime[2, i] = @rget RIDE_exectime;
-    RIDErec = @rget(RIDE_reconstruction);
-    ise[2, i] = mean((RIDErec/5000 .- It).^2);
+    RIDE_incidence = @rget(RIDE_incidence);
+    ise[2, i] = sum((RIDE_incidence/5000 .- It_normalised).^2);
 
     # WGF
     # initial distribution
@@ -109,7 +108,9 @@ for i=1:Nrep
     RKDEyWGF = rks.kde(x = x[Niter, :], var"eval.points" = t);
     KDEyWGF = abs.(rcopy(RKDEyWGF[3]));
     end
-    ise[3, i] = mean((KDEyWGF .- It).^2);
+    ise[3, i] = sum((KDEyWGF .- It_normalised).^2);
 end
 mean(ise, dims = 2)
 times = mean(runtime, dims = 2);
+# using JLD;
+# save("sim_epidem8Mar2021.jld", "runtime", runtime, "ise", ise);

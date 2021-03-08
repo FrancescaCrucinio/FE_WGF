@@ -25,7 +25,7 @@ It = It * 5000/sum(It);
 It = round.(It, digits = 0);
 
 # functional approximation
-function psi(piSample, alpha, m0, sigma0)
+function psi(piSample, alpha, m0, sigma0, muSample)
     loglik = zeros(1, length(muSample));
     for i=1:length(muSample)
         loglik[i] = mean(K.(piSample, muSample[i]));
@@ -48,19 +48,14 @@ M = 500;
 dt = 1e-1;
 # number of iterations
 Niter = 3000;
-# initial distribution
-x0 = sample(muSample, M, replace = false) .- 10;
-# prior mean = mean of μ shifted back by 10 days
-m0 = mean(muSample) - 10;
-sigma0 = std(muSample);
 # regularisation parameter
-alpha = range(0.0001, stop = 0.005, length = 10);
+alpha = range(0.0001, stop = 0.001, length = 10);
 
 # repetitions
 L = 5;
 E = zeros(length(alpha), L);
-for i=1:length(alpha)
-    for l=1:L
+Threads.@threads for i=1:length(alpha)
+    @simd for l=1:L
         # misspecified sample
         It_miss = copy(It);
         for i in t[1:98]
@@ -82,9 +77,9 @@ for i=1:length(alpha)
         m0 = mean(muSample) .- 10;
         sigma0 = std(muSample);
         # WGF
-        x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);
+        x = wgf_flu_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSample, M);
         # functional
-        E[i, l] = psi(x[Niter, :], alpha[i], m0, sigma0);
+        E[i, l] = psi(x[Niter, :], alpha[i], m0, sigma0, muSample);
         println("$i, $l")
     end
 end
