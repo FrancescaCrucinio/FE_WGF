@@ -54,8 +54,8 @@ alpha = range(0.0001, stop = 0.001, length = 10);
 # repetitions
 L = 5;
 E = zeros(length(alpha), L);
-Threads.@threads for i=1:length(alpha)
-    @simd for l=1:L
+for i=1:length(alpha)
+    for l=1:L
         # misspecified sample
         It_miss = copy(It);
         for i in t[1:98]
@@ -70,7 +70,7 @@ Threads.@threads for i=1:length(alpha)
         # shuffle sample
         shuffle!(Isample);
         # well specified
-        muSample = round.(Isample .+ rand(Gamma(10, 1), length(Isample), 1), digits = 0);
+        muSample = round.(Isample .+ rand(MixtureModel(Normal, [(8.63, 2.56), (15.24, 5.39)], [0.595, 0.405]), length(Isample), 1), digits = 0);
         # initial distribution
         x0 = sample(muSample, M, replace = false) .- 10;
         # prior mean = mean of μ

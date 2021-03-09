@@ -46,7 +46,7 @@ end
 # shuffle sample
 shuffle!(Isample);
 # well specified
-muSample = round.(Isample .+ rand(Gamma(10, 1), length(Isample), 1), digits = 0);
+muSample = round.(Isample .+ rand(MixtureModel(Normal, [(8.63, 2.56), (15.24, 5.39)], [0.595, 0.405]), length(Isample), 1), digits = 0);
 muCounts = counts(Int.(muSample), 100);
 # functional approximation
 function psi(piSample)
@@ -78,7 +78,7 @@ x0 = sample(muSample, M, replace = false) .- 10;
 m0 = mean(muSample) - 10;
 sigma0 = std(muSample);
 # regularisation parameter
-alpha = 0.0008;
+alpha = 0.0009;
 runtimeWGF = @elapsed begin
 # run WGF
 x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);
@@ -100,7 +100,7 @@ for i=1:length(muCounts)
     end
 end
 runtimeRL = @elapsed begin
-rhoCounts = RL(KDisc, muCounts, 100, pi0);
+rhoCounts = RL(KDisc, muCounts, 200, pi0);
 end
 # RIDE estimator
 # discretise delay distribution
@@ -126,22 +126,20 @@ for i=1:length(refY)
     KDEyRec[i] = delta*sum(K.(t, refY[i]).*KDEyWGF);
 end
 # recovolve RL
-RLyRec = zeros(1, length(refY));
+RLyRec = zeros(length(refY), 1);
 for i=1:length(refY)
-    RLyRec[i] = delta*sum(K(t, refY[i]).*rhoCounts[100,:]);
+    RLyRec[i] = delta*sum(K(t, refY[i]).*rhoCounts[200,:]);
 end
 
-p1=plot(t, It)
-plot!(p1, t, KDEyWGF*5000)
-plot!(p1, t, rhoCounts[100, :])
-plot!(p1, t, @rget(RIDE_incidence))
+estimators = [It rhoCounts[200, :] @rget(RIDE_incidence) KDEyWGF*5000];
+p1=plot(t, estimators, lw = 1, label = ["true incidence" "RL" "RIDE" "WGF"],
+    color = [:black :gray :blue :red], line=[:dashdot :solid :solid :solid],
+    legendfontsize = 15, tickfontsize = 10)
+# savefig(p1,"synthetic_epidem_incidence.pdf")
 
-p2=scatter(t, muCounts)
-plot!(p2, t, KDEyRec*5000)
-plot!(p2, t, RLyRec[:])
-plot!(p2, t, @rget(RIDE_reconstruction))
-
-p3=plot(t, It_normalised)
-plot!(p3, t, KDEyWGF)
-plot!(p3, t, rhoCounts[100, :]/5000)
-plot!(p3, t, @rget(RIDE_incidence)/5000)
+reconvolutions = [RLyRec[:] @rget(RIDE_reconstruction) KDEyRec*5000]
+p2=scatter(t, muCounts, marker=:x, markersize=3, label = "reported cases", color = :black)
+plot!(p2, t, reconvolutions, lw = 1, label = ["RL" "RIDE" "WGF"],
+    color = [:gray :blue :red], line=[:solid :solid :solid],
+    legendfontsize = 15, tickfontsize = 10)
+# savefig(p2,"synthetic_epidem_reconvolution.pdf")

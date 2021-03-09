@@ -52,28 +52,40 @@ dt = 1e-1;
 # number of iterations
 Niter = 3000;
 # regularisation parameter
-alpha = 0.001;
+alpha = 0.0009;
 
+# misspecified or not
+misspecified = true;
 Nrep = 100;
 ise = zeros(3, Nrep);
+ise_reconvolved = zeros(3, Nrep);
 runtime = zeros(3, Nrep);
 for i=1:Nrep
-    # misspecified model
-    It_miss = copy(It);
-    for i in t[1:98]
-        if((mod(i, 6)==0) | (mod(i, 7)==0))
-            u = 0.2*rand(1) .+ 0.3;
-            proportion = floor.(u[1].*It[i]);
-            It_miss[i] = It_miss[i] .- proportion;
-            It_miss[i+2] = It_miss[i+2] .+ proportion;
+    if(misspecified)
+        # misspecified model
+        It_miss = copy(It);
+        for i in t[1:98]
+            if((mod(i, 6)==0) | (mod(i, 7)==0))
+                u = 0.2*rand(1) .+ 0.3;
+                proportion = floor.(u[1].*It[i]);
+                It_miss[i] = It_miss[i] .- proportion;
+                It_miss[i+2] = It_miss[i+2] .+ proportion;
+            end
         end
+        Isample = vcat(fill.(1:length(It_miss), Int.(It_miss))...);
+        # shuffle sample
+        shuffle!(Isample);
+        # well specified
+        muSample = round.(Isample .+ rand(MixtureModel(Normal, [(8.63, 2.56), (15.24, 5.39)], [0.595, 0.405]), length(Isample), 1), digits = 0);
+        muCounts = counts(Int.(muSample), 100);
+    else
+        Isample = vcat(fill.(1:length(It), Int.(It))...);
+        # shuffle sample
+        shuffle!(Isample);
+        # well specified
+        muSample = round.(Isample .+ rand(MixtureModel(Normal, [(8.63, 2.56), (15.24, 5.39)], [0.595, 0.405]), length(Isample), 1), digits = 0);
+         muCounts = counts(Int.(muSample), 100);
     end
-    Isample = vcat(fill.(1:length(It_miss), Int.(It_miss))...);
-    # shuffle sample
-    shuffle!(Isample);
-    # well specified
-    muSample = round.(Isample .+ rand(Gamma(10, 1), length(Isample), 1), digits = 0);
-    muCounts = counts(Int.(muSample), 100);
 
     # RL
     # initial distribution
@@ -82,6 +94,12 @@ for i=1:Nrep
     rhoCounts = RL(KDisc, muCounts, 100, pi0);
     end
     ise[1, i] = sum((rhoCounts[100, :]/5000 .- It_normalised).^2);
+    # recovolve RL
+    RLyRec = zeros(length(refY), 1);
+    for i=1:length(refY)
+        RLyRec[i] = delta*sum(K(t, refY[i]).*rhoCounts[200,:]);
+    end
+    ise_reconvolved[1, i] = sum((RLyRec/5000 .- muCounts/5000).^2);
 
     # RIDE
     R"""
@@ -92,10 +110,12 @@ for i=1:Nrep
     exectime <- toc()
     RIDE_exectime <- exectime$toc - exectime$tic
     RIDE_incidence <- RIDE_model$Ihat
+    # reconvolve RIDE
+    RIDE_reconstruction <- RIDE_model$Chat
     """
     runtime[2, i] = @rget RIDE_exectime;
-    RIDE_incidence = @rget(RIDE_incidence);
-    ise[2, i] = sum((RIDE_incidence/5000 .- It_normalised).^2);
+    ise[2, i] = sum((@rget(RIDE_incidence)/5000 .- It_normalised).^2);
+    ise_reconvolved[2, i] = sum((@rget(RIDE_reconstruction)/5000 .- muCounts/5000).^2);
 
     # WGF
     # initial distribution
@@ -109,8 +129,18 @@ for i=1:Nrep
     KDEyWGF = abs.(rcopy(RKDEyWGF[3]));
     end
     ise[3, i] = sum((KDEyWGF .- It_normalised).^2);
+    # recovolve WGF
+    refY = t;
+    delta = refY[2] - refY[1];
+    KDEyRec = zeros(length(refY), 1);
+    for i=1:length(refY)
+        KDEyRec[i] = delta*sum(K.(t, refY[i]).*KDEyWGF);
+    end
+    ise_reconvolved[3, i] = sum((KDEyRec/5000 .- muCounts/5000).^2);
 end
 mean(ise, dims = 2)
 times = mean(runtime, dims = 2);
-# using JLD;
-# save("sim_epidem8Mar2021.jld", "runtime", runtime, "ise", ise);
+using JLD;
+save("sim_epidem10Mar2021misspecified.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
+# ise = load("sim_epidem9Mar2021misspecified.jld", "ise");
+# runtime = load("sim_epidem9Mar2021misspecified.jld", "runtime");
