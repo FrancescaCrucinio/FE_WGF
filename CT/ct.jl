@@ -11,9 +11,10 @@ using LinearAlgebra;
 using DelimitedFiles;
 using Interpolations;
 using Images;
+using Distances;
+using KernelDensity;
 # R
 using RCall;
-@rimport ks as rks;
 R"""
 library(ggplot2)
 library(scales)
@@ -26,10 +27,6 @@ using samplers;
 # set seed
 Random.seed!(1234);
 
-# entropy function
-function remove_non_finite(x)
-       return isfinite(x) ? x : zero(x)
-end
 # data image
 sinogram = readdlm("CT/sinogramCT.txt", ',', Float64);
 pixels = size(sinogram, 2);
@@ -58,36 +55,67 @@ sigma = 0.01;
 muSample = histogram2D_sampler(sinogram, phi_angle, xi, 10^6);
 
 # grid
-Xbins = range(-0.75+ 1/pixels, stop = 0.75 - 1/pixels, length = pixels);
-Ybins = range(-0.75 + 1/pixels, stop = 0.75 - 1/pixels, length = pixels);
-gridX = repeat(Xbins, inner=[pixels, 1]);
-gridY = repeat(Ybins, outer=[pixels 1]);
-KDEeval = [gridX gridY];
-
-# WGF
-x, y = wgf_pet_tamed(Nparticles, dt, Niter, alpha, muSample, M, sigma, 0.5);
-
+dx = 100;
+X1bins = range(-0.75+ 1/dx, stop = 0.75 - 1/dx, length = dx);
+X2bins = range(-0.75 + 1/dx, stop = 0.75 - 1/dx, length = dx);
+gridX1 = repeat(X1bins, inner=[dx, 1]);
+gridX2 = repeat(X2bins, outer=[dx 1]);
+KDEeval = [gridX1 gridX2];
 # function computing KDE
-function psi(t)
-    RKDE = rks.kde(x = [t[1:Nparticles] t[(Nparticles+1):(2Nparticles)]], var"eval.points" = KDEeval);
-    return abs.(rcopy(RKDE[3]));
+function phi(t)
+    B = kde((t[1:Nparticles], t[(Nparticles+1):(2Nparticles)]));
+    Bpdf = pdf(B, X1bins, X2bins);
+    return abs.(Bpdf[:]);
 end
 # function computing entropy
 function psi_ent(t)
+    t = t./maximum(t);
     # entropy
     function remove_non_finite(x)
 	       return isfinite(x) ? x : 0
     end
     ent = -mean(remove_non_finite.(t .* log.(t)));
 end
+# function computing KL
+function psi_kl(t)
+    # kl
+    trueMu = sinogram;
+    refY1 = phi_angle;
+    refY2 = xi;
+    # approximated value
+    delta1 = refY1[2] - refY1[1];
+    delta2 = refY2[2] - refY2[1];
+    hatMu = zeros(length(refY2), length(refY1));
+    # convolution with approximated ρ
+    # this gives the approximated value
+    for i=1:length(refY2)
+        for j=1:length(refY1)
+            hatMu[i, j] = sum(pdf.(Normal.(0, sigma), KDEeval[:, 1] * cos(refY1[j]) .+
+                KDEeval[:, 2] * sin(refY1[j]) .- refY2[i]).*t);
+        end
+    end
+    hatMu = hatMu/maximum(hatMu);
+    kl = kl_divergence(trueMu[:], hatMu[:]);
+    return kl;
+end
+
+# WGF
+x, y = wgf_pet_tamed(Nparticles, dt, Niter, alpha, muSample, M, sigma, 0.5);
 
 # KDE
-KDEyWGF = mapslices(psi, [x y], dims = 2);
+KDEyWGF = mapslices(phi, [x y], dims = 2);
 # entropy
 ent = mapslices(psi_ent, KDEyWGF, dims = 2);
+# KL
+KLWGF = mapslices(psi_kl, KDEyWGF, dims = 2);
+
+# plot
+plot(KLWGF)
+plot(ent)
+plot(KLWGF .- alpha * ent)
+
 # last time step
 KDEyWGFfinal = psi([x[end, :] y[end, :]]);
-plot(ent)
 
 # plot
 R"""
