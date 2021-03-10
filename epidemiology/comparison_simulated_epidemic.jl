@@ -42,6 +42,8 @@ delay = 0.595*pdf.(Normal(8.63, 2.56), t) +
         0.405*pdf.(Normal(15.24, 5.39), t);
 delay = delay./(sum(delay));
 
+refY = t;
+delta = refY[2] - refY[1];
 # parameters for WGF
 # number of particles
 Nparticles = 500;
@@ -55,7 +57,7 @@ Niter = 3000;
 alpha = 0.0009;
 
 # misspecified or not
-misspecified = true;
+misspecified = false;
 Nrep = 100;
 ise = zeros(3, Nrep);
 ise_reconvolved = zeros(3, Nrep);
@@ -91,15 +93,16 @@ for i=1:Nrep
     # initial distribution
     pi0 = 100*rand(1, length(muCounts));
     runtime[1, i] = @elapsed begin
-    rhoCounts = RL(KDisc, muCounts, 100, pi0);
+    rhoCounts = RL(KDisc, muCounts, 200, pi0);
     end
-    ise[1, i] = sum((rhoCounts[100, :]/5000 .- It_normalised).^2);
+    ise[1, i] = sum((rhoCounts[200, :]/5000 .- It_normalised).^2);
     # recovolve RL
     RLyRec = zeros(length(refY), 1);
     for i=1:length(refY)
         RLyRec[i] = delta*sum(K(t, refY[i]).*rhoCounts[200,:]);
     end
-    ise_reconvolved[1, i] = sum((RLyRec/5000 .- muCounts/5000).^2);
+    RLyRec = RLyRec/sum(RLyRec);
+    ise_reconvolved[1, i] = sum((RLyRec .- muCounts/5000).^2);
 
     # RIDE
     R"""
@@ -111,11 +114,11 @@ for i=1:Nrep
     RIDE_exectime <- exectime$toc - exectime$tic
     RIDE_incidence <- RIDE_model$Ihat
     # reconvolve RIDE
-    RIDE_reconstruction <- RIDE_model$Chat
+    RIDE_reconstruction <- RIDE_model$Chat/sum(RIDE_model$Chat)
     """
     runtime[2, i] = @rget RIDE_exectime;
     ise[2, i] = sum((@rget(RIDE_incidence)/5000 .- It_normalised).^2);
-    ise_reconvolved[2, i] = sum((@rget(RIDE_reconstruction)/5000 .- muCounts/5000).^2);
+    ise_reconvolved[2, i] = sum((@rget(RIDE_reconstruction) .- muCounts/5000).^2);
 
     # WGF
     # initial distribution
@@ -130,17 +133,17 @@ for i=1:Nrep
     end
     ise[3, i] = sum((KDEyWGF .- It_normalised).^2);
     # recovolve WGF
-    refY = t;
-    delta = refY[2] - refY[1];
     KDEyRec = zeros(length(refY), 1);
     for i=1:length(refY)
         KDEyRec[i] = delta*sum(K.(t, refY[i]).*KDEyWGF);
     end
-    ise_reconvolved[3, i] = sum((KDEyRec/5000 .- muCounts/5000).^2);
+    KDEyRec = KDEyRec/sum(KDEyRec);
+    ise_reconvolved[3, i] = sum((KDEyRec .- muCounts/5000).^2);
 end
 mean(ise, dims = 2)
+mean(ise_reconvolved, dims = 2)
 times = mean(runtime, dims = 2);
 using JLD;
-save("sim_epidem10Mar2021misspecified.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
+# save("sim_epidem11Mar2021wellspecified.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
 # ise = load("sim_epidem9Mar2021misspecified.jld", "ise");
 # runtime = load("sim_epidem9Mar2021misspecified.jld", "runtime");

@@ -116,8 +116,9 @@ RIDE_model <- fit_incidence(
   delay_dist = $delay)
 toc()
 RIDE_incidence <- RIDE_model$Ihat
-RIDE_reconstruction <- RIDE_model$Chat
+RIDE_reconstruction <- RIDE_model$Chat*5000/sum(RIDE_model$Chat)
 """
+
 # recovolve WGF
 refY = t;
 delta = refY[2] - refY[1];
@@ -125,19 +126,22 @@ KDEyRec = zeros(length(refY), 1);
 for i=1:length(refY)
     KDEyRec[i] = delta*sum(K.(t, refY[i]).*KDEyWGF);
 end
+KDEyRec = KDEyRec*5000/sum(KDEyRec);
+
 # recovolve RL
 RLyRec = zeros(length(refY), 1);
 for i=1:length(refY)
     RLyRec[i] = delta*sum(K(t, refY[i]).*rhoCounts[200,:]);
 end
+RLyRec = RLyRec*5000/sum(RLyRec);
 
-estimators = [It rhoCounts[200, :] @rget(RIDE_incidence) KDEyWGF*5000];
+estimators = [It_normalised rhoCounts[200, :]/5000 @rget(RIDE_incidence)/5000 KDEyWGF];
 p1=plot(t, estimators, lw = 1, label = ["true incidence" "RL" "RIDE" "WGF"],
     color = [:black :gray :blue :red], line=[:dashdot :solid :solid :solid],
     legendfontsize = 15, tickfontsize = 10)
 # savefig(p1,"synthetic_epidem_incidence.pdf")
 
-reconvolutions = [RLyRec[:] @rget(RIDE_reconstruction) KDEyRec*5000]
+reconvolutions = [RLyRec[:] @rget(RIDE_reconstruction) KDEyRec]
 p2=scatter(t, muCounts, marker=:x, markersize=3, label = "reported cases", color = :black)
 plot!(p2, t, reconvolutions, lw = 1, label = ["RL" "RIDE" "WGF"],
     color = [:gray :blue :red], line=[:solid :solid :solid],

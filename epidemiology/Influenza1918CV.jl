@@ -62,7 +62,7 @@ dt = 1e-1;
 # number of iterations
 Niter = 3000;
 # regularisation parameters
-alpha = range(0.001, stop = 0.01, length = 10);
+alpha = range(0.0001, stop = 0.001, length = 10);
 
 # divide muSample into groups
 L = 5;
@@ -79,11 +79,11 @@ Threads.@threads for i=1:length(alpha)
         muSampleL = muSampleL[:];
         # prior mean = mean of μ shifted back by 9 days
         # initial distribution
-        x0 = sample(muSampleL, M, replace = true) .- 9;
+        x0 = sample(muSampleL, M, replace = false) .- 9;
         m0 = mean(muSampleL) - 9;
         sigma0 = std(muSampleL);
         # WGF
-        x = wgf_flu_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSample, M, 0.5);
+        x = wgf_flu_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSample, M);
         # functional
         E[i, l] = psi(x[Niter, :], alpha[i], m0, sigma0);
         println("$i, $l")
