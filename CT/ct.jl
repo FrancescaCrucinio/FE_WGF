@@ -21,7 +21,7 @@ library(scales)
 library(viridis)
 """
 # custom packages
-using wgf;
+using wgf_prior;
 using samplers;
 
 # set seed
@@ -40,41 +40,31 @@ offsets = floor(size(sinogram, 1)/2);
 xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
 xi = xi/maximum(xi);
 
-# dt and number of iterations
-dt = 1e-02;
-Niter = 100;
-# samples from h(y)
-M = 10000;
-# number of particles
-Nparticles = 10000;
-# regularisation parameter
-alpha = 0.001;
-# variance of normal describing alignment
-sigma = 0.01;
 # sample from μ
 muSample = histogram2D_sampler(sinogram, phi_angle, xi, 10^6);
 
 # grid
-dx = 100;
-X1bins = range(-0.75+ 1/dx, stop = 0.75 - 1/dx, length = dx);
-X2bins = range(-0.75 + 1/dx, stop = 0.75 - 1/dx, length = dx);
-gridX1 = repeat(X1bins, inner=[dx, 1]);
-gridX2 = repeat(X2bins, outer=[dx 1]);
+X1bins = range(-0.75+ 1/pixels[1], stop = 0.75 - 1/pixels[1], length = pixels[1]);
+X2bins = range(-0.75 + 1/pixels[2], stop = 0.75 - 1/pixels[2], length = pixels[2]);
+gridX1 = repeat(X1bins, inner=[pixels[2], 1]);
+gridX2 = repeat(X2bins, outer=[pixels[1] 1]);
 KDEeval = [gridX1 gridX2];
-# function computing KDE
-function phi(t)
-    B = kde((t[1:Nparticles], t[(Nparticles+1):(2Nparticles)]));
-    Bpdf = pdf(B, X1bins, X2bins);
-    return abs.(Bpdf[:]);
-end
-# function computing entropy
-function psi_ent(t)
-    t = t./maximum(t);
-    # entropy
-    function remove_non_finite(x)
-	       return isfinite(x) ? x : 0
+
+# functional approximation
+function psi(piSample)
+    loglik = zeros(1, size(muSample, 1));
+    for i=1:size(muSample, 1)
+        loglik[i] = mean(pdf.(Normal.(0, sigma), piSample[:, 1] * cos(muSample[i, 1]) .+
+            piSample[:, 2] * sin(muSample[i, 1]) .- muSample[i, 2]));
     end
-    ent = -mean(remove_non_finite.(t .* log.(t)));
+    loglik = -log.(loglik);
+    kl = mean(loglik);
+    prior = pdf.(MvNormal(m0, sigma0), piSample);
+    piKDE = kde((piSample[:, 1],  piSample[:, 2]));
+    pihat = pdf(piKDE, piSample[:, 1], piSample[:, 2]);
+    pihat = abs.(pihat[:]);
+    kl_prior = mean(log.(pihat./prior));
+    return kl+alpha*kl_prior;
 end
 # function computing KL
 function psi_kl(t)
@@ -102,6 +92,34 @@ end
 # WGF
 x, y = wgf_pet_tamed(Nparticles, dt, Niter, alpha, muSample, M, sigma, 0.5);
 
+# parameters for WGF
+# number of particles
+Nparticles = 1000;
+# number of samples from μ to draw at each iteration
+M = 1000;
+# time discretisation
+dt = 1e-2;
+# number of iterations
+Niter = 100;
+# regularisation parameter
+alpha = 0.0017;
+# initial distribution
+x0 =
+# prior mean
+m0 =
+sigma0 =
+# variance of normal describing alignment
+sigma = 0.01;
+
+# WGF
+tWGF = @elapsed begin
+x1, x2 = wgf_ct_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M, sigma, 0.5);
+end
+
+# check convergence
+EWGF = mapslices(psi, [x1 x2], dims = 2);
+plot(EWGF)
+
 # KDE
 KDEyWGF = mapslices(phi, [x y], dims = 2);
 # entropy
@@ -120,14 +138,11 @@ KDEyWGFfinal = psi([x[end, :] y[end, :]]);
 # plot
 R"""
     # solution
-    data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = $KDEyWGFfinal);
-    p <- ggplot(data, aes(x, y)) +
+    data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = $KDEyWGF);
+    p2 <- ggplot(data, aes(x, y)) +
         geom_raster(aes(fill = z), interpolate=TRUE) +
         theme_void() +
         theme(legend.position = "none", aspect.ratio=1) +
-        scale_fill_gradient(low = "black", high = "white")
-    # ggsave("ct.eps", p)
+        scale_fill_viridis(discrete=FALSE, option="magma")
+    # ggsave("ct.eps", p2)
 """
-# ctWGF = reshape(KDEyWGFfinal, (pixels, pixels));
-# res = map(clamp01nan, Gray.(ctWGF))
-# save("ct.png", Gray.(ctWGF))

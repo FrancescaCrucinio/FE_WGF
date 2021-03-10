@@ -1,4 +1,4 @@
-# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
@@ -12,7 +12,7 @@ using Distances;
 using RCall;
 @rimport ks as rks
 # custom packages
-using wgf;
+using wgf_prior;
 
 # set seed
 Random.seed!(1234);
@@ -65,32 +65,19 @@ toc()
 names(outcome)<-c('PI_bandwidth','DKDE_nonrescaledPI','DKDE_rescaledPI','CV_bandwidth','DKDE_rescaledCV','normal_bandwidth','naive_KDE')
 """
 
-a = 1;
-# function computing KDE
-function phi(t)
-    RKDE = rks.kde(x = t, var"eval.points" = @rget xx);
-    return abs.(rcopy(RKDE[3]));
-end
-# function computing E
-function psi(t)
-    # entropy
-    function remove_non_finite(x)
-	       return isfinite(x) ? x : 0
+# functional approximation
+function psi(piSample, a, m0, sigma0)
+    loglik = zeros(1, length(muSample));
+    for i=1:length(muSample)
+        loglik[i] = mean(pdf.(Laplace.(muSample[i], sigU), piSample));
     end
-    ent = -mean(remove_non_finite.(t .* log.(t)));
-    # kl
-    trueMu = @rget muKDE;
-    refY = @rget xx;
-    # approximated value
-    delta = refY[2] - refY[1];
-    hatMu = zeros(1, length(refY));
-    # convolution with approximated f
-    # this gives the approximated value
-    for i=1:length(refY)
-        hatMu[i] = delta*sum(pdf.(Laplace.(refY, sigU), refY[i]).*t);
-    end
-    kl = kl_divergence(trueMu, hatMu);
-    return kl-a*ent;
+    loglik = -log.(loglik);
+    kl = mean(loglik);
+    prior = pdf.(Normal(m0, sigma0), piSample);
+    Rpihat = rks.kde(x = piSample, var"eval.points" = piSample);
+    pihat = abs.(rcopy(Rpihat[3]));
+    kl_prior = mean(prior./pihat .- 1 .- log.(prior./pihat));
+    return kl+a*kl_prior;
 end
 
 # get sample from μ
@@ -99,12 +86,17 @@ muSample = @rget W;
 sigU = @rget sigU;
 
 # parameters for WGF
-alpha = range(0.05, stop = 0.2, length = 10);
+# number of particles
 Nparticles = 500;
-dt = 1e-2;
-Niter = 1000;
+# number of samples from μ to draw at each iteration
 M = 500;
-x0 = sample(muSample, Nparticles, replace = true);
+# time discretisation
+dt = 1e-2;
+# number of iterations
+Niter = 500;
+# regularisation parameter
+alpha = range(0.0001, stop = 0.005, length = 10);
+
 # divide muSample into groups
 L = 5;
 muSample = reshape(muSample, (L, Int(length(muSample)/L)));
@@ -114,12 +106,16 @@ for i=1:length(alpha)
     for l=1:L
         # get reduced sample
         muSampleL = muSample[1:end .!= l, :];
+        muSampleL = muSampleL[:];
+        # initial distribution
+        x0 = sample(muSampleL, M, replace = false);
+        # prior mean = mean of μ
+        m0 = mean(muSampleL);
+        sigma0 = std(muSampleL);
         # WGF
-        x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha[i], x0, muSampleL, M, 0.5, sigU);
-        # KL
-        a = alpha[i];
-        KDE = phi(x[Niter, :]);
-        E[i, l] = psi(KDE);
+        x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSampleL, M, sigU);
+        # functional
+        E[i, l] = psi(x[Niter, :], alpha[i], m0, sigma0);
         println("$i, $l")
     end
 end

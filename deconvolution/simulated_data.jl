@@ -11,7 +11,7 @@ using Distances;
 using RCall;
 @rimport ks as rks;
 # custom packages
-using wgf;
+using wgf_prior;
 
 # set seed
 Random.seed!(1234);
@@ -65,31 +65,19 @@ toc()
 names(outcome)<-c('PI_bandwidth','DKDE_nonrescaledPI','DKDE_rescaledPI','CV_bandwidth','DKDE_rescaledCV','normal_bandwidth','naive_KDE')
 """
 
-# function computing KDE
-function phi(t)
-    RKDE = rks.kde(x = t, var"eval.points" = @rget xx);
-    return abs.(rcopy(RKDE[3]));
-end
-# function computing E
-function psi(t)
-    # entropy
-    function remove_non_finite(x)
-	       return isfinite(x) ? x : 0
+# functional approximation
+function psi(piSample)
+    loglik = zeros(1, length(muSample));
+    for i=1:length(muSample)
+        loglik[i] = mean(pdf.(Laplace.(muSample[i], sigU), piSample));
     end
-    ent = -mean(remove_non_finite.(t .* log.(t)));
-    # kl
-    trueH = @rget muKDE;
-    refY = @rget xx;
-    # approximated value
-    delta = refY[2] - refY[1];
-    hatH = zeros(1, length(refY));
-    # convolution with approximated f
-    # this gives the approximated value
-    for i=1:length(refY)
-        hatH[i] = delta*sum(pdf.(Laplace.(refY, sigU), refY[i]).*t);
-    end
-    kl = kl_divergence(trueH, hatH);
-    return kl-alpha*ent;
+    loglik = -log.(loglik);
+    kl = mean(loglik);
+    prior = pdf.(Normal(m0, sigma0), piSample);
+    Rpihat = rks.kde(x = piSample, var"eval.points" = piSample);
+    pihat = abs.(rcopy(Rpihat[3]));
+    kl_prior = mean(log.(pihat./prior));
+    return kl+alpha*kl_prior;
 end
 
 # get sample from μ
@@ -98,22 +86,30 @@ muSample = @rget W;
 sigU = @rget sigU;
 
 # parameters for WGF
-alpha = 0.085;
+# number of particles
 Nparticles = 500;
-dt = 1e-2;
-Niter = 1000;
+# number of samples from μ to draw at each iteration
 M = 500;
-x0 = sample(muSample, Nparticles, replace = true);
+# time discretisation
+dt = 1e-2;
+# number of iterations
+Niter = 500;
+# regularisation parameter
+alpha = 0.0017;
+# initial distribution
+x0 = sample(muSample, M, replace = false);
+# prior mean = mean of μ
+m0 = mean(muSample);
+sigma0 = std(muSample);
+
 tWGF = @elapsed begin
-x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha, x0, muSample, M, 0.5, sigU);
+x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M, sigU);
 end
 println("WGF done, $tWGF")
 
 # check convergence
-KDEyWGF = mapslices(phi, x, dims = 2);
-EWGF = mapslices(psi, KDEyWGF, dims = 2);
+EWGF = mapslices(psi, x, dims = 2);
 plot(EWGF)
-
 # plot
 R"""
     # WGF estimator

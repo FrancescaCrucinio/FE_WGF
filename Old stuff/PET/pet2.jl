@@ -9,7 +9,6 @@ using StatsBase;
 using Random;
 using LinearAlgebra;
 using DelimitedFiles;
-using Interpolations;
 using Distances;
 using Images;
 using KernelDensity;
@@ -97,7 +96,7 @@ M = 5000;
 # number of particles
 Nparticles = 5000;
 # regularisation parameter
-alpha = 1;
+alpha = 0.026;
 # variance of normal describing alignment
 sigma = 0.02;
 # sample from μ
