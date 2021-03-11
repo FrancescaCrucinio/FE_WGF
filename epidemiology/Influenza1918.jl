@@ -34,6 +34,8 @@ Philadelphia_model <- fit_incidence(
   reported = spanish_flu$Philadelphia,
   delay_dist = spanish_flu_delay_dist$proportion)
 toc()
+RIDE_reconstruction <- Philadelphia_model$Chat/sum(Philadelphia_model$Chat)
+RIDE_incidence <- Philadelphia_model$Ihat
 """
 # get counts from μ
 muCounts = Int.(@rget death_counts);
@@ -74,7 +76,7 @@ x0 = sample(muSample, M, replace = false) .- 9;
 m0 = mean(muSample) - 9;
 sigma0 = std(muSample);
 # regularisation parameter
-alpha = 0.002;
+alpha = 0.0002;
 runtimeWGF = @elapsed begin
 # run WGF
 x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);
@@ -105,61 +107,35 @@ for i=1:length(muCounts)
     end
 end
 runtimeRL = @elapsed begin
-rhoCounts = RL(KDisc, muCounts, 100, rho0);
+rhoCounts = RL(KDisc, muCounts, 200, rho0);
 end
 # recovolve WGF
 refY = KDEx;
 delta = refY[2] - refY[1];
-KDEyRec = zeros(1, length(refY));
+KDEyRec = zeros(length(refY), 1);
 for i=1:length(refY)
     KDEyRec[i] = delta*sum(K.(KDEx, refY[i]).*KDEyWGF);
 end
+KDEyRec = KDEyRec/sum(KDEyRec);
 
 # recovolve RL
-RLyRec = zeros(1, length(refY));
+RLyRec = zeros(length(refY), 1);
 for i=1:length(refY)
     t = refY[i] .- KDEx;
     nonnegative = (t .>= 1) .& (t .<= 31);
-        RLyRec[i] = delta*sum(K_prop[t[nonnegative]].*rhoCounts[100, nonnegative]);
+        RLyRec[i] = delta*sum(K_prop[t[nonnegative]].*rhoCounts[200, nonnegative]);
 end
-# plot
-R"""
-library(ggplot2)
-g <- rep(1:3, , each = length(spanish_flu$Date));
-data <- data.frame(x = rep(spanish_flu$Date, times = 3), y = c($rhoCounts[100,]/sum($rhoCounts[100,]), Philadelphia_model$Ihat/sum(Philadelphia_model$Ihat), $KDEyWGF), g = factor(g))
-p1 <- ggplot(data, aes(x, y, color = g)) +
-geom_line(size = 2) +
-scale_color_manual(values = c("gray", "red", "blue"), labels=c("RL", "RIDE", "WGF")) +
-theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3, , legend.position="none")
-# ggsave("flu1918_reconstruction.eps", p1,  height=4)
+RLyRec = RLyRec/sum(RLyRec);
 
-# reconstructed death counts
-g <- rep(1:4, , each = length(spanish_flu$Date));
-data <- data.frame(x = rep(spanish_flu$Date, times = 4), y = c($RLyRec, Philadelphia_model$reported, Philadelphia_model$Chat, $KDEyRec*sum(Philadelphia_model$reported)), g = factor(g))
-p2 <- ggplot(data, aes(x, y, color = g)) +
-geom_line(data = data[data$g!=1, ], size = 2) +
-geom_point(data = data[data$g==1, ], size = 3, shape = 3) +
-scale_color_manual(values = c("black", "gray", "red", "blue"), labels=c("recorded", "RL", "RIDE", "WGF")) +
-theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3, legend.position="none")
-# ggsave("flu1918_reconv.eps", p2,  height=4)
+estimators = [rhoCounts[200, :]/sum(rhoCounts[200, :]) @rget(RIDE_incidence)/sum(@rget(RIDE_incidence)) KDEyWGF];
+p1=plot(KDEx, estimators, lw = 1, label = ["RL" "RIDE" "WGF"],
+    color = [:gray :blue :red], line=[:solid :solid :solid],
+    legendfontsize = 15, tickfontsize = 10)
+# savefig(p1,"1918flu_incidence.pdf")
 
-# save legend separately
-p3 <- ggplot(data, aes(x, y, color = g)) +
-geom_line(data = data[data$g!=1, ], size = 2) +
-geom_point(data = data[data$g==1, ], size = 3, shape = 3) +
-scale_color_manual(values = c("black", "gray", "red", "blue"), labels=c("recorded", "RL", "RIDE", "WGF")) +
-theme(axis.title=element_blank(), text = element_text(size=20), legend.title=element_blank(), aspect.ratio = 2/3, legend.position="bottom")
-
-g_legend <- function(a.gplot){
-  tmp <- ggplot_gtable(ggplot_build(a.gplot))
-  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
-  legend <- tmp$grobs[[leg]]
-  return(legend)
-}
-
-mylegend <- g_legend(p3)
-library(grid)
-grid.draw(mylegend)
-
-# ggsave("flu1918_legend.eps", mylegend,  height=2)
-"""
+reconvolutions = [RLyRec[:] @rget(RIDE_reconstruction) KDEyRec].*sum(muCounts);
+p2=scatter(KDEx, muCounts, marker=:x, markersize=3, label = "reported cases", color = :black)
+plot!(p2, KDEx, reconvolutions, lw = 1, label = ["RL" "RIDE" "WGF"],
+    color = [:gray :blue :red], line=[:solid :solid :solid],
+    legendfontsize = 15, tickfontsize = 10)
+# savefig(p2,"1918flu_reconvolution.pdf")
