@@ -80,9 +80,9 @@ alpha = 0.0002;
 runtimeWGF = @elapsed begin
 # run WGF
 x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);
-end
 RKDEyWGF = rks.kde(x = x[Niter, :], var"eval.points" = KDEx);
 KDEyWGF = abs.(rcopy(RKDEyWGF[3]));
+end
 # check convergence
 EWGF = mapslices(psi, x, dims = 2);
 plot(EWGF)
