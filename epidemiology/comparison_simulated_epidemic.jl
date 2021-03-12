@@ -1,4 +1,5 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -57,7 +58,7 @@ Niter = 3000;
 alpha = 0.0009;
 
 # misspecified or not
-misspecified = false;
+misspecified = true;
 Nrep = 100;
 ise = zeros(3, Nrep);
 ise_reconvolved = zeros(3, Nrep);
@@ -144,6 +145,6 @@ mean(ise, dims = 2)
 mean(ise_reconvolved, dims = 2)
 times = mean(runtime, dims = 2);
 using JLD;
-# save("sim_epidem11Mar2021wellspecified.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
+save("sim_epidem11Mar2021misspecified.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
 # ise = load("sim_epidem9Mar2021misspecified.jld", "ise");
 # runtime = load("sim_epidem9Mar2021misspecified.jld", "runtime");
