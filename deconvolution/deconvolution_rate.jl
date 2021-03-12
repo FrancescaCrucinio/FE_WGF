@@ -40,7 +40,7 @@ alpha = [0.0034 0.0023 0.0006 0.0005 0.0005];
 NSR = 0.2;
 
 
-Nrep = 2;
+Nrep = 100;
 isePI = zeros(length(Nparticles), Nrep);
 iseCV = zeros(length(Nparticles), Nrep);
 iseWGF = zeros(length(Nparticles), Nrep);
@@ -93,3 +93,31 @@ for i=1:length(Nparticles)
         iseWGF[i, j] = dx*sum((true_density .- KDEyWGF).^2);
     end
 end
+
+runtimeWGF = mean(timeWGF, dims = 2);
+runtimePI = mean(timePI, dims = 2);
+runtimeCV = mean(timeCV, dims = 2);
+errorWGF = mean(iseWGF, dims = 2);
+errorPI = mean(isePI, dims = 2);
+errorCV = mean(iseCV, dims = 2);
+
+p = plot(runtimePI, errorPI, xaxis = :log, lw = 3, color = :gray, line = :dashdot, label = "DKDEpi",
+    legendfontsize = 15, tickfontsize = 10)
+plot!(p, runtimeCV, errorCV, xaxis = :log, lw = 3, color = :blue, line = :dot,  label = "DKDEcv")
+plot!(p, runtimeWGF, errorWGF, xaxis = :log, lw = 3, color = :red, line = :solid, label = "WGF")
+markers = [:circle :rect :diamond :star5 :utriangle];
+for i=1:length(Nparticles)
+    N = Nparticles[i];
+    scatter!(p, [runtimePI[i]], [errorPI[i]], xaxis = :log, color = :black,
+        markerstrokecolor = :black, marker = markers[i], markersize = 5, label = "N = $N")
+    scatter!(p, [runtimePI[i]], [errorPI[i]], xaxis = :log, color = :gray,
+        markerstrokecolor = :gray, marker = markers[i], markersize = 5, label = "")
+    scatter!(p, [runtimeCV[i]], [errorCV[i]], xaxis = :log, color = :blue,
+        markerstrokecolor = :blue, marker = markers[i], markersize = 5, label = "")
+    scatter!(p, [runtimeWGF[i]], [errorWGF[i]], xaxis = :log, color = :red,
+        markerstrokecolor = :red, marker = markers[i], markersize = 5, label = "")
+end
+
+using JLD;
+save("deconv_rate12Mar2021.jld", "timeWGF", timeWGF, "timeCV", timeCV, "timePI", timePI,
+     "iseWGF", iseWGF, "iseCV", iseCV, "isePI", isePI);
