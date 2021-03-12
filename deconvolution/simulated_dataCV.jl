@@ -25,7 +25,7 @@ library(fDKDE)
 NSR=0.2
 
 #Sample size
-n=500
+n=1000
 
 #Generate data from a normal mixture
 X=rnorm(n,5,.4);
@@ -87,15 +87,13 @@ sigU = @rget sigU;
 
 # parameters for WGF
 # number of particles
-Nparticles = 500;
-# number of samples from μ to draw at each iteration
-M = 500;
+Nparticles = 5000;
 # time discretisation
 dt = 1e-2;
 # number of iterations
 Niter = 500;
 # regularisation parameter
-alpha = range(0.0001, stop = 0.005, length = 10);
+alpha = range(0.0001, stop = 0.001, length = 10);
 
 # divide muSample into groups
 L = 5;
@@ -107,8 +105,10 @@ for i=1:length(alpha)
         # get reduced sample
         muSampleL = muSample[1:end .!= l, :];
         muSampleL = muSampleL[:];
+        # number of samples from μ to draw at each iteration
+        M = min(Nparticles, length(muSampleL));
         # initial distribution
-        x0 = sample(muSampleL, M, replace = false);
+        x0 = sample(muSampleL, Nparticles, replace = true);
         # prior mean = mean of μ
         m0 = mean(muSampleL);
         sigma0 = std(muSampleL);

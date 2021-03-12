@@ -25,7 +25,7 @@ set.seed(1234);
 NSR=0.2
 
 #Sample size
-n=500
+n=1000
 
 #Generate data from a normal mixture
 X=rnorm(n,5,.4);
@@ -87,9 +87,9 @@ sigU = @rget sigU;
 
 # parameters for WGF
 # number of particles
-Nparticles = 500;
+Nparticles = 1000;
 # number of samples from μ to draw at each iteration
-M = 500;
+M = 1000;
 # time discretisation
 dt = 1e-2;
 # number of iterations
