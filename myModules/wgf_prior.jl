@@ -84,7 +84,7 @@ function wgf_DKDE_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, M, sigU)
         # gradient and drift
         drift = zeros(N, 1);
         for i=1:N
-            gradient = pdf.(Laplace.(x[n, i], sigU), y) .* (-sign.(x[n, i] .- y)/sigU);
+            gradient = pdf.(Normal.(0, sigU), y .- x[n, i]) .* (y .- x[n, i])/sigU^2;
             drift[i] = mean(gradient./muN) + alpha*(x[n, i] .- m0)/sigma0^2;
         end
         # update locations

@@ -19,7 +19,7 @@ library(incidental)
 # set seed
 Random.seed!(1234);
 
-# pathological example
+# synthetic data
 K(x, y) = 0.595*pdf.(Normal(8.63, 2.56), y .- x) +
         0.405*pdf.(Normal(15.24, 5.39), y .- x);
 t = 1:100;

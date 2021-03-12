@@ -63,9 +63,9 @@ end
 
 # parameters for WGF
 # number of particles
-Nparticles = 100;
+Nparticles = 500;
 # number of samples from μ to draw at each iteration
-M = 100;
+M = 500;
 # time discretisation
 dt = 1e-1;
 # number of iterations
@@ -77,8 +77,8 @@ m0 = mean(muSample) - 9;
 sigma0 = std(muSample);
 # regularisation parameter
 alpha = 0.0002;
-runtimeWGF = @elapsed begin
 # run WGF
+runtimeWGF = @elapsed begin
 x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);
 RKDEyWGF = rks.kde(x = x[Niter, :], var"eval.points" = KDEx);
 KDEyWGF = abs.(rcopy(RKDEyWGF[3]));
