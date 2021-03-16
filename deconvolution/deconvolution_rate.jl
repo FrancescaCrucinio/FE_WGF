@@ -27,20 +27,20 @@ dx = KDEx[2] - KDEx[1];
 true_density = pdf.(MixtureModel(Normal, [(5, 0.4), (2, 1)], [0.25, 0.75]), KDEx);
 # parameters for WGF
 # number of particles
-Nparticles = [100 500 1000 5000 10000];
+Nparticles = [100 500 1000 5000];
 # time discretisation
 dt = 1e-2;
 # number of iterations
 Niter = 500;
 # regularisation parameter
-alpha = [0.0034 0.0023 0.0006 0.0005 0.0005];
+alpha = 0.1;
 
 # synthetic data
 # noise to signal ratio
 NSR = 0.2;
 
 
-Nrep = 100;
+Nrep = 10;
 isePI = zeros(length(Nparticles), Nrep);
 iseCV = zeros(length(Nparticles), Nrep);
 iseWGF = zeros(length(Nparticles), Nrep);
@@ -86,7 +86,7 @@ for i=1:length(Nparticles)
         M = min(Nparticles[i], 10^3);
         x0 = sample(muSampleWGF, Nparticles[i], replace = true);
         timeWGF[i, j] = @elapsed begin
-        x = wgf_DKDE_tamed(Nparticles[i], dt, Niter, alpha[i], x0, m0, sigma0, muSampleWGF, M, error_sdWGF);
+        x = wgf_DKDE_tamed(Nparticles[i], dt, Niter, alpha, x0, m0, sigma0, muSampleWGF, M, error_sdWGF);
         RKDEyWGF = rks.kde(x = x[Niter, :], var"eval.points" = KDEx);
         KDEyWGF = abs.(rcopy(RKDEyWGF[3]));
         end
@@ -101,11 +101,11 @@ errorWGF = mean(iseWGF, dims = 2);
 errorPI = mean(isePI, dims = 2);
 errorCV = mean(iseCV, dims = 2);
 
-p = plot(runtimePI, errorPI, xaxis = :log, lw = 3, color = :gray, line = :dashdot, label = "DKDEpi",
-    legendfontsize = 15, tickfontsize = 10)
+p = plot(runtimePI, errorPI, yaxis = :log, xaxis = :log, lw = 3, color = :gray, line = :dashdot, label = "DKDEpi",
+    legendfontsize = 10, tickfontsize = 10, legend = :outerright)
 plot!(p, runtimeCV, errorCV, xaxis = :log, lw = 3, color = :blue, line = :dot,  label = "DKDEcv")
 plot!(p, runtimeWGF, errorWGF, xaxis = :log, lw = 3, color = :red, line = :solid, label = "WGF")
-markers = [:circle :rect :diamond :star5 :utriangle];
+markers = [:circle :rect :diamond :star5 :xcross];
 for i=1:length(Nparticles)
     N = Nparticles[i];
     scatter!(p, [runtimePI[i]], [errorPI[i]], xaxis = :log, color = :black,
@@ -119,5 +119,5 @@ for i=1:length(Nparticles)
 end
 
 using JLD;
-save("deconv_rate12Mar2021.jld", "timeWGF", timeWGF, "timeCV", timeCV, "timePI", timePI,
+save("deconv_rate14Mar2021.jld", "timeWGF", timeWGF, "timeCV", timeCV, "timePI", timePI,
      "iseWGF", iseWGF, "iseCV", iseCV, "isePI", isePI);
