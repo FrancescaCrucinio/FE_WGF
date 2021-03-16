@@ -46,7 +46,7 @@ true_density = pi(KDEx);
 epsilon = 1e-3;
 alpha = 2e-2;
 # number of repetitions
-Nrep = 1;
+Nrep = 10;
 
 # diagnostics
 tPI = zeros(length(Nparticles), 1);
@@ -147,22 +147,22 @@ for i=1:length(Nparticles)
     qdistWGF[:, i] = mean(qdistrepWGF, dims = 1);
 end
 
-p = plot(tPI, isePI, xaxis = :log, lw = 3, color = :gray, line = :dashdot, label = "DKDEpi",
+p = plot(tPI, isePI, xaxis = :log, lw = 3, color = :orange, line = :dashdotdot, label = "DKDEpi",
     legendfontsize = 10, tickfontsize = 10, legend = :outerright)
 plot!(p, tCV, iseCV, xaxis = :log, lw = 3, color = :blue, line = :dot,  label = "DKDEcv")
-plot!(p, tSMC, iseSMC, xaxis = :log, lw = 3, color = :green, line = :dot,  label = "SMC-EMS")
+plot!(p, tSMC, iseSMC, xaxis = :log, lw = 3, color = :purple, line = :dash,  label = "SMC-EMS")
 plot!(p, tWGF, iseWGF, xaxis = :log, lw = 3, color = :red, line = :solid, label = "WGF")
 markers = [:circle :rect :diamond :star5 :xcross];
 for i=1:length(Nparticles)
     N = Nparticles[i];
     scatter!(p, [tPI[i]], [isePI[i]], xaxis = :log, color = :black,
         markerstrokecolor = :black, marker = markers[i], markersize = 5, label = "N = $N")
-    scatter!(p, [tPI[i]], [isePI[i]], xaxis = :log, color = :gray,
-        markerstrokecolor = :gray, marker = markers[i], markersize = 5, label = "")
+    scatter!(p, [tPI[i]], [isePI[i]], xaxis = :log, color = :orange,
+        markerstrokecolor = :orange, marker = markers[i], markersize = 5, label = "")
     scatter!(p, [tCV[i]], [iseCV[i]], xaxis = :log, color = :blue,
         markerstrokecolor = :blue, marker = markers[i], markersize = 5, label = "")
-    scatter!(p, [tSMC[i]], [iseSMC[i]], xaxis = :log, color = :green,
-        markerstrokecolor = :green, marker = markers[i], markersize = 5, label = "")
+    scatter!(p, [tSMC[i]], [iseSMC[i]], xaxis = :log, color = :purple,
+        markerstrokecolor = :purple, marker = markers[i], markersize = 5, label = "")
     scatter!(p, [tWGF[i]], [iseWGF[i]], xaxis = :log, color = :red,
         markerstrokecolor = :red, marker = markers[i], markersize = 5, label = "")
 end
