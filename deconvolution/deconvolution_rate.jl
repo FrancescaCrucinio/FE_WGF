@@ -172,3 +172,9 @@ end
 save("deconv_rate16Mar2021.jld", "tPI", tPI, "tCV", tCV, "tWGF", tWGF, "tSMC", tSMC,
      "iseWGF", iseWGF, "iseCV", iseCV, "isePI", isePI, "iseSMC", iseSMC,
      "qdistPI", qdistPI, "qdistCV", qdistCV, "qdistSMC", qdistSMC, "qdistWGF", qdistWGF);
+
+bp1 = boxplot(transpose(tPI), qdistPI, yaxis = :log, legend = :none)
+bp2 = boxplot(transpose(tCV), qdistCV, yaxis = :log, legend = :none)
+bp3 = boxplot(transpose(tSMC), qdistSMC, yaxis = :log, legend = :none)
+bp4 = boxplot(transpose(tWGF), qdistWGF, yaxis = :log, legend = :none)
+plot(bp1, bp2, bp3, bp4, layout = (2, 2))

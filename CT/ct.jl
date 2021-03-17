@@ -8,18 +8,12 @@ using Statistics;
 using StatsBase;
 using Random;
 using LinearAlgebra;
-using DelimitedFiles;
 using Interpolations;
 using Images;
 using Distances;
 using KernelDensityEstimate;
-# R
-using RCall;
-R"""
-library(ggplot2)
-library(scales)
-library(viridis)
-"""
+using TomoForward;
+using XfromProjections;
 # custom packages
 using wgf_prior;
 using samplers;
@@ -27,19 +21,28 @@ using samplers;
 # set seed
 Random.seed!(1234);
 
-# data image
-sinogram = readdlm("CT/sinogramCT.txt", ',', Float64);
-pixels = size(sinogram, 2);
-# sinogram = reverse(sinogram, dims=1);
+# CT scan
+CTscan = load("CT/LIDC_IDRI_0683_1_048.jpg");
+CTscan = convert(Array{Float64}, CTscan);
+pixels = size(CTscan, 1);
 # number of angles
-nphi = size(sinogram, 2);
+nphi = size(CTscan, 1);
 # angles
 phi_angle = range(0, stop = 2*pi, length = nphi);
 # number of offsets
-offsets = floor(size(sinogram, 1)/2);
-xi = range(-offsets, stop = offsets, length = size(sinogram, 1));
+offsets = 729;
+proj_geom = ProjGeom(1.0, offsets, LinRange(0, 2pi, nphi));
+xi = range(-floor(offsets/2), stop = floor(offsets/2), length = offsets);
 xi = xi/maximum(xi);
 
+# sinogram
+A = fp_op_parallel2d_line(proj_geom, pixels, pixels);
+sinogram = A * vec(CTscan);
+sinogram = reshape(Array(sinogram), (:, offsets));
+
+# filtered back projection
+fbp = A' * vec(sinogram) .* (pi / nphi);
+fbp_img = reshape(fbp, size(CTscan));
 # grid
 X1bins = range(-1 + 1/pixels[1], stop = 1 - 1/pixels[1], length = pixels[1]);
 X2bins = range(-1 + 1/pixels[2], stop = 1 - 1/pixels[2], length = pixels[2]);
