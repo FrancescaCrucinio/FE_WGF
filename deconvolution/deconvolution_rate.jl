@@ -18,6 +18,7 @@ using smcems;
 R"""
 library(fDKDE)
 library(tictoc)
+memory.limit(17000)
 """
 
 # set seed
@@ -168,6 +169,6 @@ for i=1:length(Nparticles)
 end
 
 #
-save("deconv_rate16Mar2021.jld", "tPI", tPI, "tCV", tCV, "tWGF", tWGF, "tSMC", tSMC
+save("deconv_rate16Mar2021.jld", "tPI", tPI, "tCV", tCV, "tWGF", tWGF, "tSMC", tSMC,
      "iseWGF", iseWGF, "iseCV", iseCV, "isePI", isePI, "iseSMC", iseSMC,
      "qdistPI", qdistPI, "qdistCV", qdistCV, "qdistSMC", qdistSMC, "qdistWGF", qdistWGF);
