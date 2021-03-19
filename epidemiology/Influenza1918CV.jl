@@ -79,7 +79,7 @@ Threads.@threads for i=1:length(alpha)
         muSampleL = muSampleL[:];
         # prior mean = mean of μ shifted back by 9 days
         # initial distribution
-        x0 = sample(muSampleL, M, replace = false) .- 9;
+        x0 = sample(muSampleL, Nparticles, replace = false) .- 9;
         m0 = mean(muSampleL) - 9;
         sigma0 = std(muSampleL);
         # WGF
