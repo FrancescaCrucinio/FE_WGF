@@ -34,7 +34,7 @@ function smc_gaussian_mixture(N, Niter, epsilon, x0, muSample, M)
     W[1, :] = ones(1, N)/N;
 
     for n=2:Niter
-        # samples from h(y)
+        # samples from μ(y)
         y = sample(muSample, M, replace = false);
         # ESS
         ESS=1/sum(W[n-1,:].^2);
@@ -48,13 +48,14 @@ function smc_gaussian_mixture(N, Niter, epsilon, x0, muSample, M)
             W[n,:] = W[n-1,:];
         end
 
+        # Markov kernel: Random walk step
+        x[n, :] = x[n, :] + epsilon*randn(N, 1);
+        
         # Compute μ^N_{n}
         hN = zeros(M,1);
         for j=1:M
             hN[j] = mean(W[n, ] .* pdf.(Normal.(x[n, :], 0.045), y[j]));
         end
-        # Markov kernel: Random walk step
-        x[n, :] = x[n, :] + epsilon*randn(N, 1);
 
         # update weights
         for i=1:N
