@@ -35,8 +35,6 @@ sdK = 0.045;
 # dt and number of iterations
 dt = 1e-03;
 Niter = 100;
-# samples from μ(y)
-M = 1000;
 # number of particles
 Nparticles = [100; 500; 1000; 5000; 10000];
 # values at which evaluate KDE
