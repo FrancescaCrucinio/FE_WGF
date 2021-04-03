@@ -50,17 +50,17 @@ function smc_gaussian_mixture(N, Niter, epsilon, x0, muSample, M)
 
         # Markov kernel: Random walk step
         x[n, :] = x[n, :] + epsilon*randn(N, 1);
-        
+
         # Compute μ^N_{n}
         hN = zeros(M,1);
         for j=1:M
-            hN[j] = mean(W[n, ] .* pdf.(Normal.(x[n, :], 0.045), y[j]));
+            hN[j] = mean(W[n, :] .* pdf.(Normal.(x[n, :], 0.045), y[j]));
         end
 
         # update weights
         for i=1:N
             K = pdf.(Normal.(x[n, i], 0.045), y);
-            potential = sum(K ./ hN);
+            potential = mean(K ./ hN);
             # update weight
             W[n, i] = W[n, i] * potential;
         end

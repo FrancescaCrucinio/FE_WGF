@@ -112,9 +112,9 @@ for i=1:length(alpha)
     end
 end
 
-read = readdlm("PET/resCV.txt", ',', Float64);
-alpha = read[:, 1];
-kl = read[:, 2:11];
-ent = read[:, 12:21];
-E = read[:, 22:31];
+readf = readdlm("Old stuff/PET/resCV.txt", ',', Float64);
+alpha = readf[:, 1];
+kl = readf[:, 2:11];
+ent = readf[:, 12:21];
+E = readf[:, 22:31];
 plot(alpha,  mean(E, dims = 2))

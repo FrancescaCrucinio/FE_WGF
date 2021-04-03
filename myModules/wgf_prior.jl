@@ -53,7 +53,7 @@ function wgf_flu_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, M)
    return x
 end
 
-#= WGF for deconvolution with Laplace error
+#= WGF for deconvolution with Normal error
 OUTPUTS
 1 - particle locations
 INPUTS
@@ -80,7 +80,7 @@ function wgf_DKDE_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, M, sigU)
         # Compute denominator
         muN = zeros(M, 1);
         for j=1:M
-            muN[j] = mean(pdf.(Laplace.(x[n, :], sigU), y[j]));
+            muN[j] =  mean(pdf.(Normal.(x[n, :], sigU), y[j]));
         end
         # gradient and drift
         drift = zeros(N, 1);
