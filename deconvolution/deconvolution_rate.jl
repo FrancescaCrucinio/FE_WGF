@@ -49,7 +49,7 @@ true_density = pi(KDEx);
 epsilon = 1e-3;
 alpha = [1.1e-1 5e-2 6e-2 3.1e-2 2.1e-2];
 # number of repetitions
-Nrep = 1;
+Nrep = 100;
 
 # diagnostics
 tPI = zeros(length(Nparticles), 1);
