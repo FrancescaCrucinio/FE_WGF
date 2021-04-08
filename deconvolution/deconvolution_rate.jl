@@ -87,27 +87,27 @@ for i=1:length(Nparticles)
         # sample from μ(y)
         muSample = Ysample_gaussian_mixture(10^3);
         muSampleDKDE = Ysample_gaussian_mixture(Nparticles[i]);
-        # # DKDEpi & DKDEcv
-        # R"""
-        # # PI bandwidth of Delaigle and Gijbels
-        # tic()
-        # hPI <- PI_deconvUknownth4(c($muSampleDKDE), "norm", $sdK^2, $sdK);
-        # fdec_hPI <- fdecUknown($KDEx, c($muSampleDKDE), hPI, "norm", $sdK, $dx);
-        # exectime <- toc()
-        # exectimePI <- exectime$toc - exectime$tic
-        # tic()
-        # hCV <- CVdeconv(c($muSampleDKDE), "norm", $sdK);
-        # fdec_hCV <-  fdecUknown($KDEx, c($muSampleDKDE), hCV, "norm", $sdK, $dx);
-        # exectime <- toc()
-        # exectimeCV <- exectime$toc - exectime$tic
-        # """
-        # # runtimes and ise
-        # trepPI[j] = @rget exectimePI;
-        # trepCV[j] = @rget exectimeCV;
-        # qdistrepPI[j, :] = (true_density .- @rget(fdec_hPI)).^2;
-        # qdistrepCV[j, :] = (true_density .- @rget(fdec_hCV)).^2;
-        # iserepPI[j] = dx*sum(qdistrepPI[j, :]);
-        # iserepCV[j] = dx*sum(qdistrepCV[j, :]);
+        # DKDEpi & DKDEcv
+        R"""
+        # PI bandwidth of Delaigle and Gijbels
+        tic()
+        hPI <- PI_deconvUknownth4(c($muSampleDKDE), "norm", $sdK^2, $sdK);
+        fdec_hPI <- fdecUknown($KDEx, c($muSampleDKDE), hPI, "norm", $sdK, $dx);
+        exectime <- toc()
+        exectimePI <- exectime$toc - exectime$tic
+        tic()
+        hCV <- CVdeconv(c($muSampleDKDE), "norm", $sdK);
+        fdec_hCV <-  fdecUknown($KDEx, c($muSampleDKDE), hCV, "norm", $sdK, $dx);
+        exectime <- toc()
+        exectimeCV <- exectime$toc - exectime$tic
+        """
+        # runtimes and ise
+        trepPI[j] = @rget exectimePI;
+        trepCV[j] = @rget exectimeCV;
+        qdistrepPI[j, :] = (true_density .- @rget(fdec_hPI)).^2;
+        qdistrepCV[j, :] = (true_density .- @rget(fdec_hCV)).^2;
+        iserepPI[j] = dx*sum(qdistrepPI[j, :]);
+        iserepCV[j] = dx*sum(qdistrepCV[j, :]);
 
         # SMC
         # initial distribution
@@ -154,65 +154,65 @@ for i=1:length(Nparticles)
 end
 
 
-# p = plot(tPI, isePI, xaxis = :log, lw = 3, color = :orange, line = :dashdotdot, label = "DKDE-pi",
-#     legendfontsize = 10, tickfontsize = 10, legend = :outerright, size=(700, 400))
-# plot!(p, tCV, iseCV, xaxis = :log, lw = 3, color = :blue, line = :dot,  label = "DKDE-cv")
-# plot!(p, tSMC, iseSMC, xaxis = :log, lw = 3, color = :purple, line = :dash,  label = "SMC-EMS")
-# plot!(p, tWGF, iseWGF, xaxis = :log, lw = 3, color = :red, line = :solid, label = "WGF")
-# markers = [:circle :rect :diamond :star5 :xcross];
-# for i=1:length(Nparticles)
-#     N = Nparticles[i];
-#     scatter!(p, [tPI[i]], [isePI[i]], xaxis = :log, color = :black,
-#         markerstrokecolor = :black, marker = markers[i], markersize = 5, label = "N = $N")
-#     scatter!(p, [tPI[i]], [isePI[i]], xaxis = :log, color = :orange,
-#         markerstrokecolor = :orange, marker = markers[i], markersize = 5, label = "")
-#     scatter!(p, [tCV[i]], [iseCV[i]], xaxis = :log, color = :blue,
-#         markerstrokecolor = :blue, marker = markers[i], markersize = 5, label = "")
-#     scatter!(p, [tSMC[i]], [iseSMC[i]], xaxis = :log, color = :purple,
-#         markerstrokecolor = :purple, marker = markers[i], markersize = 5, label = "")
-#     scatter!(p, [tWGF[i]], [iseWGF[i]], xaxis = :log, color = :red,
-#         markerstrokecolor = :red, marker = markers[i], markersize = 5, label = "")
-# end
-# # savefig(p, "mixture_runtime_vs_mise.pdf")
-# bp1 = boxplot(transpose(log10.(tPI)), qdistPI, yaxis = :log10, legend = :none, bar_width = 0.2, range = 0, tickfontsize = 15)
-# # title = "DKDE-pi", ylabel = "MSE", xlabel = "Runtime (log s)")
-# # savefig(bp1, "mixture_runtime_vs_mse_pi.pdf")
-# bp2 = boxplot(transpose(log10.(tCV)), qdistCV, yaxis = :log10, legend = :none, bar_width = 0.2, range = 0, tickfontsize = 15)
-# # title = "DKDE-cv", ylabel = "MSE", xlabel = "Runtime (log s)")
-# # savefig(bp2, "mixture_runtime_vs_mse_cv.pdf")
-# bp3 = boxplot(transpose(log10.(tSMC)), qdistSMC, yaxis = :log10, legend = :none, bar_width = 0.3, range = 0, tickfontsize = 15)
-# # title = "SMC-EMS", ylabel = "MSE", xlabel = "Runtime (log s)")
-# # savefig(bp3, "mixture_runtime_vs_mse_smc.pdf")
-# bp4 = boxplot(transpose(log10.(tWGF)), qdistWGF, yaxis = :log10, legend = :none, bar_width = 0.3, range = 0, tickfontsize = 15)
-# # title = "WGF", ylabel = "MSE", xlabel = "Runtime (log s)")
-# # savefig(bp4, "mixture_runtime_vs_mse_wgf.pdf")
-# legend = scatter([0 0 0 0 0], showaxis = false, grid = false, label = ["N = 100" "N = 500" "N=1000" "N=5000" "N=10000"],
-#     markerstrokewidth = 0, markersize = 10, fontsize = 20, legend = :outertopright, size = (100, 200))
-# scatter!(legend, [0], markercolor = :white, label = "", markerstrokecolor = :white, markersize = 13)
-# # savefig(legend, "mixture_runtime_vs_mse_legend.pdf")
-# bp = plot(bp1, bp2, bp3, bp4, legend, layout = @layout([[A B; C D] E{.15w}]), size = (900, 500), tickfontsize = 10)
-# # savefig(bp, "mixture_runtime_vs_mse.pdf")
+p = plot(tPI, isePI, xaxis = :log, lw = 3, color = :orange, line = :dashdotdot, label = "DKDE-pi",
+    legendfontsize = 10, tickfontsize = 10, legend = :outerright, size=(700, 400))
+plot!(p, tCV, iseCV, xaxis = :log, lw = 3, color = :blue, line = :dot,  label = "DKDE-cv")
+plot!(p, tSMC, iseSMC, xaxis = :log, lw = 3, color = :purple, line = :dash,  label = "SMC-EMS")
+plot!(p, tWGF, iseWGF, xaxis = :log, lw = 3, color = :red, line = :solid, label = "WGF")
+markers = [:circle :rect :diamond :star5 :xcross];
+for i=1:length(Nparticles)
+    N = Nparticles[i];
+    scatter!(p, [tPI[i]], [isePI[i]], xaxis = :log, color = :black,
+        markerstrokecolor = :black, marker = markers[i], markersize = 5, label = "N = $N")
+    scatter!(p, [tPI[i]], [isePI[i]], xaxis = :log, color = :orange,
+        markerstrokecolor = :orange, marker = markers[i], markersize = 5, label = "")
+    scatter!(p, [tCV[i]], [iseCV[i]], xaxis = :log, color = :blue,
+        markerstrokecolor = :blue, marker = markers[i], markersize = 5, label = "")
+    scatter!(p, [tSMC[i]], [iseSMC[i]], xaxis = :log, color = :purple,
+        markerstrokecolor = :purple, marker = markers[i], markersize = 5, label = "")
+    scatter!(p, [tWGF[i]], [iseWGF[i]], xaxis = :log, color = :red,
+        markerstrokecolor = :red, marker = markers[i], markersize = 5, label = "")
+end
+# savefig(p, "mixture_runtime_vs_mise.pdf")
+bp1 = boxplot(transpose(log10.(tPI)), qdistPI, yaxis = :log10, legend = :none, bar_width = 0.2, range = 0, tickfontsize = 15)
+# title = "DKDE-pi", ylabel = "MSE", xlabel = "Runtime (log s)")
+# savefig(bp1, "mixture_runtime_vs_mse_pi.pdf")
+bp2 = boxplot(transpose(log10.(tCV)), qdistCV, yaxis = :log10, legend = :none, bar_width = 0.2, range = 0, tickfontsize = 15)
+# title = "DKDE-cv", ylabel = "MSE", xlabel = "Runtime (log s)")
+# savefig(bp2, "mixture_runtime_vs_mse_cv.pdf")
+bp3 = boxplot(transpose(log10.(tSMC)), qdistSMC, yaxis = :log10, legend = :none, bar_width = 0.3, range = 0, tickfontsize = 15)
+# title = "SMC-EMS", ylabel = "MSE", xlabel = "Runtime (log s)")
+# savefig(bp3, "mixture_runtime_vs_mse_smc.pdf")
+bp4 = boxplot(transpose(log10.(tWGF)), qdistWGF, yaxis = :log10, legend = :none, bar_width = 0.3, range = 0, tickfontsize = 15)
+# title = "WGF", ylabel = "MSE", xlabel = "Runtime (log s)")
+# savefig(bp4, "mixture_runtime_vs_mse_wgf.pdf")
+legend = scatter([0 0 0 0 0], showaxis = false, grid = false, label = ["N = 100" "N = 500" "N=1000" "N=5000" "N=10000"],
+    markerstrokewidth = 0, markersize = 10, fontsize = 20, legend = :outertopright, size = (100, 200))
+scatter!(legend, [0], markercolor = :white, label = "", markerstrokecolor = :white, markersize = 13)
+# savefig(legend, "mixture_runtime_vs_mse_legend.pdf")
+bp = plot(bp1, bp2, bp3, bp4, legend, layout = @layout([[A B; C D] E{.15w}]), size = (900, 500), tickfontsize = 10)
+# savefig(bp, "mixture_runtime_vs_mse.pdf")
 #
 # # save("deconv_rate28Mar2021.jld", "tPI", tPI,  "tCV", tCV, "tSMC", tSMC, "tWGF", tWGF,
 # #      "isePI", isePI,  "iseCV", iseCV, "iseSMC", iseSMC, "iseWGF", iseWGF,
 # #      "entSMC", entSMC, "entWGF", entWGF,
 # #      "qdistPI", qdistPI,  "qdistCV", qdistCV, "qdistSMC", qdistSMC, "qdistWGF", qdistWGF);
 # #
-# # tPI = load("deconv_rate28Mar2021.jld", "tPI");
-# # tCV = load("deconv_rate28Mar2021.jld", "tCV");
-# # tSMC = load("deconv_rate28Mar2021.jld", "tSMC");
-# # tWGF = load("deconv_rate28Mar2021.jld", "tWGF");
-# # isePI = load("deconv_rate28Mar2021.jld", "isePI");
-# # iseCV = load("deconv_rate28Mar2021.jld", "iseCV");
-# # iseSMC = load("deconv_rate28Mar2021.jld", "iseSMC");
-# # iseWGF = load("deconv_rate28Mar2021.jld", "iseWGF");
-# # qdistPI = load("deconv_rate28Mar2021.jld", "qdistPI");
-# # qdistCV = load("deconv_rate28Mar2021.jld", "qdistCV");
-# # qdistSMC = load("deconv_rate28Mar2021.jld", "qdistSMC");
-# # qdistWGF = load("deconv_rate28Mar2021.jld", "qdistWGF");
-# # entSMC = load("deconv_rate28Mar2021.jld", "entSMC");
-# # entWGF = load("deconv_rate28Mar2021.jld", "entWGF");
-#
-# i = 3
-# histogram(entWGF[i, :])
-# histogram!(entSMC[i, :])
+tPI = load("prior_deconv_rate3Apr2021.jld", "tPI");
+tCV = load("prior_deconv_rate3Apr2021.jld", "tCV");
+tSMC = load("prior_deconv_rate3Apr2021.jld", "tSMC");
+tWGF = load("prior_deconv_rate3Apr2021.jld", "tWGF");
+isePI = load("prior_deconv_rate3Apr2021.jld", "isePI");
+iseCV = load("prior_deconv_rate3Apr2021.jld", "iseCV");
+iseSMC = load("prior_deconv_rate3Apr2021.jld", "iseSMC");
+iseWGF = load("prior_deconv_rate3Apr2021.jld", "iseWGF");
+qdistPI = load("prior_deconv_rate3Apr2021.jld", "qdistPI");
+qdistCV = load("prior_deconv_rate3Apr2021.jld", "qdistCV");
+qdistSMC = load("prior_deconv_rate3Apr2021.jld", "qdistSMC");
+qdistWGF = load("prior_deconv_rate3Apr2021.jld", "qdistWGF");
+entSMC = load("prior_deconv_rate3Apr2021.jld", "entSMC");
+entWGF = load("prior_deconv_rate3Apr2021.jld", "entWGF");
+
+i = 3
+histogram(entWGF[i, :])
+histogram!(entSMC[i, :])
