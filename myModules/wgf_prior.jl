@@ -6,9 +6,55 @@ using LinearAlgebra;
 
 using samplers;
 
+export wgf_AT_tamed
 export wgf_flu_tamed
 export wgf_DKDE_tamed
 export wgf_ct_tamed
+
+#= WGF for analytically tractable example
+OUTPUTS
+1 - particle locations
+INPUTS
+'N' number of particles
+'dt' discretisation step
+'Niter' number of iterations
+'alpha' regularisation parameter
+'x0' initial distribution
+'m0' mean of prior
+'sigma0' standard deviation of prior
+'muSample' sample from μ
+'M' number of samples from μ(y) to be drawn at each iteration
+'reference' reference measure π0
+=#
+function wgf_AT_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, M, reference)
+    # initialise a matrix x storing the particles
+    x = zeros(Niter, N);
+    # initial distribution is given as input:
+    x[1, :] = x0;
+
+    for n=1:(Niter-1)
+        # get samples from μ(y)
+        y = sample(muSample, M, replace = false);
+        # Compute μ^N_{n}
+        muN = zeros(M, 1);
+        for j=1:M
+            muN[j] = mean(pdf.(Normal.(x[n, :], 0.045), y[j]));
+        end
+        # gradient and drift
+        drift = zeros(N, 1);
+        for i=1:N
+            gradient = pdf.(Normal.(x[n, i], 0.045), y) .* (y .- x[n, i])/(0.045^2);
+            drift[i] = mean(gradient./muN);
+        end
+        if(reference == "normal")
+            drift = drift .+ alpha*(x[n, :] .- m0)/sigma0^2;
+        end
+
+        # update locations
+        x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ dt * abs.(drift)) .+  sqrt(2*alpha*dt)*randn(N, 1);
+    end
+    return x
+end
 
 #= WGF for Spanish flu data
 OUTPUTS
@@ -121,7 +167,7 @@ function wgf_ct_tamed(N, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_angl
 
     for n=1:(Niter-1)
         # get sample from μ(y)
-        y = histogram2D_sampler(sinogram, phi_angle, xi, M);
+        y = histogram2D_sampler(sinogram, xi, phi_angle, M);
 
         # Compute denominator
         muN = zeros(M, 1);

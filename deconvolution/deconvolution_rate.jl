@@ -198,21 +198,21 @@ save("prior_deconv_rate3Apr2021.jld", "tPI", tPI,  "tCV", tCV, "tSMC", tSMC, "tW
       "entSMC", entSMC, "entWGF", entWGF,
       "qdistPI", qdistPI,  "qdistCV", qdistCV, "qdistSMC", qdistSMC, "qdistWGF", qdistWGF);
 
-# # tPI = load("deconv_rate28Mar2021.jld", "tPI");
-# # tCV = load("deconv_rate28Mar2021.jld", "tCV");
-# # tSMC = load("deconv_rate28Mar2021.jld", "tSMC");
-# # tWGF = load("deconv_rate28Mar2021.jld", "tWGF");
-# # isePI = load("deconv_rate28Mar2021.jld", "isePI");
-# # iseCV = load("deconv_rate28Mar2021.jld", "iseCV");
-# # iseSMC = load("deconv_rate28Mar2021.jld", "iseSMC");
-# # iseWGF = load("deconv_rate28Mar2021.jld", "iseWGF");
-# # qdistPI = load("deconv_rate28Mar2021.jld", "qdistPI");
-# # qdistCV = load("deconv_rate28Mar2021.jld", "qdistCV");
-# # qdistSMC = load("deconv_rate28Mar2021.jld", "qdistSMC");
-# # qdistWGF = load("deconv_rate28Mar2021.jld", "qdistWGF");
-# # entSMC = load("deconv_rate28Mar2021.jld", "entSMC");
-# # entWGF = load("deconv_rate28Mar2021.jld", "entWGF");
-#
-# i = 3
-# histogram(entWGF[i, :])
-# histogram!(entSMC[i, :])
+tPI = load("prior_deconv_rate3Apr2021.jld", "tPI");
+tCV = load("prior_deconv_rate3Apr2021.jld", "tCV");
+tSMC = load("prior_deconv_rate3Apr2021.jld", "tSMC");
+tWGF = load("prior_deconv_rate3Apr2021.jld", "tWGF");
+isePI = load("prior_deconv_rate3Apr2021.jld", "isePI");
+iseCV = load("prior_deconv_rate3Apr2021.jld", "iseCV");
+iseSMC = load("prior_deconv_rate3Apr2021.jld", "iseSMC");
+iseWGF = load("prior_deconv_rate3Apr2021.jld", "iseWGF");
+qdistPI = load("prior_deconv_rate3Apr2021.jld", "qdistPI");
+qdistCV = load("prior_deconv_rate3Apr2021.jld", "qdistCV");
+qdistSMC = load("prior_deconv_rate3Apr2021.jld", "qdistSMC");
+qdistWGF = load("prior_deconv_rate3Apr2021.jld", "qdistWGF");
+entSMC = load("prior_deconv_rate3Apr2021.jld", "entSMC");
+entWGF = load("prior_deconv_rate3Apr2021.jld", "entWGF");
+
+i = 3
+histogram(entWGF[i, :])
+histogram!(entSMC[i, :])
