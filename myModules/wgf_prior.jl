@@ -3,119 +3,14 @@ module wgf_prior;
 using Distributions;
 using Statistics;
 using LinearAlgebra;
-using RCall;
-@rimport ks as rks
 
 using samplers;
 
-export wgf_AT_tamed
 export wgf_flu_tamed
 export wgf_DKDE_tamed
 export wgf_ct_tamed
 
-#= WGF for analytically tractable example
-OUTPUTS
-1 - particle locations
-2 - value of functional E at each iteration
-INPUTS
-'N' number of particles
-'dt' discretisation step
-'Niter' number of iterations
-'alpha' regularisation parameter
-'x0' initial distribution
-'m0' mean of prior
-'sigma0' standard deviation of prior
-'muSample' sample from μ
-'M' number of samples from μ(y) to be drawn at each iteration
-'reference' reference measure π0
-=#
-function wgf_AT_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, M, reference)
-    # initialise a matrix x storing the particles
-    x = zeros(Niter, N);
-    # initial distribution is given as input:
-    x[1, :] = x0;
-    # value of functional
-    E = zeros(Niter, 1);
-    # parameters for priors
-    nu = 100;
-    b = sigma0/sqrt(2);
-    for n=1:(Niter-1)
-        # log-likelihood
-        loglik = zeros(1, length(muSample));
-        for i=1:length(muSample)
-            loglik[i] = mean(pdf.(Normal.(x[n, :], 0.45), muSample[i]));
-        end
-        loglik = -log.(loglik);
-        kl = mean(loglik);
-        # entropy
-        Rpihat = rks.kde(x = x[n, :], var"eval.points" = x[n, :] );
-        pihat = abs.(rcopy(Rpihat[3]));
-        # prior
-        if(reference == "uniform")
-            kl_prior = mean(log.(pihat));
-        elseif(reference == "normal")
-            prior = pdf.(Normal(0, sigma0), x[n, :]);
-            kl_prior = mean(log.(pihat./prior));
-        elseif(reference == "t")
-            prior = pdf.(TDist(nu), x[n, :]);
-            kl_prior = mean(log.(pihat./prior));
-        elseif(reference == "Laplace")
-            prior = pdf.(Laplace(0, b), x[n, :]);
-            kl_prior = mean(log.(pihat./prior));
-        end
 
-        E[n] = kl+alpha*kl_prior;
-        # get samples from μ(y)
-        y = sample(muSample, M, replace = false);
-        # Compute μ^N_{n}
-        muN = zeros(M, 1);
-        for j=1:M
-            muN[j] = mean(pdf.(Normal.(x[n, :], 0.45), y[j]));
-        end
-        # gradient and drift
-        drift = zeros(N, 1);
-        for i=1:N
-            gradient = pdf.(Normal.(x[n, i], 0.45), y) .* (y .- x[n, i])/(0.45^2);
-            drift[i] = mean(gradient./muN);
-        end
-        if(reference == "normal")
-            drift = drift .+ alpha*x[n, :]/sigma0^2;
-        elseif(reference == "t")
-            drift = drift .+ alpha*(-nu + 1)*x[n, :]./(nu .+ x[n, :].^2);
-        elseif(reference == "Laplace")
-            drift = drift .- alpha*sign.(x[n, :])/b;
-        end
-
-        # update locations
-        x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ dt * abs.(drift)) .+  sqrt(2*alpha*dt)*randn(N, 1);
-    end
-
-    loglik = zeros(1, length(muSample));
-    for i=1:length(muSample)
-        loglik[i] = mean(pdf.(Normal.(x[Niter, :], 0.45), muSample[i]));
-    end
-    loglik = -log.(loglik);
-    kl = mean(loglik);
-    # entropy
-    Rpihat = rks.kde(x = x[Niter, :], var"eval.points" = x[Niter, :] );
-    pihat = abs.(rcopy(Rpihat[3]));
-    # prior
-    if(reference == "uniform")
-        kl_prior = mean(log.(pihat));
-    elseif(reference == "normal")
-        prior = pdf.(Normal(0, sigma0), x[Niter, :]);
-        kl_prior = mean(log.(pihat./prior));
-    elseif(reference == "t")
-        prior = pdf.(TDist(nu), x[Niter, :]);
-        kl_prior = mean(log.(pihat./prior));
-    elseif(reference == "Laplace")
-        prior = pdf.(Laplace(0, b), x[Niter, :]);
-        kl_prior = mean(log.(pihat./prior));
-    end
-
-    E[Niter] = kl+alpha*kl_prior;
-    return x, E
-end
 
 #= WGF for Spanish flu data
 OUTPUTS
@@ -225,17 +120,33 @@ function wgf_ct_tamed(N, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_angl
     # intial distribution
     x1[1, :] = x0[1, :];
     x2[1, :] = x0[2, :];
+    # value of functional
+    E = zeros(1, Niter);
 
     for n=1:(Niter-1)
+        # log-likelihood
+        loglik = zeros(size(sinogram));
+        for i=1:length(phi_angle)
+            for j=1:length(xi)
+                loglik[i, j] = mean(pdf.(Normal.(0, sigma), x1[n, :] * cos(phi_angle[i]) .+
+                x2[n, :] * sin(phi_angle[i]) .- xi[j]));
+               end
+            end
+        loglik = -log.(loglik);
+        kl = (phi_angle[2] - phi_angle[1])*(xi[2]-xi[1])*sum(loglik);
+        # prior
+        prior = pdf(MvNormal(m0, Diagonal(sigma0)), [x1[n, :] x2[n, :]]');
+        pihat = ct_kde([x1[n, :] x2[n, :]], [x1[n, :] x2[n, :]]);
+        kl_prior = mean(log.(pihat./prior));
+        E[n] = kl+alpha*kl_prior;
         # get sample from μ(y)
         y = histogram2D_sampler(sinogram, xi, phi_angle, M);
 
         # Compute denominator
         muN = zeros(M, 1);
         for j=1:M
-            muN[j] = mean(pdf.(Normal.(0, sigma), x1[n, :] * cos(y[j, 1]) .+
-                    x2[n, :] * sin(y[j, 1]) .- y[j, 2])
-                    );
+            muN[j] = mean(pdf.(Normal.(0, sigma), x1[n, :] * cos(y[j, 2]) .+
+                    x2[n, :] * sin(y[j, 2]) .- y[j, 1]));
         end
 
         # gradient and drift
@@ -243,72 +154,66 @@ function wgf_ct_tamed(N, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_angl
         driftX2 = zeros(N, 1);
         for i=1:N
             # precompute common quantities for gradient
-            prec = -pdf.(Normal.(0, sigma), x1[n, i] * cos.(y[:, 1]) .+
-                    x2[n, i] * sin.(y[:, 1]) .- y[:, 2]) .*
-                    (x1[n, i] * cos.(y[:, 1]) .+
-                    x2[n, i] * sin.(y[:, 1]) .- y[:, 2])/sigma^2;
-            gradientX1 = prec .* cos.(y[:, 1]);
-            gradientX2 = prec .* sin.(y[:, 1]);
+            prec = -pdf.(Normal.(0, sigma), x1[n, i] * cos.(y[:, 2]) .+
+                    x2[n, i] * sin.(y[:, 2]) .- y[:, 1]) .*
+                    (x1[n, i] * cos.(y[:, 2]) .+
+                    x2[n, i] * sin.(y[:, 2]) .- y[:, 1])/sigma^2;
+            gradientX1 = prec .* cos.(y[:, 2]);
+            gradientX2 = prec .* sin.(y[:, 2]);
             # keep only finite elements
             g1h = gradientX1./muN;
             g2h = gradientX2./muN;
             g1h[(!).(isfinite.(g1h))] .= 0;
             g2h[(!).(isfinite.(g2h))] .= 0;
-            driftX1[i] = mean(g1h) + alpha*(x1[n, i] .- m0[1])/sigma0[1]^2;
-            driftX2[i] = mean(g2h) + alpha*(x2[n, i] .- m0[2])/sigma0[2]^2;;
+            # driftX1[i] = mean(g1h) + alpha*(x1[n, i] .- m0[1])/sigma0[1]^2;
+            # driftX2[i] = mean(g2h) + alpha*(x2[n, i] .- m0[2])/sigma0[2]^2;
+            driftX1[i] = mean(g1h) ;
+            driftX2[i] = mean(g2h);
         end
         # update locations
         drift_norm = sqrt.(sum([driftX1 driftX2].^2, dims = 2));
         x1[n+1, :] = x1[n, :] .+ dt * driftX1./(1 .+ dt * drift_norm) .+ sqrt(2*alpha*dt)*randn(N, 1);
         x2[n+1, :] = x2[n, :] .+ dt * driftX2./(1 .+ dt * drift_norm) .+ sqrt(2*alpha*dt)*randn(N, 1);
     end
-    return x1, x2
-end
+    loglik = zeros(size(sinogram));
+    for i=1:length(phi_angle)
+        for j=1:length(xi)
+            loglik[i, j] = mean(pdf.(Normal.(0, sigma), x1[Niter, :] * cos(phi_angle[i]) .+
+            x2[Niter, :] * sin(phi_angle[i]) .- xi[j]));
+           end
+        end
+    loglik = -log.(loglik);
+    kl = (phi_angle[2] - phi_angle[1])*(xi[2]-xi[1])*sum(loglik);
+    # prior
+    prior = pdf(MvNormal(m0, Diagonal(sigma0)), [x1[Niter, :] x2[Niter, :]]');
+    pihat = ct_kde([x1[Niter, :] x2[Niter, :]], [x1[Niter, :] x2[Niter, :]]);
+    kl_prior = mean(log.(pihat[:]./prior));
+    E[Niter] = kl+alpha*kl_prior;
+    return x1, x2, E
 end
 
-# #= WGF for gaussian mixture
-# OUTPUTS
-# 1 - particle locations
-# 2 - drift evolution
-# INPUTS
-# 'N' number of particles
-# 'dt' discretisation step
-# 'Niter' number of iterations
-# 'alpha' regularisation parameter
-# 'x0' user selected initial distribution
-# 'sigma0' standard deviation of prior
-# 'm0' mean of prior
-# 'muSample' sample from μ(y)
-# 'M' number of samples from μ(y) to be drawn at each iteration
-# 'a' parameter for tamed Euler scheme
-# =#
-# function wgf_prior_gaussian_mixture_tamed(N, dt, Niter, alpha, x0, sigma0, m0, muSample, M, a)
-#     # initialise a matrix x storing the particles
-#     x = zeros(Niter, N);
-#     # initial distribution is given as input:
-#     x[1, :] = x0;
-#
-#     for n=1:(Niter-1)
-#         # samples from h(y)
-#         y = sample(muSample, M, replace = true);
-#         # Compute h^N_{n}
-#         hN = zeros(M, 1);
-#         for j=1:M
-#             hN[j] = mean(pdf.(Normal.(x[n, :], 0.045), y[j]));
-#         end
-#         # gradient and drift
-#         drift = zeros(N, 1);
-#         for i=1:N
-#             gradient = pdf.(Normal.(x[n, i], 0.045), y) .* (y .- x[n, i])/(0.045^2);
-#             drift[i] = mean(gradient./hN);
-#         end
-#         # update locations
-#         x[n+1, :] = x[n, :] .+  dt * (drift./(1 .+ Niter^(-a) * abs.(drift)) .+ alpha*(x[n, :] .- m0)./sigma0^2) .+
-#             sqrt(2*alpha*dt)*randn(N, 1);
-#     end
-#     return x
-# end
-#
+#= Kernel density estimatior for CT reconstructions
+OUTPUTS
+1 - KDE evaluated at KDEeval
+INPUTS
+'piSample' sample from π (Nx2 matrix)
+'KDEeval' evaluation points (2 column matrix)
+=#
+function ct_kde(piSample, KDEeval)
+    N = size(piSample, 1);
+    # Silverman's plug in bandwidth
+    bw1 = 1.06*Statistics.std(piSample[:, 1])*N^(-1/5);
+    bw2 = 1.06*Statistics.std(piSample[:, 2])*N^(-1/5);
+
+    KDEdensity = zeros(1, size(KDEeval, 1));
+    for i=size(KDEeval, 1)
+        KDEdensity[i] = mean(pdf(MvNormal(KDEeval[i, :], diagm([bw1^2; bw2^2])), piSample'))/(bw1*bw2);
+    end
+    return KDEdensity;
+end
+
+end
+
 # function pda_gaussian_mixture_tamed(N, dt, Niter, alpha, x0, sigma0, m0, muSample, M, a)
 #     # initialise a matrix x storing the particles
 #     x = zeros(Niter+1, N);

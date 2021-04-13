@@ -13,7 +13,7 @@ using Distances;
 using RCall;
 @rimport ks as rks
 # custom packages
-using wgf_prior;
+include("wgf_AT_tamed.jl")
 
 # Compare initial distributions
 
@@ -75,7 +75,7 @@ p3 = plot(log.(E), label = ["uniform" "normal" "t" "Laplace"], lw = 3, legendfon
 
 
 # approximate KL
-sample = sigmaPi * randn(1, 10^6);
-gaussian_ref = mean(pdf.(Normal(0, sigma0), sample));
-t_ref = mean(pdf.(TDist(100), sample));
-laplace_ref = mean(pdf.(Laplace(0, sigma0/sqrt(2)), sample));
+samplePi = sigmaPi * randn(1, 10^6);
+gaussian_ref = mean(pdf.(Normal(0, sigma0), samplePi));
+t_ref = mean(pdf.(TDist(100), samplePi));
+laplace_ref = mean(pdf.(Laplace(0, sigma0/sqrt(2)), samplePi));
