@@ -30,7 +30,7 @@ Gray.(CTscan)
 # number of angles
 nphi = size(CTscan, 1);
 # angles
-phi_angle = range(0, stop = pi, length = nphi);
+phi_angle = range(0, stop = 2pi, length = nphi);
 # number of offsets
 offsets = 729;
 proj_geom = ProjGeom(1.0, offsets, phi_angle);
@@ -63,7 +63,7 @@ function psi(t)
     loglik = zeros(size(sinogram));
     for i=1:nphi
         for j=1:length(xi)
-        loglik[j, i] = mean(pdf.(Normal.(0, sigma), piSample[1, :] * cos(phi_angle[i]) .+
+        loglik[i, j] = mean(pdf.(Normal.(0, sigma), piSample[1, :] * cos(phi_angle[i]) .+
             piSample[2, :] * sin(phi_angle[i]) .- xi[j]));
         end
     end
@@ -78,9 +78,9 @@ end
 
 # parameters for WGF
 # number of particles
-Nparticles = 500;
+Nparticles = 1000;
 # number of samples from μ to draw at each iteration
-M = 500;
+M = 1000;
 # time discretisation
 dt = 1e-2;
 # number of iterations
