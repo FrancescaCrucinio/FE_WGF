@@ -78,16 +78,16 @@ X2bins = range(-1 + 1/pixels, stop = 1 - 1/pixels, length = pixels);
 # number of particles
 Nparticles = 500;
 # number of samples from μ to draw at each iteration
-M = 5000;
+M = 500;
 # time discretisation
 dt = 1e-2;
 # number of iterations
-Niter = 100;
+Niter = 50;
 # regularisation parameter
 alpha = 0.0017;
 # prior mean
 m0 = [0; 0];
-sigma0 = [0.1; 0.1];
+sigma0 = [0.2; 0.2];
 # initial distribution
 x0 = sigma0[1]*randn(2, Nparticles);
 # variance of normal describing alignment
@@ -102,4 +102,4 @@ piKDE = kde([x1[Niter, :] x2[Niter, :]]);
 res = pdf(piKDE, X1bins, X2bins);
 Gray.(res./maximum(res))
 
-plot(E)
+plot(E[:])

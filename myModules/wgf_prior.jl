@@ -165,10 +165,8 @@ function wgf_ct_tamed(N, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_angl
             g2h = gradientX2./muN;
             g1h[(!).(isfinite.(g1h))] .= 0;
             g2h[(!).(isfinite.(g2h))] .= 0;
-            # driftX1[i] = mean(g1h) + alpha*(x1[n, i] .- m0[1])/sigma0[1]^2;
-            # driftX2[i] = mean(g2h) + alpha*(x2[n, i] .- m0[2])/sigma0[2]^2;
-            driftX1[i] = mean(g1h) ;
-            driftX2[i] = mean(g2h);
+            driftX1[i] = mean(g1h) + alpha*(x1[n, i] .- m0[1])/sigma0[1]^2;
+            driftX2[i] = mean(g2h) + alpha*(x2[n, i] .- m0[2])/sigma0[2]^2;
         end
         # update locations
         drift_norm = sqrt.(sum([driftX1 driftX2].^2, dims = 2));
@@ -206,7 +204,7 @@ function ct_kde(piSample, KDEeval)
     bw2 = 1.06*Statistics.std(piSample[:, 2])*N^(-1/5);
 
     KDEdensity = zeros(1, size(KDEeval, 1));
-    for i=size(KDEeval, 1)
+    for i = 1:size(KDEeval, 1)
         KDEdensity[i] = mean(pdf(MvNormal(KDEeval[i, :], diagm([bw1^2; bw2^2])), piSample'))/(bw1*bw2);
     end
     return KDEdensity;
