@@ -54,26 +54,6 @@ Gray.(fbp_img./maximum(fbp_img))
 X1bins = range(-1 + 1/pixels, stop = 1 - 1/pixels, length = pixels);
 X2bins = range(-1 + 1/pixels, stop = 1 - 1/pixels, length = pixels);
 
-
-# functional approximation
-# function psi(t)
-#     piSample = [transpose(t[1:Nparticles]); transpose(t[(Nparticles+1):(2Nparticles)])];
-#     loglik = zeros(size(sinogram));
-#     for i=1:nphi
-#         for j=1:length(xi)
-#         loglik[i, j] = mean(pdf.(Normal.(0, sigma), piSample[1, :] * cos(phi_angle[i]) .+
-#             piSample[2, :] * sin(phi_angle[i]) .- xi[j]));
-#         end
-#     end
-#     loglik = -log.(loglik);
-#     kl = (phi_angle[2] - phi_angle[1])*(xi[2]-xi[1])*sum(loglik);
-#     prior = pdf(MvNormal(m0, Diagonal(sigma0)), piSample);
-#     piKDE = kde!(piSample);
-#     pihat = piKDE(piSample);
-#     kl_prior = mean(log.(pihat./prior));
-#     return kl+alpha*kl_prior;
-# end
-
 # parameters for WGF
 # number of particles
 Nparticles = 500;
@@ -90,6 +70,7 @@ m0 = [0; 0];
 sigma0 = [0.2; 0.2];
 # initial distribution
 x0 = sigma0[1]*randn(2, Nparticles);
+x0 = rand(2, Nparticles);
 # variance of normal describing alignment
 sigma = 0.02;
 
