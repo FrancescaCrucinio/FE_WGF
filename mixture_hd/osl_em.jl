@@ -20,12 +20,12 @@ function osl_em(muDisc, sigmaK, alpha, Niter, pi0, pi_init)
         # update the denominator
         den = zeros(1, M);
         for d=1:M
-            den[d] = pi' * mvnpdf(eval, eval(d, :), sigmaG^2*eye(p));
+            den[d] = (pi' * pdf(MvNormal(KDEeval[d, :], sigmaK*Matrix{Float64}(I, 2, 2)), KDEeval'))[1];
         end
         for b=1:M
             # numerator + penalty
-            pi[b] = pi[b]*sum(muDisc .* mvnpdf(eval(b, :), eval, sigmaG^2*eye(p))./den')/
-                (1 + alpha + alpha*log(pi[b]/pi0[b]));
+            pi[b] = pi[b]*sum(muDisc .* pdf(MvNormal(KDEeval[b, :], sigmaK*Matrix{Float64}(I, 2, 2)), KDEeval')./den')/
+                (1 + alpha + alpha*(log(pi[b]/pi0[b])));
         end
     end
     return pi
