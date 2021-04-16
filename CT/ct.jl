@@ -76,9 +76,9 @@ X2bins = range(-1 + 1/pixels, stop = 1 - 1/pixels, length = pixels);
 
 # parameters for WGF
 # number of particles
-Nparticles = 500;
+Nparticles = 50000;
 # number of samples from μ to draw at each iteration
-M = 500;
+M = 5000;
 # time discretisation
 dt = 1e-2;
 # number of iterations
