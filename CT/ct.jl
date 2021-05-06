@@ -21,8 +21,9 @@ using wgf_prior;
 Random.seed!(1234);
 
 # load data image
-sinogram = load("CT/sinogram.png");
+sinogram = load("CT/sinogram_128p.png");
 sinogram = convert(Array{Float64}, sinogram);
+pixels = size(sinogram, 1);
 # angles
 nphi = size(sinogram, 1);
 phi_angle = range(0, stop = 2pi, length = nphi);
@@ -37,18 +38,18 @@ X2bins = range(-1 + 1/pixels, stop = 1 - 1/pixels, length = pixels);
 
 # parameters for WGF
 # number of particles
-Nparticles = 20000;
+Nparticles = 10000;
 # number of samples from μ to draw at each iteration
-M = 1000;
+M = 2000;
 # time discretisation
 dt = 1e-2;
 # number of iterations
 Niter = 50;
 # regularisation parameter
-alpha = 0.0017;
+alpha = 0.1;
 # prior mean
 m0 = [0; 0];
-sigma0 = [0.2; 0.2];
+sigma0 = [0.25; 0.25];
 # initial distribution
 x0 = sigma0[1]*randn(2, Nparticles);
 # variance of normal describing alignment
