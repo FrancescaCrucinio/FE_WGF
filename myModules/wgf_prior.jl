@@ -139,6 +139,7 @@ function wgf_ct_tamed(N, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_angl
         pihat = ct_kde([x1[n, :] x2[n, :]], [x1[n, :] x2[n, :]]);
         kl_prior = mean(log.(pihat./prior));
         E[n] = kl+alpha*kl_prior;
+
         # get sample from μ(y)
         y = histogram2D_sampler(sinogram, xi, phi_angle, M);
 
@@ -163,8 +164,6 @@ function wgf_ct_tamed(N, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_angl
             # keep only finite elements
             g1h = gradientX1./muN;
             g2h = gradientX2./muN;
-            g1h[(!).(isfinite.(g1h))] .= 0;
-            g2h[(!).(isfinite.(g2h))] .= 0;
             driftX1[i] = mean(g1h) + alpha*(x1[n, i] .- m0[1])/sigma0[1]^2;
             driftX2[i] = mean(g2h) + alpha*(x2[n, i] .- m0[2])/sigma0[2]^2;
         end
