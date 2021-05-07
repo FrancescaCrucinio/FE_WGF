@@ -10,8 +10,6 @@ export wgf_flu_tamed
 export wgf_DKDE_tamed
 export wgf_ct_tamed
 
-
-
 #= WGF for Spanish flu data
 OUTPUTS
 1 - particle locations
@@ -210,33 +208,3 @@ function ct_kde(piSample, KDEeval)
 end
 
 end
-
-# function pda_gaussian_mixture_tamed(N, dt, Niter, alpha, x0, sigma0, m0, muSample, M, a)
-#     # initialise a matrix x storing the particles
-#     x = zeros(Niter+1, N);
-#     # initial distribution is given as input:
-#     x[1, :] = x0;
-#     # samples from h(y)
-#     y = sample(muSample, M, replace = true);
-#     hN = zeros(M, 1);
-#     for n=1:Niter
-#         j = sample(1:M);
-#         # Compute h^N_{n}
-#         hN[j] = hN[j] + n/mean(pdf.(Normal.(x[n, :], 0.045), y[j]));
-#         # Langevin steps
-#         dt = 0.0001/sqrt(n);
-#         xtilde = x[n, :];
-#         for k=1:5*ceil(sqrt(n))
-#             # gradient and drift
-#             cum_drift = zeros(N, 1);
-#             for i=1:N
-#                 gradient = pdf.(Normal.(xtilde[i], 0.045), y) .* (y .- xtilde[i])/(0.045^2);
-#                 cum_drift[i] = 2 * sum(hN .* gradient)/(alpha*(n+2)*(n+1)) + 2*n/(n+2) * (xtilde[i] - m0)/sigma0^2;
-#             end
-#             xtilde = xtilde .+  dt * cum_drift./(1 .+ Niter^(-a) * abs.(cum_drift)) .+ sqrt(2*dt)*randn(N, 1);
-#         end
-#         x[n+1, :] = xtilde;
-#     end
-#     time = wsample(2:(Niter+1), 2*(2:(Niter+1))./(Niter*(Niter+3)));
-#     return x, time
-# end
