@@ -33,6 +33,7 @@ xi = range(-floor(offsets/2), stop = floor(offsets/2), length = offsets);
 xi = xi/maximum(xi);
 
 # grid
+pixels = size(sinogram, 1);
 X1bins = range(-1 + 1/pixels, stop = 1 - 1/pixels, length = pixels);
 X2bins = range(-1 + 1/pixels, stop = 1 - 1/pixels, length = pixels);
 
