@@ -46,10 +46,10 @@ dt = 1e-2;
 # number of iterations
 Niter = 50;
 # regularisation parameter
-alpha = 0.1;
+alpha = 0.01;
 # prior mean
 m0 = [0; 0];
-sigma0 = [0.25; 0.25];
+sigma0 = [0.2; 0.2];
 # initial distribution
 x0 = sigma0[1]*randn(2, Nparticles);
 # variance of normal describing alignment
