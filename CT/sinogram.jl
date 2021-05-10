@@ -11,7 +11,7 @@ using Statistics;
 Random.seed!(1234);
 
 # CT scan
-CTscan = load("CT/LIDC_IDRI_0683_1_048_128p.jpg");
+CTscan = load("CT/LIDC_IDRI_0683_1_048.jpg");
 CTscan = convert(Array{Float64}, Gray.(CTscan));
 pixels = size(CTscan, 1);
 Gray.(CTscan)
@@ -21,7 +21,7 @@ nphi = size(CTscan, 1);
 # angles
 phi_angle = range(0, stop = 2pi, length = nphi);
 # number of offsets
-offsets = 185;
+offsets = 729;
 proj_geom = ProjGeom(1.0, offsets, phi_angle);
 xi = range(-floor(offsets/2), stop = floor(offsets/2), length = offsets);
 xi = xi/maximum(xi);
@@ -33,8 +33,8 @@ sinogram = reshape(Array(sinogram), (:, offsets));
 noisy_sinogram = poisson(sinogram);
 noisy_sinogram_std = noisy_sinogram./maximum(noisy_sinogram);
 Gray.(noisy_sinogram_std)
-save("sinogram_128p.png", colorview(Gray, sinogram./maximum(sinogram)));
-save("noisy_sinogram_128p.png", colorview(Gray, noisy_sinogram_std));
+save("sinogram.png", colorview(Gray, sinogram./maximum(sinogram)));
+save("noisy_sinogram.png", colorview(Gray, noisy_sinogram_std));
 
 # filtered back projection
 tFBP = @elapsed begin

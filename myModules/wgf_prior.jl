@@ -9,6 +9,7 @@ using samplers;
 export wgf_flu_tamed
 export wgf_DKDE_tamed
 export wgf_ct_tamed
+export wgf_ct_tamed_cv
 
 #= WGF for Spanish flu data
 OUTPUTS
@@ -97,6 +98,7 @@ end
 #= WGF for CT scan reconstruction
 OUTPUTS
 1 - particle locations (2D)
+2 - value of functional E
 INPUTS
 'N' number of particles
 'dt' discretisation step
@@ -205,6 +207,61 @@ function ct_kde(piSample, KDEeval)
         KDEdensity[i] = mean(pdf(MvNormal(KDEeval[i, :], diagm([bw1^2; bw2^2])), piSample'))/(bw1*bw2);
     end
     return KDEdensity;
+end
+
+#= WGF for cross validation of CT scan reconstruction
+OUTPUTS
+1 - particle locations (2D)
+INPUTS
+'N' number of particles
+'dt' discretisation step
+'Niter' number of iterations
+'alpha' regularisation parameter
+'x0' initial distribution
+'m0' mean of prior
+'sigma0' standard deviation of prior'
+'muSample' sample from sinogram
+'sigma' standard deviation for Normal describing alignment
+=#
+function wgf_ct_tamed_cv(N, dt, Niter, alpha, x0, m0, sigma0, muSample, sigma)
+    # initialise two matrices x, y storing the particles
+    x1 = zeros(Niter, N);
+    x2 = zeros(Niter, N);
+    # intial distribution
+    x1[1, :] = x0[1, :];
+    x2[1, :] = x0[2, :];
+
+    for n=1:(Niter-1)
+        # Compute denominator
+        muN = zeros(M, 1);
+        for j=1:M
+            muN[j] = mean(pdf.(Normal.(0, sigma), x1[n, :] * cos(muSample[j, 2]) .+
+                    x2[n, :] * sin(muSample[j, 2]) .- muSample[j, 1]));
+        end
+
+        # gradient and drift
+        driftX1 = zeros(N, 1);
+        driftX2 = zeros(N, 1);
+        for i=1:N
+            # precompute common quantities for gradient
+            prec = -pdf.(Normal.(0, sigma), x1[n, i] * cos.(muSample[:, 2]) .+
+                    x2[n, i] * sin.(muSample[:, 2]) .- y[:, 1]) .*
+                    (x1[n, i] * cos.(muSample[:, 2]) .+
+                    x2[n, i] * sin.(muSample[:, 2]) .- muSample[:, 1])/sigma^2;
+            gradientX1 = prec .* cos.(muSample[:, 2]);
+            gradientX2 = prec .* sin.(muSample[:, 2]);
+            # keep only finite elements
+            g1h = gradientX1./muN;
+            g2h = gradientX2./muN;
+            driftX1[i] = mean(g1h) + alpha*(x1[n, i] .- m0[1])/sigma0[1]^2;
+            driftX2[i] = mean(g2h) + alpha*(x2[n, i] .- m0[2])/sigma0[2]^2;
+        end
+        # update locations
+        drift_norm = sqrt.(sum([driftX1 driftX2].^2, dims = 2));
+        x1[n+1, :] = x1[n, :] .+ dt * driftX1./(1 .+ dt * drift_norm) .+ sqrt(2*alpha*dt)*randn(N, 1);
+        x2[n+1, :] = x2[n, :] .+ dt * driftX2./(1 .+ dt * drift_norm) .+ sqrt(2*alpha*dt)*randn(N, 1);
+    end
+    return x1, x2
 end
 
 end

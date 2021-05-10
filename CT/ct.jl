@@ -20,23 +20,21 @@ using wgf_prior;
 # set seed
 Random.seed!(1234);
 # CT scan
-CTscan = load("CT/LIDC_IDRI_0683_1_048_128p.jpg");
+CTscan = load("CT/LIDC_IDRI_0683_1_048.jpg");
 CTscan = convert(Array{Float64}, Gray.(CTscan));
 CTscan = CTscan./maximum(CTscan);
 # load data image
-sinogram = load("CT/sinogram_128p.png");
+sinogram = load("CT/noisy_sinogram.png");
 sinogram = convert(Array{Float64}, sinogram);
+# number of angles
 pixels = size(sinogram, 1);
-# angles
-nphi = size(sinogram, 1);
-phi_angle = range(0, stop = 2pi, length = nphi);
+phi_angle = range(0, stop = 2pi, length = pixels);
 # offsets
 offsets = size(sinogram, 2);
 xi = range(-floor(offsets/2), stop = floor(offsets/2), length = offsets);
 xi = xi/maximum(xi);
 
 # grid
-pixels = size(sinogram, 1);
 X1bins = range(-1 + 1/pixels, stop = 1 - 1/pixels, length = pixels);
 X2bins = range(-1 + 1/pixels, stop = 1 - 1/pixels, length = pixels);
 gridX1 = repeat(X1bins, inner=[pixels, 1]);
@@ -45,7 +43,7 @@ KDEeval = [gridX1 gridX2];
 
 # parameters for WGF
 # number of particles
-Nparticles = 100000;
+Nparticles = 50000;
 # number of samples from μ to draw at each iteration
 M = 10000;
 # time discretisation
@@ -53,7 +51,7 @@ dt = 1e-2;
 # number of iterations
 Niter = 10;
 # regularisation parameter
-alpha = 0.01;
+alpha = 0.0001;
 # prior mean
 m0 = [0; 0];
 sigma0 = [0.2; 0.2];
@@ -74,19 +72,6 @@ using RCall;
 @rimport ks as rks;
 KDEyWGFfinal = rks.kde(x = [x1[Niter, :] x2[Niter, :]], var"eval.points" = KDEeval);
 KDEyWGFfinal = abs.(rcopy(KDEyWGFfinal[3]));
-R"""
-    library(ggplot2)
-    library(scales)
-    library(viridis)
-    # solution
-    data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = $KDEyWGFfinal);
-    p2 <- ggplot(data, aes(x, y)) +
-        geom_raster(aes(fill = z), interpolate=TRUE) +
-        theme_void() +
-        theme(legend.position = "none", aspect.ratio=1) +
-        scale_fill_viridis(discrete=FALSE, option="magma")
-    # ggsave("pet.eps", p2)
-"""
 # ise
 petWGF = reshape(KDEyWGFfinal, (pixels, pixels));
 petWGF = reverse(petWGF, dims=1);
