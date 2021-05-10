@@ -3,6 +3,12 @@ using Images;
 using TomoForward;
 using XfromProjections;
 using Noise;
+using Random;
+using StatsBase;
+using Statistics;
+
+# set seed
+Random.seed!(1234);
 
 # CT scan
 CTscan = load("CT/LIDC_IDRI_0683_1_048_128p.jpg");
@@ -27,10 +33,18 @@ sinogram = reshape(Array(sinogram), (:, offsets));
 noisy_sinogram = poisson(sinogram);
 noisy_sinogram_std = noisy_sinogram./maximum(noisy_sinogram);
 Gray.(noisy_sinogram_std)
-save("sinogram_128p.png", colorview(Gray, noisy_sinogram_std));
+save("sinogram_128p.png", colorview(Gray, sinogram./maximum(sinogram)));
+save("noisy_sinogram_128p.png", colorview(Gray, noisy_sinogram_std));
 
-# # filtered back projection
-# q = filter_proj(sinogram);
-# fbp = A' * vec(q) .* (pi / nphi);
-# fbp_img = reshape(fbp, size(CTscan));
-# Gray.(fbp_img./maximum(fbp_img))
+# filtered back projection
+tFBP = @elapsed begin
+proj_geom = ProjGeom(1.0, offsets, phi_angle);
+A = fp_op_parallel2d_line(proj_geom, pixels, pixels);
+q = filter_proj(noisy_sinogram);
+fbp = A' * vec(q) .* (pi / nphi);
+end
+fbp_img = reshape(fbp, size(CTscan));
+Gray.(fbp_img./maximum(fbp_img))
+
+CTscan = CTscan./maximum(CTscan);
+var(fbp_img./maximum(fbp_img) .- CTscan)

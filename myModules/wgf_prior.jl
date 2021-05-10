@@ -135,7 +135,7 @@ function wgf_ct_tamed(N, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_angl
         # prior
         prior = pdf(MvNormal(m0, Diagonal(sigma0)), [x1[n, :] x2[n, :]]');
         pihat = ct_kde([x1[n, :] x2[n, :]], [x1[n, :] x2[n, :]]);
-        kl_prior = mean(log.(pihat./prior));
+        kl_prior = mean(log.(pihat[:]./prior));
         E[n] = kl+alpha*kl_prior;
 
         # get sample from μ(y)

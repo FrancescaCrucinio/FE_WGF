@@ -8,7 +8,7 @@ using samplers;
 
 export smc_gaussian_mixture
 export optimal_bandwidthESS
-
+export smc_p_dim_gaussian_mixture
 
 #= SMC for gaussian mixture exmaple
 OUTPUTS
@@ -113,5 +113,63 @@ function optimal_bandwidthESS(x, W)
     bw = 1.06*s*ESS^(1/5);
 
     return bw
+end
+
+#= SMC-EMS for gaussian mixture exmaple -- d>1
+OUTPUTS
+1 - particle locations
+2 - particle weights
+INPUTS
+'N' number of particles
+'Niter' number of time steps
+'epsilon' standard deviation for Gaussian smoothing kernel
+'x0' initial distribution.
+'muSample' sample from μ
+'sigmaK' standard deviation of k
+=#
+function smc_p_dim_gaussian_mixture(N, Niter, epsilon, x0, muSample, sigmaK)
+    # initial distribution
+    xOld = x0;
+    # number of dimensions
+    p = size(x0, 2);
+    # uniform weights at time n = 1
+    W = ones[N, 1]/N;
+    # number of samples to draw from μ(y)
+    M = min(N, size(muSample, 1));
+    for n=2:Niter
+        # ESS
+        ESS=1/sum(W.^2);
+        # RESAMPLING
+        if(ESS < N/2)
+            indices = trunc.(Int, mult_resample(W, N));
+            xNew = xOld[indices];
+            W .= 1/N;
+        else
+            xNew = xOld;
+        end
+
+        # Markov kernel
+        xNew = xNew + epsilon*randn(N, p);
+
+        # Compute μ^N_{n}
+        yIndex = randsample(1:size(hSample, 1), M, false);
+        y = hSample[yIndex, :];
+        muN = zeros(size(y, 1),1);
+        for j=1:size(y, 1)
+            muN[j] = mean(W .* pdf(MvNormal(y[j, :], sigmaK*Matrix{Float64}(I, 2, 2)), xNew'));
+        end
+
+        # update weights
+        for i=1:N
+            g = pdf(MvNormal(xNew[i, :], sigmaK*Matrix{Float64}(I, 2, 2)), y'));
+            # potential at time n
+            potential = mean(g ./ hN);
+            # update weight
+            W[i] = W[i] * potential;
+        end
+        # normalise weights
+        W = W / sum(W);
+        xOld = xNew;
+    end
 end
 end

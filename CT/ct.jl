@@ -19,7 +19,10 @@ using wgf_prior;
 
 # set seed
 Random.seed!(1234);
-
+# CT scan
+CTscan = load("CT/LIDC_IDRI_0683_1_048_128p.jpg");
+CTscan = convert(Array{Float64}, Gray.(CTscan));
+CTscan = CTscan./maximum(CTscan);
 # load data image
 sinogram = load("CT/sinogram_128p.png");
 sinogram = convert(Array{Float64}, sinogram);
@@ -36,16 +39,19 @@ xi = xi/maximum(xi);
 pixels = size(sinogram, 1);
 X1bins = range(-1 + 1/pixels, stop = 1 - 1/pixels, length = pixels);
 X2bins = range(-1 + 1/pixels, stop = 1 - 1/pixels, length = pixels);
+gridX1 = repeat(X1bins, inner=[pixels, 1]);
+gridX2 = repeat(X2bins, outer=[pixels 1]);
+KDEeval = [gridX1 gridX2];
 
 # parameters for WGF
 # number of particles
-Nparticles = 10000;
+Nparticles = 100000;
 # number of samples from μ to draw at each iteration
-M = 2000;
+M = 10000;
 # time discretisation
 dt = 1e-2;
 # number of iterations
-Niter = 50;
+Niter = 10;
 # regularisation parameter
 alpha = 0.01;
 # prior mean
@@ -61,8 +67,29 @@ tWGF = @elapsed begin
 x1, x2, E = wgf_ct_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_angle, xi, sigma);
 end
 
-piKDE = kde([x1[Niter, :] x2[Niter, :]]);
-res = pdf(piKDE, X1bins, X2bins);
-Gray.(res./maximum(res))
-
 plot(E[:])
+
+
+using RCall;
+@rimport ks as rks;
+KDEyWGFfinal = rks.kde(x = [x1[Niter, :] x2[Niter, :]], var"eval.points" = KDEeval);
+KDEyWGFfinal = abs.(rcopy(KDEyWGFfinal[3]));
+R"""
+    library(ggplot2)
+    library(scales)
+    library(viridis)
+    # solution
+    data <- data.frame(x = $KDEeval[, 1], y = $KDEeval[, 2], z = $KDEyWGFfinal);
+    p2 <- ggplot(data, aes(x, y)) +
+        geom_raster(aes(fill = z), interpolate=TRUE) +
+        theme_void() +
+        theme(legend.position = "none", aspect.ratio=1) +
+        scale_fill_viridis(discrete=FALSE, option="magma")
+    # ggsave("pet.eps", p2)
+"""
+# ise
+petWGF = reshape(KDEyWGFfinal, (pixels, pixels));
+petWGF = reverse(petWGF, dims=1);
+petWGF = petWGF/maximum(petWGF);
+var(petWGF .- CTscan)
+Gray.(petWGF)
