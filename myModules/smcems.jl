@@ -137,6 +137,9 @@ function smc_p_dim_gaussian_mixture(N, Niter, epsilon, x0, muSample, sigmaK)
     # number of samples to draw from μ(y)
     M = min(N, size(muSample, 1));
     for n=2:Niter
+        # sample from μ
+        yIndex = sample(1:size(hSample, 1), M, false);
+        y = muSample[yIndex, :];
         # ESS
         ESS=1/sum(W.^2);
         # RESAMPLING
@@ -152,10 +155,8 @@ function smc_p_dim_gaussian_mixture(N, Niter, epsilon, x0, muSample, sigmaK)
         xNew = xNew + epsilon*randn(N, p);
 
         # Compute μ^N_{n}
-        yIndex = randsample(1:size(hSample, 1), M, false);
-        y = hSample[yIndex, :];
-        muN = zeros(size(y, 1),1);
-        for j=1:size(y, 1)
+        muN = zeros(M, 1);
+        for j=1:M
             muN[j] = mean(W .* pdf(MvNormal(y[j, :], sigmaK*Matrix{Float64}(I, 2, 2)), xNew'));
         end
 

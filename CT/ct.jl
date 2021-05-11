@@ -24,7 +24,7 @@ CTscan = load("CT/LIDC_IDRI_0683_1_048.jpg");
 CTscan = convert(Array{Float64}, Gray.(CTscan));
 CTscan = CTscan./maximum(CTscan);
 # load data image
-sinogram = load("CT/noisy_sinogram.png");
+sinogram = load("CT/sinogram.png");
 sinogram = convert(Array{Float64}, sinogram);
 # number of angles
 pixels = size(sinogram, 1);
@@ -35,8 +35,8 @@ xi = range(-floor(offsets/2), stop = floor(offsets/2), length = offsets);
 xi = xi/maximum(xi);
 
 # grid
-X1bins = range(-1 + 1/pixels, stop = 1 - 1/pixels, length = pixels);
-X2bins = range(-1 + 1/pixels, stop = 1 - 1/pixels, length = pixels);
+X1bins = range(-0.75 + 1/pixels, stop = 0.75 - 1/pixels, length = pixels);
+X2bins = range(-0.75 + 1/pixels, stop = 0.75 - 1/pixels, length = pixels);
 gridX1 = repeat(X1bins, inner=[pixels, 1]);
 gridX2 = repeat(X2bins, outer=[pixels 1]);
 KDEeval = [gridX1 gridX2];
@@ -45,7 +45,7 @@ KDEeval = [gridX1 gridX2];
 # number of particles
 Nparticles = 50000;
 # number of samples from μ to draw at each iteration
-M = 10000;
+M = 50000;
 # time discretisation
 dt = 1e-2;
 # number of iterations

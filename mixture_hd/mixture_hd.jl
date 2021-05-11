@@ -8,6 +8,7 @@ using StatsBase;
 using Random;
 using Distances;
 using LinearAlgebra;
+using OptimalTransport;
 include("osl_em.jl")
 
 # dimension
@@ -19,7 +20,7 @@ pi = MixtureModel(MvNormal, [(means[1, :], diagm(variances[1]*ones(p))), (means[
 sigmaK = 0.15;
 mu = MixtureModel(MvNormal, [(means[1, :], diagm(variances[1]*ones(p) .+ sigmaK^2)), (means[2, :], diagm(variances[2]*ones(p) .+ sigmaK^2))], [1/3, 2/3]);
 
-Nbins = 100;
+Nbins = 10;
 X1bins = range(0, stop = 1, length = Nbins);
 X2bins = range(0, stop = 1, length = Nbins);
 gridX1 = repeat(X1bins, inner=[Nbins, 1]);
