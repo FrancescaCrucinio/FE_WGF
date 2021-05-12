@@ -132,7 +132,7 @@ function smc_p_dim_gaussian_mixture(N, Niter, epsilon, x0, muSample, sigmaK)
     # number of dimensions
     p = size(x0, 1);
     # uniform weights at time n = 1
-    W = ones(N, 1)/N;
+    W = ones(N)/N;
     # number of samples to draw from μ(y)
     M = min(N, size(muSample, 2));
     for n=2:Niter
@@ -146,7 +146,6 @@ function smc_p_dim_gaussian_mixture(N, Niter, epsilon, x0, muSample, sigmaK)
             indices = trunc.(Int, mult_resample(W, N));
             x = x[:, indices[:]];
             W .= 1/N;
-            println("Resampling at iteration $n")
         end
 
         # Markov kernel
@@ -168,7 +167,7 @@ function smc_p_dim_gaussian_mixture(N, Niter, epsilon, x0, muSample, sigmaK)
         end
         # normalise weights
         W = W / sum(W);
-        return x, W
     end
+    return x, W
 end
 end

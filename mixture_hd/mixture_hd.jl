@@ -26,14 +26,23 @@ pi = MixtureModel(MvNormal, [(means[1, :], diagm(variances[1]*ones(p))), (means[
 sigmaK = 0.15;
 mu = MixtureModel(MvNormal, [(means[1, :], diagm(variances[1]*ones(p) .+ sigmaK^2)), (means[2, :], diagm(variances[2]*ones(p) .+ sigmaK^2))], [1/3, 2/3]);
 
+Nbins = 100;
+X1bins = range(0, stop = 1, length = Nbins);
+X2bins = range(0, stop = 1, length = Nbins);
+gridX1 = repeat(X1bins, inner=[Nbins, 1]);
+gridX2 = repeat(X2bins, outer=[Nbins 1]);
+KDEeval = [gridX1 gridX2];
+truth = reshape(pdf(pi, KDEeval'), (Nbins, Nbins));
+p1 = heatmap(X1bins, X2bins, truth);
+
+
+# OSL-EM
 Nbins = 50;
 X1bins = range(0, stop = 1, length = Nbins);
 X2bins = range(0, stop = 1, length = Nbins);
 gridX1 = repeat(X1bins, inner=[Nbins, 1]);
 gridX2 = repeat(X2bins, outer=[Nbins 1]);
 KDEeval = [gridX1 gridX2];
-
-# OSL-EM
 muDisc = pdf(mu, KDEeval');
 pi0 = ones(size(KDEeval, 1), 1)/size(KDEeval, 1);
 pi_init = ones(size(KDEeval, 1), 1)/size(KDEeval, 1);
@@ -43,14 +52,14 @@ tEM = @elapsed begin
 EMres = osl_em(muDisc, sigmaK, alpha, Niter, pi0, pi_init);
 end
 EM = reshape(EMres, (Nbins, Nbins));
-heatmap(X1bins, X2bins, EM)
+p2 = heatmap(X1bins, X2bins, EM);
 
 # SMC-EMS
 muSample = rand(mu, 10^6);
 x0 = rand(p, Nbins^p);
 epsilon = 1e-03;
 tSMC = @elapsed begin
-x, W = smc_p_dim_gaussian_mixture(Nbins^p, Niter, epsilon, x0, muSample, sigmaK);
+xSMC, W = smc_p_dim_gaussian_mixture(Nbins^p, Niter, epsilon, x0, muSample, sigmaK);
 # KDE
 bw1 = sqrt(epsilon^2 + optimal_bandwidthESS(x[1, :], W)^2);
 bw2 = sqrt(epsilon^2 + optimal_bandwidthESS(x[2, :], W)^2);
@@ -58,7 +67,7 @@ Rkde = rks.kde(x = [x[1, :] x[2, :]], var"eval.points" = KDEeval, var"w" = Nbins
 SMCkde = abs.(rcopy(Rkde[3]));
 end
 SMC_EMS = reshape(SMCkde, (Nbins, Nbins));
-heatmap(X1bins, X2bins, SMC_EMS)
+p3 = heatmap(X1bins, X2bins, SMC_EMS);
 
 # WGF
 m0 = 0.5;
@@ -70,9 +79,18 @@ Rkde = rks.kde(x = [xWGF[1, :] xWGF[2, :]], var"eval.points" = KDEeval);
 WGFkde = abs.(rcopy(Rkde[3]));
 end
 WGF = reshape(WGFkde, (Nbins, Nbins));
-heatmap(X1bins, X2bins, WGF)
+p4 = heatmap(X1bins, X2bins, WGF);
+
+plot(p1, p2, p3, p4, layout = (2,2))
 #
-# piSample = rand(pi, size(KDEeval, 1));
-# C = pairwise(Cityblock(), piSample, KDEeval', dims = 2);
-# piWeights = fill(1/size(KDEeval, 1), size(KDEeval, 1));
-# OptimalTransport.emd2(piWeights, EMSres[:]./sum(EMSres), C)
+piSample = rand(pi, size(KDEeval, 1));
+piWeights = fill(1/size(KDEeval, 1), size(KDEeval, 1));
+
+C = pairwise(Cityblock(), piSample, KDEeval', dims = 2);
+OptimalTransport.emd2(piWeights, EMres[:]./sum(EMres), C)
+
+C = pairwise(Cityblock(), piSample, xSMC, dims = 2);
+OptimalTransport.emd2(piWeights, W, C)
+
+C = pairwise(Cityblock(), piSample, xWGF, dims = 2);
+OptimalTransport.emd2(piWeights, fill(1/Nbins^p, Nbins^p), C)
