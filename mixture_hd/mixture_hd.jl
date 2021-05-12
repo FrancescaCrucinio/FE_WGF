@@ -14,6 +14,7 @@ using RCall;
 @rimport ks as rks;
 # custom packages
 using smcems;
+using wgf_prior;
 include("osl_em.jl")
 
 # dimension
@@ -58,6 +59,18 @@ SMCkde = abs.(rcopy(Rkde[3]));
 end
 SMC_EMS = reshape(SMCkde, (Nbins, Nbins));
 heatmap(X1bins, X2bins, SMC_EMS)
+
+# WGF
+m0 = 0.5;
+sigma0 = 0.1;
+dt = 1e-3;
+tWGF = @elapsed begin
+xWGF = wgf_hd_mixture_tamed(Nbins^p, dt, Niter, alpha, x0, m0, sigma0, muSample, sigmaK);
+Rkde = rks.kde(x = [xWGF[1, :] xWGF[2, :]], var"eval.points" = KDEeval);
+WGFkde = abs.(rcopy(Rkde[3]));
+end
+WGF = reshape(WGFkde, (Nbins, Nbins));
+heatmap(X1bins, X2bins, WGF)
 #
 # piSample = rand(pi, size(KDEeval, 1));
 # C = pairwise(Cityblock(), piSample, KDEeval', dims = 2);

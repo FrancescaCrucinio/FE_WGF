@@ -10,6 +10,7 @@ export wgf_flu_tamed
 export wgf_DKDE_tamed
 export wgf_ct_tamed
 export wgf_ct_tamed_cv
+export wgf_hd_mixture_tamed
 
 #= WGF for Spanish flu data
 OUTPUTS
@@ -280,30 +281,31 @@ INPUTS
 =#
 function wgf_hd_mixture_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, sigmaK)
     # initial distribution
-    x = x0;
+    x = copy(x0);
     # number of dimensions
-    d = size(x0, 2);
+    p = size(x0, 1);
     # number of samples from μ(y) to draw at each iteration
-    M = min(N, size(muSample, 1));
+    M = min(N, size(muSample, 2));
     for n=1:(Niter-1)
         # get samples from μ(y)
-        yIndex = sample(1:size(hSample, 1), M, false);
-        y = muSample[yIndex, :];
+        yIndex = sample(1:size(muSample, 2), M, replace = false);
+        y = muSample[:, yIndex];
         # Compute denominator
-        muN = zeros(M, 1);
+        muN = zeros(M);
         for j=1:M
-            muN[j] = mean(W .* pdf(MvNormal(y[j, :], sigmaK*Matrix{Float64}(I, 2, 2)), x'));
+            muN[j] = mean(pdf(MvNormal(y[:, j], sigmaK^2*Matrix{Float64}(I, 2, 2)), x));
         end
         # gradient and drift
         drift = zeros(p, N);
         for i=1:N
             # precompute common quantities for gradient
-            prec = pdf(MvNormal(x[i, :], sigmaK*Matrix{Float64}(I, 2, 2)), y');
-            gradient = prec .* (y .- x[i, :])/sigmaK^2;
-            drift[i] = mean(gradient./muN) + alpha*(x[i, p] .- m0)/sigma0^2;
+            prec = pdf(MvNormal(x[:, i], sigmaK^2*Matrix{Float64}(I, 2, 2)), y);
+            gradient = prec' .* (y .- x[:, i])/sigmaK^2;
+            drift[:, i] =  mean(gradient./muN', dims = 2) .+ alpha*(x[:, i] .- m0)/sigma0^2;
         end
         # update locations
-        x = x .+ dt * drift./(1 .+ dt * abs.(drift)) .+ sqrt(2*alpha*dt)*randn(N, 1);
+        drift_norm = sqrt.(sum(drift.^2, dims = 1));
+        x = x .+ dt * drift./(1 .+ dt * drift_norm) .+ sqrt(2*alpha*dt)*randn(p, N);
     end
     return x
 end
