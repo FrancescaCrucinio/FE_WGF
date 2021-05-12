@@ -43,15 +43,15 @@ KDEeval = [gridX1 gridX2];
 
 # parameters for WGF
 # number of particles
-Nparticles = 50000;
+Nparticles = 10000;
 # number of samples from μ to draw at each iteration
-M = 50000;
+M = 10000;
 # time discretisation
 dt = 1e-2;
 # number of iterations
-Niter = 10;
+Niter = 60;
 # regularisation parameter
-alpha = 0.0001;
+alpha = 0.01;
 # prior mean
 m0 = [0; 0];
 sigma0 = [0.2; 0.2];
@@ -78,3 +78,4 @@ petWGF = reverse(petWGF, dims=1);
 petWGF = petWGF/maximum(petWGF);
 var(petWGF .- CTscan)
 Gray.(petWGF)
+save("WGFreconstruction.png", colorview(Gray, petWGF));

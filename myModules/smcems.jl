@@ -3,6 +3,7 @@ module smcems
 using Distributions;
 using Statistics;
 using StatsBase;
+using LinearAlgebra;
 
 using samplers;
 
@@ -80,7 +81,6 @@ INPUTS
 function mult_resample(W, N)
     # vector to store number of offsprings
     indices = zeros(N, 1);
-
     # start inverse transfor method
     s = W[1];
     u = sort(rand(N, 1), dims = 1);
@@ -92,7 +92,6 @@ function mult_resample(W, N)
     end
     indices[i] = j;
     end
-
     return indices
 end
 
@@ -129,48 +128,47 @@ INPUTS
 =#
 function smc_p_dim_gaussian_mixture(N, Niter, epsilon, x0, muSample, sigmaK)
     # initial distribution
-    xOld = x0;
+    x = copy(x0);
     # number of dimensions
-    p = size(x0, 2);
+    p = size(x0, 1);
     # uniform weights at time n = 1
-    W = ones[N, 1]/N;
+    W = ones(N, 1)/N;
     # number of samples to draw from μ(y)
-    M = min(N, size(muSample, 1));
+    M = min(N, size(muSample, 2));
     for n=2:Niter
         # sample from μ
-        yIndex = sample(1:size(hSample, 1), M, false);
-        y = muSample[yIndex, :];
+        yIndex = sample(1:size(muSample, 2), M, replace = false);
+        y = muSample[:, yIndex];
         # ESS
         ESS=1/sum(W.^2);
         # RESAMPLING
         if(ESS < N/2)
             indices = trunc.(Int, mult_resample(W, N));
-            xNew = xOld[indices];
+            x = x[:, indices[:]];
             W .= 1/N;
-        else
-            xNew = xOld;
+            println("Resampling at iteration $n")
         end
 
         # Markov kernel
-        xNew = xNew + epsilon*randn(N, p);
+        x = x .+ epsilon*randn(p, N);
 
         # Compute μ^N_{n}
         muN = zeros(M, 1);
         for j=1:M
-            muN[j] = mean(W .* pdf(MvNormal(y[j, :], sigmaK*Matrix{Float64}(I, 2, 2)), xNew'));
+            muN[j] = mean(W .* pdf(MvNormal(y[:, j], sigmaK^2*Matrix{Float64}(I, 2, 2)), x));
         end
 
         # update weights
         for i=1:N
-            g = pdf(MvNormal(xNew[i, :], sigmaK*Matrix{Float64}(I, 2, 2)), y'));
+            g = pdf(MvNormal(x[:, i], sigmaK^2*Matrix{Float64}(I, 2, 2)), y);
             # potential at time n
-            potential = mean(g ./ hN);
+            potential = mean(g ./ muN);
             # update weight
             W[i] = W[i] * potential;
         end
         # normalise weights
         W = W / sum(W);
-        xOld = xNew;
+        return x, W
     end
 end
 end
