@@ -9,7 +9,7 @@ using StatsBase;
 using Random;
 using Distances;
 using LinearAlgebra;
-using OptimalTransport;
+# using OptimalTransport;
 using RCall;
 @rimport ks as rks;
 # custom packages
