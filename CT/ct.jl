@@ -43,18 +43,18 @@ KDEeval = [gridX1 gridX2];
 
 # parameters for WGF
 # number of particles
-Nparticles = 10000;
+Nparticles = 5000;
 # number of samples from μ to draw at each iteration
-M = 10000;
+M = 5000;
 # time discretisation
-dt = 1e-2;
+dt = 1e-3;
 # number of iterations
-Niter = 60;
+Niter = 200;
 # regularisation parameter
-alpha = 0.01;
+alpha = 0.0001;
 # prior mean
 m0 = [0; 0];
-sigma0 = [0.2; 0.2];
+sigma0 = [0.35; 0.35];
 # initial distribution
 x0 = sigma0[1]*randn(2, Nparticles);
 # variance of normal describing alignment
@@ -76,6 +76,6 @@ KDEyWGFfinal = abs.(rcopy(KDEyWGFfinal[3]));
 petWGF = reshape(KDEyWGFfinal, (pixels, pixels));
 petWGF = reverse(petWGF, dims=1);
 petWGF = petWGF/maximum(petWGF);
-var(petWGF .- CTscan)
 Gray.(petWGF)
-save("WGFreconstruction.png", colorview(Gray, petWGF));
+mse = sum((petWGF .- CTscan).^2)/512^2;
+# save("WGFreconstruction.png", colorview(Gray, petWGF));

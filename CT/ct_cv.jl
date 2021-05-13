@@ -39,34 +39,31 @@ X2bins = range(-1 + 1/pixels, stop = 1 - 1/pixels, length = pixels);
 
 # parameters for WGF
 # number of particles
-Nparticles = 50000;
+Nparticles = 10000;
 # number of samples from μ to draw at each iteration
 M = 10000;
 # time discretisation
-dt = 1e-2;
+dt = 1e-3;
 # number of iterations
 Niter = 10;
 # variance of normal describing alignment
 sigma = 0.02;
 # prior mean
 m0 = [0; 0];
-sigma0 = [0.2; 0.2];
+sigma0 = [0.35; 0.35];
 # regularisation parameter
 alpha = range(0.0, stop = 1, length = 2);
 
 # number of repetitions
 L = 5;
 
-ent = zeros(length(alpha), L);
-kl = zeros(length(alpha), L);
+E = zeros(length(alpha), L);
 for i=1:length(alpha)
     for l=1:L
-        # sample from μ(y)
-        muSample = histogram2D_sampler(sinogram, xi, phi_angle, M);
         # initial distribution
         x0 = sigma0[1]*randn(2, Nparticles);
         # WGF
-        x1, x2 = wgf_ct_tamed_cv(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSample, sigma);
+        x1, x2 = wgf_ct_tamed_cv(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, M, sinogram, phi_angle, xi, sigma);
         # functional
         loglik = zeros(size(sinogram));
         for i=1:length(phi_angle)

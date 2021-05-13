@@ -37,6 +37,8 @@ save("sinogram.png", colorview(Gray, sinogram./maximum(sinogram)));
 save("noisy_sinogram.png", colorview(Gray, noisy_sinogram_std));
 
 # filtered back projection
+# noisy_sinogram = load("CT/noisy_sinogram.png");
+# noisy_sinogram = convert(Array{Float64}, Gray.(noisy_sinogram));
 tFBP = @elapsed begin
 proj_geom = ProjGeom(1.0, offsets, phi_angle);
 A = fp_op_parallel2d_line(proj_geom, pixels, pixels);
@@ -45,6 +47,7 @@ fbp = A' * vec(q) .* (pi / nphi);
 end
 fbp_img = reshape(fbp, size(CTscan));
 Gray.(fbp_img./maximum(fbp_img))
-
+save("CT_fbp.png", colorview(Gray, fbp_img./maximum(fbp_img)))
 CTscan = CTscan./maximum(CTscan);
-var(fbp_img./maximum(fbp_img) .- CTscan)
+mse = sum((fbp_img./maximum(fbp_img) .- CTscan).^2)/512^2;
+-10*log10(mse)
