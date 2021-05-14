@@ -53,6 +53,7 @@ EMres = osl_em(muDisc, sigmaK, alpha, Niter, pi0, pi_init);
 end
 EM = reshape(EMres, (Nbins, Nbins));
 p2 = heatmap(X1bins, X2bins, EM);
+entEM = (X1bins[2]-X1bins[1])^2*sum(log.(EMres).*EMres);
 
 # SMC-EMS
 muSample = rand(mu, 10^6);
@@ -68,7 +69,7 @@ SMCkde = abs.(rcopy(Rkde[3]));
 end
 SMC_EMS = reshape(SMCkde, (Nbins, Nbins));
 p3 = heatmap(X1bins, X2bins, SMC_EMS);
-
+entSMC = (X1bins[2]-X1bins[1])^2*sum(log.(SMCkde).*SMCkde);
 # WGF
 m0 = 0.5;
 sigma0 = 0.1;
@@ -80,6 +81,7 @@ WGFkde = abs.(rcopy(Rkde[3]));
 end
 WGF = reshape(WGFkde, (Nbins, Nbins));
 p4 = heatmap(X1bins, X2bins, WGF);
+entWGF = (X1bins[2]-X1bins[1])^2*sum(log.(WGFkde).*WGFkde);
 
 plot(p1, p2, p3, p4, layout = (2,2))
 #
