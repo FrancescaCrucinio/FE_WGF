@@ -47,11 +47,11 @@ Nparticles = 10000;
 # number of samples from μ to draw at each iteration
 M = 10000;
 # time discretisation
-dt = 1e-2;
+dt = 1e-3;
 # number of iterations
-Niter = 60;
+Niter = 1000;
 # regularisation parameter
-alpha = 0.01;
+alpha = 0.001;
 # prior mean
 m0 = [0; 0];
 sigma0 = [0.2; 0.2];
@@ -78,4 +78,4 @@ petWGF = reverse(petWGF, dims=1);
 petWGF = petWGF/maximum(petWGF);
 var(petWGF .- CTscan)
 Gray.(petWGF)
-save("WGFreconstruction.png", colorview(Gray, petWGF));
+save("ct_wgf.png", colorview(Gray, petWGF));
