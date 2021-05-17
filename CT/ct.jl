@@ -24,7 +24,7 @@ CTscan = load("CT/LIDC_IDRI_0683_1_048.jpg");
 CTscan = convert(Array{Float64}, Gray.(CTscan));
 CTscan = CTscan./maximum(CTscan);
 # load data image
-sinogram = load("CT/sinogram.png");
+sinogram = load("CT/noisy_sinogram.png");
 sinogram = convert(Array{Float64}, sinogram);
 # number of angles
 pixels = size(sinogram, 1);
@@ -43,9 +43,9 @@ KDEeval = [gridX1 gridX2];
 
 # parameters for WGF
 # number of particles
-Nparticles = 5000;
+Nparticles = 10000;
 # number of samples from μ to draw at each iteration
-M = 5000;
+M = 10000;
 # time discretisation
 dt = 1e-3;
 # number of iterations
@@ -78,4 +78,4 @@ petWGF = reverse(petWGF, dims=1);
 petWGF = petWGF/maximum(petWGF);
 Gray.(petWGF)
 mse = sum((petWGF .- CTscan).^2)/512^2;
-# save("WGFreconstruction.png", colorview(Gray, petWGF));
+# save("CT_wgf.png", colorview(Gray, petWGF));

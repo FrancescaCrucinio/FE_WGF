@@ -1,27 +1,21 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
-using Revise;
-using StatsPlots;
 using Distributions;
 using Statistics;
 using StatsBase;
 using Random;
 using LinearAlgebra;
-using Interpolations;
 using Images;
-using Distances;
-using KernelDensity;
 using DelimitedFiles;
 # custom packages
 using samplers;
-using wgf_prior;
+using wgf_prior_server;
 
 # set seed
 Random.seed!(1234);
 
 # data image
-sinogram = load("CT/noisy_sinogram_128p.png");
+sinogram = load("CT/noisy_sinogram.png");
 sinogram = convert(Array{Float64}, sinogram);
 # number of angles
 pixels = size(sinogram, 1);
@@ -45,14 +39,14 @@ M = 10000;
 # time discretisation
 dt = 1e-3;
 # number of iterations
-Niter = 10;
+Niter = 200;
 # variance of normal describing alignment
 sigma = 0.02;
 # prior mean
 m0 = [0; 0];
 sigma0 = [0.35; 0.35];
 # regularisation parameter
-alpha = range(0.0, stop = 1, length = 2);
+alpha = range(0.00001, stop = 0.01, length = 2);
 
 # number of repetitions
 L = 5;
@@ -83,6 +77,11 @@ for i=1:length(alpha)
     end
 end
 
-open("resCV.txt", "w") do io
-           writedlm(io, [alpha E], ',')
-       end
+# open("resCV.txt", "w") do io
+#            writedlm(io, [alpha E], ',')
+#        end
+using StatsPlots;
+readf = readdlm("CT/resCV.txt", ',', Float64);
+alpha = readf[:, 1];
+E = readf[:, 2:end];
+plot(alpha,  mean(E, dims = 2))

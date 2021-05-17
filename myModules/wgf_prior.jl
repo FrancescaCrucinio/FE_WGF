@@ -11,6 +11,7 @@ export wgf_DKDE_tamed
 export wgf_ct_tamed
 export wgf_ct_tamed_cv
 export wgf_hd_mixture_tamed
+export ct_kde
 
 #= WGF for Spanish flu data
 OUTPUTS
@@ -235,6 +236,9 @@ function wgf_ct_tamed_cv(N, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_a
     x2[1, :] = x0[2, :];
 
     for n=1:(Niter-1)
+        # get sample from μ(y)
+        muSample = histogram2D_sampler(sinogram, xi, phi_angle, M);
+
         # Compute denominator
         muN = zeros(M, 1);
         for j=1:M
@@ -248,7 +252,7 @@ function wgf_ct_tamed_cv(N, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_a
         for i=1:N
             # precompute common quantities for gradient
             prec = -pdf.(Normal.(0, sigma), x1[n, i] * cos.(muSample[:, 2]) .+
-                    x2[n, i] * sin.(muSample[:, 2]) .- y[:, 1]) .*
+                    x2[n, i] * sin.(muSample[:, 2]) .- muSample[:, 1]) .*
                     (x1[n, i] * cos.(muSample[:, 2]) .+
                     x2[n, i] * sin.(muSample[:, 2]) .- muSample[:, 1])/sigma^2;
             gradientX1 = prec .* cos.(muSample[:, 2]);
