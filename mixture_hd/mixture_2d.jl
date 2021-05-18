@@ -9,13 +9,16 @@ using StatsBase;
 using Random;
 using Distances;
 using LinearAlgebra;
-# using OptimalTransport;
+using OptimalTransport;
 using RCall;
 @rimport ks as rks;
 # custom packages
 using smcems;
 using wgf_prior;
 include("osl_em.jl")
+
+# set seed
+Random.seed!(1234);
 
 # dimension
 p = 2;
@@ -62,9 +65,9 @@ epsilon = 1e-03;
 tSMC = @elapsed begin
 xSMC, W = smc_p_dim_gaussian_mixture(Nbins^p, Niter, epsilon, x0, muSample, sigmaK);
 # KDE
-bw1 = sqrt(epsilon^2 + optimal_bandwidthESS(x[1, :], W)^2);
-bw2 = sqrt(epsilon^2 + optimal_bandwidthESS(x[2, :], W)^2);
-Rkde = rks.kde(x = [x[1, :] x[2, :]], var"eval.points" = KDEeval, var"w" = Nbins^p*W, var"H" = [bw1^2 0; 0 bw2^2]);
+bw1 = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[1, :], W)^2);
+bw2 = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[2, :], W)^2);
+Rkde = rks.kde(x = [xSMC[1, :] xSMC[2, :]], var"eval.points" = KDEeval, var"w" = Nbins^p*W, var"H" = [bw1^2 0; 0 bw2^2]);
 SMCkde = abs.(rcopy(Rkde[3]));
 end
 SMC_EMS = reshape(SMCkde, (Nbins, Nbins));

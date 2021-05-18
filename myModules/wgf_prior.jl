@@ -125,10 +125,9 @@ function wgf_ct_tamed(N, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_angl
     # value of functional
     E = zeros(1, Niter);
 
-    # get sample from μ(y)
-    y = histogram2D_sampler(sinogram, xi, phi_angle, M);
-
     for n=1:(Niter-1)
+        # get sample from μ(y)
+        y = histogram2D_sampler(sinogram, xi, phi_angle, M);
         # log-likelihood
         loglik = zeros(M);
         for i=1:M
@@ -274,6 +273,7 @@ end
 #= WGF for Gaussian mixture in d dimensions
 OUTPUTS
 1 - particle locations
+2 - value of functional
 INPUTS
 'N' number of particles
 'dt' discretisation step
@@ -289,30 +289,80 @@ function wgf_hd_mixture_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, sig
     # initial distribution
     x = copy(x0);
     # number of dimensions
-    p = size(x0, 1);
+    d = size(x0, 1);
     # number of samples from μ(y) to draw at each iteration
     M = min(N, size(muSample, 2));
+    # value of functional
+    E = zeros(Niter);
     for n=1:(Niter-1)
         # get samples from μ(y)
         yIndex = sample(1:size(muSample, 2), M, replace = false);
         y = muSample[:, yIndex];
+
         # Compute denominator
         muN = zeros(M);
         for j=1:M
-            muN[j] = mean(pdf(MvNormal(y[:, j], sigmaK^2*Matrix{Float64}(I, 2, 2)), x));
+            muN[j] = mean(pdf(MvNormal(y[:, j], sigmaK^2*Matrix{Float64}(I, d, d)), x));
         end
+
+        # log-likelihood
+        loglik = -log.(muN);
+        kl = mean(loglik);
+        # prior
+        prior = pdf(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), x);
+        pihat = mixture_hd_kde(x, x');
+        kl_prior = mean(log.(pihat./prior));
+        E[n] = kl+alpha*kl_prior;
         # gradient and drift
-        drift = zeros(p, N);
+        drift = zeros(d, N);
         for i=1:N
             # precompute common quantities for gradient
-            prec = pdf(MvNormal(x[:, i], sigmaK^2*Matrix{Float64}(I, 2, 2)), y);
+            prec = pdf(MvNormal(x[:, i], sigmaK^2*Matrix{Float64}(I, d, d)), y);
             gradient = prec' .* (y .- x[:, i])/sigmaK^2;
             drift[:, i] =  mean(gradient./muN', dims = 2) .+ alpha*(x[:, i] .- m0)/sigma0^2;
         end
         # update locations
         drift_norm = sqrt.(sum(drift.^2, dims = 1));
-        x = x .+ dt * drift./(1 .+ dt * drift_norm) .+ sqrt(2*alpha*dt)*randn(p, N);
+        x = x .+ dt * drift./(1 .+ dt * drift_norm) .+ sqrt(2*alpha*dt)*randn(d, N);
     end
-    return x
+    # functional at last time step
+    # get samples from μ(y)
+    yIndex = sample(1:size(muSample, 2), M, replace = false);
+    y = muSample[:, yIndex];
+    muN = zeros(M);
+    for j=1:M
+        muN[j] = mean(pdf(MvNormal(y[:, j], sigmaK^2*Matrix{Float64}(I, d, d)), x));
+    end
+    # log-likelihood
+    loglik = -log.(muN);
+    kl = mean(loglik);
+    # prior
+    prior = pdf(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), x);
+    pihat = mixture_hd_kde(x, x');
+    kl_prior = mean(log.(pihat./prior));
+    E[Niter] = kl+alpha*kl_prior;
+    return x, E
 end
+#= Kernel density estimatior for mixture model in d dimnension
+OUTPUTS
+1 - KDE evaluated at KDEeval
+INPUTS
+'piSample' sample from π (Nx2 matrix)
+'KDEeval' evaluation points (2 column matrix)
+=#
+function mixture_hd_kde(piSample, KDEeval)
+    N = size(piSample, 1);
+    # Silverman's plug in bandwidth
+    bw = zeros(N);
+    for i=1:N
+        bw[i] = 1.06*Statistics.std(piSample[i, :])*N^(-1/5);
+    end
+    # kde
+    KDEdensity = zeros(size(KDEeval, 1));
+    for i = 1:size(KDEeval, 1)
+        KDEdensity[i] = mean(pdf(MvNormal(KDEeval[i, :], Diagonal(bw.^2)), piSample))/prod(bw);
+    end
+    return KDEdensity;
+end
+
 end

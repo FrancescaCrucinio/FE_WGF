@@ -1,0 +1,39 @@
+#= Sobolev norm for WGF reconstructions
+OUTPUTS
+1 - integrated square error
+2 - integrated square error for gradient
+INPUTS
+'piSample' sample from π (Nxd matrix)
+'KDEeval' evaluation points (d column matrix)
+=#
+function sobolev_norm_kde(piSample, KDEeval, piEval)
+
+    N = size(piSample, 1);
+    # Silverman's plug in bandwidth
+    bw = zeros(N);
+    for i=1:N
+        bw[i] = 1.06*Statistics.std(piSample[:, i])*N^(-1/5);
+    end
+    KDEdensity = zeros(size(KDEeval, 1));
+    gradient = zeros(size(KDEeval, 1));
+    for i = 1:size(KDEeval, 1)
+        KDEdensity[i] = mean(pdf(MvNormal(KDEeval[i, :], Diagonal(bw.^2)), piSample))/prod(bw);
+        gradient[i] = (KDEeval[i, :] .- piSample)./bw;
+    end
+
+end
+
+
+#= Sobolev norm for OSL-EM reconstructions
+OUTPUTS
+1 - integrated square error
+2 - integrated square error for gradient
+INPUTS
+'piSample' sample from π (Nxd matrix)
+'EMres' approximate solution
+=#
+function sobolev_norm_bins(piSample, EMres, piEval)
+
+    ise = sum(piEval .- EMres).^2
+    
+end
