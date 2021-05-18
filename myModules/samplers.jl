@@ -3,7 +3,6 @@ module samplers
 using Statistics;
 using StatsBase;
 using IterTools;
-using QuadGK;
 
 export Ysample_gaussian_mixture
 export histogram2D_sampler

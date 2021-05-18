@@ -12,6 +12,7 @@ export wgf_ct_tamed
 export wgf_ct_tamed_cv
 export wgf_hd_mixture_tamed
 export ct_kde
+export mixture_hd_kde
 
 #= WGF for Spanish flu data
 OUTPUTS
@@ -284,8 +285,9 @@ INPUTS
 'sigma0' standard deviation of prior
 'muSample' sample from μ
 'sigmaK' variance of mixing kernel
+'funtional' if true the value of the functional at each iteration is returned
 =#
-function wgf_hd_mixture_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, sigmaK)
+function wgf_hd_mixture_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, sigmaK, functional)
     # initial distribution
     x = copy(x0);
     # number of dimensions
@@ -305,14 +307,16 @@ function wgf_hd_mixture_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, sig
             muN[j] = mean(pdf(MvNormal(y[:, j], sigmaK^2*Matrix{Float64}(I, d, d)), x));
         end
 
-        # log-likelihood
-        loglik = -log.(muN);
-        kl = mean(loglik);
-        # prior
-        prior = pdf(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), x);
-        pihat = mixture_hd_kde(x, x');
-        kl_prior = mean(log.(pihat./prior));
-        E[n] = kl+alpha*kl_prior;
+        if(functional)
+            # log-likelihood
+            loglik = -log.(muN);
+            kl = mean(loglik);
+            # prior
+            prior = pdf(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), x);
+            pihat = mixture_hd_kde(x, x');
+            kl_prior = mean(log.(pihat./prior));
+            E[n] = kl+alpha*kl_prior;
+        end
         # gradient and drift
         drift = zeros(d, N);
         for i=1:N
@@ -326,21 +330,23 @@ function wgf_hd_mixture_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, sig
         x = x .+ dt * drift./(1 .+ dt * drift_norm) .+ sqrt(2*alpha*dt)*randn(d, N);
     end
     # functional at last time step
-    # get samples from μ(y)
-    yIndex = sample(1:size(muSample, 2), M, replace = false);
-    y = muSample[:, yIndex];
-    muN = zeros(M);
-    for j=1:M
-        muN[j] = mean(pdf(MvNormal(y[:, j], sigmaK^2*Matrix{Float64}(I, d, d)), x));
+    if(functional)
+        # get samples from μ(y)
+        yIndex = sample(1:size(muSample, 2), M, replace = false);
+        y = muSample[:, yIndex];
+        muN = zeros(M);
+        for j=1:M
+            muN[j] = mean(pdf(MvNormal(y[:, j], sigmaK^2*Matrix{Float64}(I, d, d)), x));
+        end
+        # log-likelihood
+        loglik = -log.(muN);
+        kl = mean(loglik);
+        # prior
+        prior = pdf(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), x);
+        pihat = mixture_hd_kde(x, x');
+        kl_prior = mean(log.(pihat./prior));
+        E[Niter] = kl+alpha*kl_prior;
     end
-    # log-likelihood
-    loglik = -log.(muN);
-    kl = mean(loglik);
-    # prior
-    prior = pdf(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), x);
-    pihat = mixture_hd_kde(x, x');
-    kl_prior = mean(log.(pihat./prior));
-    E[Niter] = kl+alpha*kl_prior;
     return x, E
 end
 #= Kernel density estimatior for mixture model in d dimnension

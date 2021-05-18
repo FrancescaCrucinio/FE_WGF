@@ -19,45 +19,78 @@ include("osl_em.jl")
 # set seed
 Random.seed!(1234);
 
-# dimension
-d = 2;
-# mixture of Gaussians
-means = [0.3*ones(1, d); 0.7*ones(1, d)];
-variances = [0.07^2; 0.1^2];
-pi = MixtureModel(MvNormal, [(means[1, :], diagm(variances[1]*ones(d))), (means[2, :], diagm(variances[2]*ones(d)))], [1/3, 2/3]);
-sigmaK = 0.15;
-mu = MixtureModel(MvNormal, [(means[1, :], diagm(variances[1]*ones(d) .+ sigmaK^2)), (means[2, :], diagm(variances[2]*ones(d) .+ sigmaK^2))], [1/3, 2/3]);
-
 # parameters for penalised KL
+# regularisation parameter
 alpha = 0.01;
-Niter = 100;
-m0 = 0.5;
-sigma0 = 0.25;
-Nparticles = 10^2;
-Nbins = trunc(Integer, ceil(Nparticles^(1/d)));
-
-# OSL-EM
-Xbins = range(0, stop = 1, length = Nbins);
-iter = Iterators.product((Xbins for _ in 1:d)...);
-KDEeval = reduce(vcat, vec([collect(i) for i in iter])');
-# discretise μ
-muDisc = pdf(mu, KDEeval');
-# reference measure
-pi0 = pdf(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), KDEeval');
-tEM = @elapsed begin
-EMres, funEM = osl_em(muDisc, sigmaK, alpha, Niter, pi0, pi0, KDEeval);
-end
-plot(funEM)
-# WGF
+# number of iterations
+Niter = 50;
 # time discretisation
 dt = 1e-2;
-# sample from μ
-muSample = rand(mu, 10^6);
-# initial distribution
-x0 = rand(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), Nparticles);
-tWGF = @elapsed begin
-xWGF, funWGF = wgf_hd_mixture_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, sigmaK);
-#Rkde = rks.kde(x = [xWGF[1, :] xWGF[2, :]], var"eval.points" = KDEeval);
-#WGFres = abs.(rcopy(Rkde[3]));
+# reference measure
+m0 = 0.5;
+sigma0 = 0.25;
+# number of particles
+Nparticles = 10^3;
+# find bins closest to number of particles
+function find_bins(Nparticles, d)
+    bins = [[ceil(Nparticles^(1/i))^i for i in 1:d]';
+        [floor(Nparticles^(1/i))^i for i in 1:d]'];
+    solve = argmin(abs.(bins .- Nparticles), dims = 1);
+    optima = [solve[i][1] for i in 1:d];
+    Nbins = [bins[optima[i], i]^(1/i) for i in 1:d];
+    return Nbins
 end
-plot(funWGF)
+Nbins = trunc.(Int, find_bins(Nparticles, 5));
+
+# number of replicates
+Nrep = 1;
+t_d = zeros(5, 2);
+ise_d = zeros(5, 2);
+for d=1:5
+    # mixture of Gaussians
+    means = [0.3*ones(1, d); 0.7*ones(1, d)];
+    variances = [0.07^2; 0.1^2];
+    pi = MixtureModel(MvNormal, [(means[1, :], diagm(variances[1]*ones(d))), (means[2, :], diagm(variances[2]*ones(d)))], [1/3, 2/3]);
+    sigmaK = 0.15;
+    mu = MixtureModel(MvNormal, [(means[1, :], diagm(variances[1]*ones(d) .+ sigmaK^2)), (means[2, :], diagm(variances[2]*ones(d) .+ sigmaK^2))], [1/3, 2/3]);
+
+    # discretisation
+    Xbins = range(0, stop = 1, length = Nbins[d]);
+    dx = Xbins[2] - Xbins[1];
+    iter = Iterators.product((Xbins for _ in 1:d)...);
+    KDEeval = reduce(vcat, vec([collect(i) for i in iter])');
+    # discretise μ
+    muDisc = pdf(mu, KDEeval');
+    # reference measure
+    pi0 = pdf(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), KDEeval');
+    # exact solution
+    truth = pdf(pi, KDEeval');
+
+    tWGFrep = zeros(Nrep);
+    tEMrep = zeros(Nrep);
+    iseWGFrep = zeros(Nrep);
+    iseEMrep = zeros(Nrep);
+    for j=1:Nrep
+        # OSL-EM
+        tEMrep[j] = @elapsed begin
+        EM, _ = osl_em(muDisc, sigmaK, alpha, Niter, pi0, pi0, KDEeval, false);
+        end
+        iseEMrep[j] = dx^d * sum((EM .- truth).^2);
+        # WGF
+        # sample from μ
+        muSample = rand(mu, 10^6);
+        # initial distribution
+        x0 = rand(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), Nparticles);
+        tWGFrep[j] = @elapsed begin
+        xWGF, _ = wgf_hd_mixture_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, sigmaK, false);
+        Rkde = rks.kde(x = transpose(xWGF), var"eval.points" = KDEeval);
+        WGF = abs.(rcopy(Rkde[3]));
+        end
+        iseWGFrep[j] = dx^d * sum((WGF .- truth).^2);
+    end
+    t_d[d, 1] = mean(tEMrep);
+    t_d[d, 2] = mean(tWGFrep);
+    ise_d[d, 1] = mean(iseEMrep);
+    ise_d[d, 2] = mean(iseWGFrep);
+end
+plot(1:5, t_d)
