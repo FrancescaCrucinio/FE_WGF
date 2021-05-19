@@ -9,8 +9,6 @@ using StatsBase;
 using Random;
 using Distances;
 using LinearAlgebra;
-# using RCall;
-# @rimport ks as rks;
 # custom packages
 using wgf_prior;
 using smcems;
