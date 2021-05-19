@@ -129,22 +129,6 @@ function wgf_ct_tamed(N, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_angl
     for n=1:(Niter-1)
         # get sample from μ(y)
         y = histogram2D_sampler(sinogram, xi, phi_angle, M);
-        # log-likelihood
-        loglik = zeros(M);
-        for i=1:M
-            loglik[i] = mean(pdf.(Normal.(0, sigma), x1[n, :] * cos(y[i, 2]) .+
-                x2[n, :] * sin(y[i, 2]) .- y[i, 1]));
-        end
-        loglik = -log.(loglik);
-        kl = mean(loglik);
-        # prior
-        prior = pdf(MvNormal(m0, Diagonal(sigma0)), [x1[n, :] x2[n, :]]');
-        pihat = ct_kde([x1[n, :] x2[n, :]], [x1[n, :] x2[n, :]]);
-        kl_prior = mean(log.(pihat[:]./prior));
-        E[n] = kl+alpha*kl_prior;
-
-        # get sample from μ(y)
-        y = histogram2D_sampler(sinogram, xi, phi_angle, M);
 
         # Compute denominator
         muN = zeros(M, 1);
@@ -152,6 +136,15 @@ function wgf_ct_tamed(N, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_angl
             muN[j] = mean(pdf.(Normal.(0, sigma), x1[n, :] * cos(y[j, 2]) .+
                     x2[n, :] * sin(y[j, 2]) .- y[j, 1]));
         end
+
+        # log-likelihood
+        loglik = -log.(muN);
+        kl = mean(loglik);
+        # prior
+        prior = pdf(MvNormal(m0, Diagonal(sigma0)), [x1[n, :] x2[n, :]]');
+        pihat = ct_kde([x1[n, :] x2[n, :]], [x1[n, :] x2[n, :]]);
+        kl_prior = mean(log.(pihat[:]./prior));
+        E[n] = kl+alpha*kl_prior;
 
         # gradient and drift
         driftX1 = zeros(N, 1);
@@ -175,12 +168,12 @@ function wgf_ct_tamed(N, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_angl
         x1[n+1, :] = x1[n, :] .+ dt * driftX1./(1 .+ dt * drift_norm) .+ sqrt(2*alpha*dt)*randn(N, 1);
         x2[n+1, :] = x2[n, :] .+ dt * driftX2./(1 .+ dt * drift_norm) .+ sqrt(2*alpha*dt)*randn(N, 1);
     end
-    loglik = zeros(M);
+    muN = zeros(M);
     for i=1:M
-        loglik[i] = mean(pdf.(Normal.(0, sigma), x1[Niter, :] * cos(y[i, 2]) .+
+        muN[i] = mean(pdf.(Normal.(0, sigma), x1[Niter, :] * cos(y[i, 2]) .+
             x2[Niter, :] * sin(y[i, 2]) .- y[i, 1]));
     end
-    loglik = -log.(loglik);
+    loglik = -log.(muN);
     kl = mean(loglik);
     # prior
     prior = pdf(MvNormal(m0, Diagonal(sigma0)), [x1[Niter, :] x2[Niter, :]]');
