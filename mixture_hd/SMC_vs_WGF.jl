@@ -9,12 +9,12 @@ using StatsBase;
 using Random;
 using Distances;
 using LinearAlgebra;
-# using OptimalTransport;
 # using RCall;
 # @rimport ks as rks;
 # custom packages
 using wgf_prior;
 using smcems;
+include("sobolev_norm_kde");
 
 # set seed
 Random.seed!(1234);
@@ -40,10 +40,10 @@ dt = 1e-2;
 m0 = 0.5;
 sigma0 = 0.25;
 # number of particles
-Nparticles = 10^2;
+Nparticles = 10^3;
 # sample from μ
 muSample = rand(mu, 10^6);
-x0 = rand(mu, Nparticles);
+x0 = rand(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), Nparticles);
 
 
 # SMC-EMS
@@ -57,14 +57,6 @@ tWGF = @elapsed begin
 xWGF, funWGF = wgf_hd_mixture_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, sigmaK, true);
 end
 
-#
-piSample = rand(pi, 10^6);
-piWeights = fill(1/10^6, 10^6);
 
-C = pairwise(Cityblock(), piSample, xSMC, dims = 2);
-OptimalTransport.emd2(piWeights, W, C)
-sinkhorn2(piWeights, W, C, 1e-1; tol=1e-9, check_marginal_step=10, maxiter=1000)
-
-C = pairwise(Cityblock(), piSample, xWGF, dims = 2);
-OptimalTransport.emd2(piWeights, fill(1/Nparticles, Nparticles), C)
-sinkhorn2(piWeights, fill(1/Nparticles, Nparticles), C, 1e-1; tol=1e-9, check_marginal_step=10, maxiter=1000)
+sobolev_norm_kde(xSMC, 10, W, epsilon)
+sobolev_norm_kde(xWGF, 10, WGFWeights, epsilon)

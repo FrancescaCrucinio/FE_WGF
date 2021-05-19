@@ -11,7 +11,6 @@ using LinearAlgebra;
 using Interpolations;
 using Images;
 using Distances;
-using KernelDensity;
 # custom packages
 using samplers;
 using wgf_prior;

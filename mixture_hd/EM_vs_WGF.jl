@@ -10,14 +10,17 @@ using Random;
 using Distances;
 using LinearAlgebra;
 using OptimalTransport;
-using RCall;
-@rimport ks as rks;
+using KernelEstimator;
 # custom packages
 using wgf_prior;
 include("osl_em.jl")
 
 # set seed
 Random.seed!(1234);
+
+# mean and variances
+means = [0.3; 0.7];
+variances = [0.07^2; 0.1^2];
 
 # parameters for penalised KL
 # regularisation parameter
@@ -42,29 +45,31 @@ function find_bins(Nparticles, d)
 end
 Nbins = trunc.(Int, find_bins(Nparticles, 5));
 
+# 1d marginal
+KDEx = range(0, stop = 1, length = 100);
+dKDEx = KDEx[2] - KDEx[1];
+truth = pdf.(Normal(means[1], sqrt(variances[1])), KDEx)/3 + 2*pdf.(Normal(means[2], sqrt(variances[2])), KDEx)/3;
+
 # number of replicates
 Nrep = 1;
 t_d = zeros(5, 2);
 ise_d = zeros(5, 2);
-for d=1:5
+for d=1
     # mixture of Gaussians
-    means = [0.3*ones(1, d); 0.7*ones(1, d)];
-    variances = [0.07^2; 0.1^2];
-    pi = MixtureModel(MvNormal, [(means[1, :], diagm(variances[1]*ones(d))), (means[2, :], diagm(variances[2]*ones(d)))], [1/3, 2/3]);
+    pi = MixtureModel(MvNormal, [(means[1]*ones(d), diagm(variances[1]*ones(d))), (means[2]*ones(d), diagm(variances[2]*ones(d)))], [1/3, 2/3]);
     sigmaK = 0.15;
     mu = MixtureModel(MvNormal, [(means[1, :], diagm(variances[1]*ones(d) .+ sigmaK^2)), (means[2, :], diagm(variances[2]*ones(d) .+ sigmaK^2))], [1/3, 2/3]);
 
     # discretisation
-    Xbins = range(0, stop = 1, length = Nbins[d]);
-    dx = Xbins[2] - Xbins[1];
+    # bin centres
+    Xbins = range(1/Nbins[d], stop = 1-1/Nbins[d], length = Nbins[d]);
     iter = Iterators.product((Xbins for _ in 1:d)...);
-    KDEeval = reduce(vcat, vec([collect(i) for i in iter])');
+    KDEeval = reduce(hcat, [collect(i) for i in iter])';
     # discretise μ
     muDisc = pdf(mu, KDEeval');
     # reference measure
     pi0 = pdf(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), KDEeval');
-    # exact solution
-    truth = pdf(pi, KDEeval');
+
 
     tWGFrep = zeros(Nrep);
     tEMrep = zeros(Nrep);
@@ -73,9 +78,14 @@ for d=1:5
     for j=1:Nrep
         # OSL-EM
         tEMrep[j] = @elapsed begin
-        EM, _ = osl_em(muDisc, sigmaK, alpha, Niter, pi0, pi0, KDEeval, false);
+        resEM, _ = osl_em(muDisc, sigmaK, alpha, Niter, pi0, pi0, KDEeval, false);
         end
-        iseEMrep[j] = dx^d * sum((EM .- truth).^2);
+        # get closest bin centre for KDEx
+        binCENTRE = [searchsortedlast(Xbins, i) for i in KDEx];
+        binCENTRE[binCENTRE .== 0] .= 1;
+        EM = [resEM[1, i] for i in binCENTRE];
+        iseEMrep[j] = dKDEx * sum((EM .- truth).^2);
+
         # WGF
         # sample from μ
         muSample = rand(mu, 10^6);
@@ -83,10 +93,9 @@ for d=1:5
         x0 = rand(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), Nparticles);
         tWGFrep[j] = @elapsed begin
         xWGF, _ = wgf_hd_mixture_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, sigmaK, false);
-        Rkde = rks.kde(x = transpose(xWGF), var"eval.points" = KDEeval);
-        WGF = abs.(rcopy(Rkde[3]));
+        WGF = kerneldensity(xWGF[1, :], xeval=KDEx);
         end
-        iseWGFrep[j] = dx^d * sum((WGF .- truth).^2);
+        iseWGFrep[j] = dKDEx * sum((WGF .- truth).^2);
     end
     t_d[d, 1] = mean(tEMrep);
     t_d[d, 2] = mean(tWGFrep);
