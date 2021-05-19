@@ -14,10 +14,11 @@ INPUTS
 =#
 
 function osl_em(muDisc, sigmaK, alpha, Niter, pi0, pi_init, KDEeval, functional)
-    # get dimension of unknown function f
+    # get dimension of approximation
     M = length(pi_init);
     # initial distribution
     pi = copy(pi_init);
+    Nbins = sum(pi);
     # discretisation grid
     dx = KDEeval[2, 1] .- KDEeval[1, 1];
     # dimension

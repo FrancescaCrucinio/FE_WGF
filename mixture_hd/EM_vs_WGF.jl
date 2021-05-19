@@ -31,7 +31,7 @@ dt = 1e-2;
 m0 = 0.5;
 sigma0 = 0.25;
 # number of particles
-Nparticles = 10^4;
+Nparticles = 10^3;
 # find bins closest to number of particles
 function find_bins(Nparticles, d)
     bins = [[ceil(Nparticles^(1/i))^i for i in 1:d]';
@@ -70,7 +70,6 @@ for d=1:5
     muDisc = pdf(mu, KDEeval');
     # reference measure
     pi0 = pdf(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), KDEeval');
-
     for j=1:Nrep
         # OSL-EM
         tEM[j, d] = @elapsed begin
@@ -82,6 +81,7 @@ for d=1:5
         if(d>1)
             resEMmarginal = [sum(resEM[(i*Nbins[d] + 1):(i+1)*Nbins[d]]) for i in 0:Nbins[d]-1];
             EM = [resEMmarginal[i] for i in binCENTRE];
+            EM = EM/sum(EM)*sum(truth);
         else
             # if we have more or equal just choose the closest one
             EM = resEM[binCENTRE];
@@ -99,5 +99,7 @@ for d=1:5
         iseWGF[j, d] = dKDEx * sum((WGF .- truth).^2);
     end
 end
-plot(1:5, t_d)
-plot(1:5, ise_d)
+plot(1:5, mean(tEM, dims = 1)[:])
+plot!(1:5, mean(tWGF, dims = 1)[:])
+plot(1:5, mean(iseEM, dims = 1)[:])
+plot!(1:5, mean(iseWGF, dims = 1)[:])
