@@ -9,7 +9,7 @@ using samplers;
 
 export smc_gaussian_mixture
 export optimal_bandwidthESS
-export smc_p_dim_gaussian_mixture
+export smc_mixture_hd
 
 #= SMC for gaussian mixture exmaple
 OUTPUTS
@@ -118,6 +118,7 @@ end
 OUTPUTS
 1 - particle locations
 2 - particle weights
+3 - value of KL
 INPUTS
 'N' number of particles
 'Niter' number of time steps
@@ -125,8 +126,9 @@ INPUTS
 'x0' initial distribution.
 'muSample' sample from μ
 'sigmaK' standard deviation of k
+'funtional' if true the value of the KL divergence at each iteration is returned
 =#
-function smc_p_dim_gaussian_mixture(N, Niter, epsilon, x0, muSample, sigmaK)
+function smc_mixture_hd(N, Niter, epsilon, x0, muSample, sigmaK, functional)
     # initial distribution
     x = copy(x0);
     # number of dimensions
@@ -135,6 +137,7 @@ function smc_p_dim_gaussian_mixture(N, Niter, epsilon, x0, muSample, sigmaK)
     W = ones(N)/N;
     # number of samples to draw from μ(y)
     M = min(N, size(muSample, 2));
+    E = zeros(Niter);
     for n=2:Niter
         # sample from μ
         yIndex = sample(1:size(muSample, 2), M, replace = false);
@@ -157,6 +160,12 @@ function smc_p_dim_gaussian_mixture(N, Niter, epsilon, x0, muSample, sigmaK)
             muN[j] = mean(W .* pdf(MvNormal(y[:, j], sigmaK^2*Matrix{Float64}(I, 2, 2)), x));
         end
 
+        if(functional)
+            # log-likelihood
+            loglik = -log.(muN);
+            E[n-1] =  mean(loglik);
+        end
+
         # update weights
         for i=1:N
             g = pdf(MvNormal(x[:, i], sigmaK^2*Matrix{Float64}(I, 2, 2)), y);
@@ -168,6 +177,19 @@ function smc_p_dim_gaussian_mixture(N, Niter, epsilon, x0, muSample, sigmaK)
         # normalise weights
         W = W / sum(W);
     end
-    return x, W
+    # sample from μ
+    yIndex = sample(1:size(muSample, 2), M, replace = false);
+    y = muSample[:, yIndex];
+    # Compute μ^N_{n}
+    muN = zeros(M, 1);
+    for j=1:M
+        muN[j] = mean(W .* pdf(MvNormal(y[:, j], sigmaK^2*Matrix{Float64}(I, 2, 2)), x));
+    end
+    if(functional)
+        # log-likelihood
+        loglik = -log.(muN);
+        E[Niter] =  mean(loglik);
+    end
+    return x, W, E
 end
 end
