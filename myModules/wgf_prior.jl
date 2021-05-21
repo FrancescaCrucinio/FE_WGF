@@ -289,6 +289,8 @@ function wgf_hd_mixture_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, sig
     M = min(N, size(muSample, 2));
     # value of functional
     E = zeros(Niter);
+    # entropy
+    ent = zeros(Niter);
     for n=1:(Niter-1)
         # get samples from μ(y)
         yIndex = sample(1:size(muSample, 2), M, replace = false);
@@ -308,6 +310,7 @@ function wgf_hd_mixture_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, sig
             prior = pdf(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), x);
             pihat = mixture_hd_kde(x, x');
             kl_prior = mean(log.(pihat./prior));
+            ent[n] = mean(log.(pihat));
             E[n] = kl+alpha*kl_prior;
         end
         # gradient and drift
@@ -338,22 +341,26 @@ function wgf_hd_mixture_tamed(N, dt, Niter, alpha, x0, m0, sigma0, muSample, sig
         prior = pdf(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), x);
         pihat = mixture_hd_kde(x, x');
         kl_prior = mean(log.(pihat./prior));
+        ent[Niter] = mean(log.(pihat));
         E[Niter] = kl+alpha*kl_prior;
     end
-    return x, E
+    return x, E, ent
 end
-#= Kernel density estimatior for mixture model in d dimnension
+#= Kernel density estimatior for mixture model in d dimension
 OUTPUTS
 1 - KDE evaluated at KDEeval
 INPUTS
-'piSample' sample from π (Nx2 matrix)
-'KDEeval' evaluation points (2 column matrix)
+'piSample' sample from π (dxN matrix)
+'KDEeval' evaluation points (d rows matrix)
 =#
 function mixture_hd_kde(piSample, KDEeval)
-    N = size(piSample, 1);
+    # dimension
+    d = size(piSample, 1);
+    # number of samples 
+    N = size(piSample, 2);
     # Silverman's plug in bandwidth
-    bw = zeros(N);
-    for i=1:N
+    bw = zeros(d);
+    for i=1:d
         bw[i] = 1.06*Statistics.std(piSample[i, :])*N^(-1/5);
     end
     # kde

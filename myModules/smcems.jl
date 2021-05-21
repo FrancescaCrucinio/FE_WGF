@@ -10,6 +10,7 @@ using samplers;
 export smc_gaussian_mixture
 export optimal_bandwidthESS
 export smc_mixture_hd
+export mixture_hd_kde_weighted
 
 #= SMC for gaussian mixture exmaple
 OUTPUTS
@@ -192,4 +193,31 @@ function smc_mixture_hd(N, Niter, epsilon, x0, muSample, sigmaK, functional)
     end
     return x, W, E
 end
+#= Kernel density estimatior for mixture model in d dimension
+OUTPUTS
+1 - KDE evaluated at KDEeval
+INPUTS
+'piSample' sample from π (dxN matrix)
+'W' weights for piSample
+'KDEeval' evaluation points (d rows matrix)
+'epsilon' standard deviation for Gaussian smoothing kernel
+=#
+function mixture_hd_kde_weighted(piSample, W, KDEeval, epsilon)
+    # dimension
+    d = size(piSample, 1);
+    # number of samples
+    N = size(piSample, 2);
+    # Silverman's plug in bandwidth
+    bw = zeros(d);
+    for i=1:d
+        bw[i] = sqrt(epsilon^2 + optimal_bandwidthESS(piSample[i, :], W)^2);
+    end
+    # kde
+    KDEdensity = zeros(size(KDEeval, 1));
+    for i = 1:size(KDEeval, 1)
+        KDEdensity[i] = sum(W.*pdf(MvNormal(KDEeval[i, :], Diagonal(bw.^2)), piSample))/prod(bw);
+    end
+    return KDEdensity;
+end
+
 end

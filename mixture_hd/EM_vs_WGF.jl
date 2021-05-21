@@ -1,5 +1,5 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -31,7 +31,7 @@ dt = 1e-2;
 m0 = 0.5;
 sigma0 = 0.25;
 # number of particles
-Nparticles = 10^3;
+Nparticles = 10^5;
 # find bins closest to number of particles
 function find_bins(Nparticles, d)
     bins = [[ceil(Nparticles^(1/i))^i for i in 1:d]';
@@ -49,12 +49,12 @@ dKDEx = KDEx[2] - KDEx[1];
 truth = pdf.(Normal(means[1], sqrt(variances[1])), KDEx)/3 + 2*pdf.(Normal(means[2], sqrt(variances[2])), KDEx)/3;
 
 # number of replicates
-Nrep = 2;
+Nrep = 1;
 tEM = zeros(Nrep, 5);
 iseEM = zeros(Nrep, 5);
 tWGF = zeros(Nrep, 5);
 iseWGF = zeros(Nrep, 5);
-for d=1:5
+Threads.@threads for d=1:5
     # mixture of Gaussians
     pi = MixtureModel(MvNormal, [(means[1]*ones(d), diagm(variances[1]*ones(d))), (means[2]*ones(d), diagm(variances[2]*ones(d)))], [1/3, 2/3]);
     sigmaK = 0.15;
@@ -70,7 +70,7 @@ for d=1:5
     muDisc = pdf(mu, KDEeval');
     # reference measure
     pi0 = pdf(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), KDEeval');
-    for j=1:Nrep
+    @simd for j=1:Nrep
         # OSL-EM
         tEM[j, d] = @elapsed begin
         resEM, _ = osl_em(muDisc, sigmaK, alpha, Niter, pi0, pi0, KDEeval, false);
@@ -97,6 +97,7 @@ for d=1:5
         WGF = kerneldensity(xWGF[1, :], xeval=KDEx);
         end
         iseWGF[j, d] = dKDEx * sum((WGF .- truth).^2);
+        println("$d, $j")
     end
 end
 plot(1:5, mean(tEM, dims = 1)[:])

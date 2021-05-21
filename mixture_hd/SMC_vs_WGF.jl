@@ -1,5 +1,5 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -19,11 +19,11 @@ Random.seed!(1234);
 
 d = 2;
 # mixture of Gaussians
-means = [0.3*ones(1, d); 0.7*ones(1, d)];
+means = [0.3 0.7];
 variances = [0.07^2; 0.1^2];
-pi = MixtureModel(MvNormal, [(means[1, :], diagm(variances[1]*ones(d))), (means[2, :], diagm(variances[2]*ones(d)))], [1/3, 2/3]);
+pi = MixtureModel(MvNormal, [(means[1]*ones(d), diagm(variances[1]*ones(d))), (means[2]*ones(d), diagm(variances[2]*ones(d)))], [1/3, 2/3]);
 sigmaK = 0.15;
-mu = MixtureModel(MvNormal, [(means[1, :], diagm(variances[1]*ones(d) .+ sigmaK^2)), (means[2, :], diagm(variances[2]*ones(d) .+ sigmaK^2))], [1/3, 2/3]);
+mu = MixtureModel(MvNormal, [(means[1]*ones(d), diagm(variances[1]*ones(d) .+ sigmaK^2)), (means[2]*ones(d), diagm(variances[2]*ones(d) .+ sigmaK^2))], [1/3, 2/3]);
 
 
 # parameters for penalised KL
@@ -31,7 +31,7 @@ mu = MixtureModel(MvNormal, [(means[1, :], diagm(variances[1]*ones(d) .+ sigmaK^
 epsilon = 1e-03;
 alpha = 0.01;
 # number of iterations
-Niter = 50;
+Niter = 100;
 # time discretisation
 dt = 1e-2;
 # reference measure
@@ -48,13 +48,16 @@ x0 = rand(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), Nparticles);
 tSMC = @elapsed begin
 xSMC, W, funSMC = smc_mixture_hd(Nparticles, Niter, epsilon, x0, muSample, sigmaK, true);
 end
-
+entSMC = mixture_hd_kde_weighted(xSMC, W, xSMC', epsilon);
+mean(xSMC[1, :])
+var(xSMC[1, :])
 # WGF
 dt = 1e-2;
 tWGF = @elapsed begin
-xWGF, funWGF = wgf_hd_mixture_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, sigmaK, true);
+xWGF, funWGF, entWGF = wgf_hd_mixture_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, sigmaK, true);
 end
-
-
-sobolev_norm_kde(xSMC, 10, W, epsilon)
-sobolev_norm_kde(xWGF, 10, WGFWeights, epsilon)
+mean(xWGF[1, :])
+var(xWGF[1, :])
+#
+# sobolev_norm_kde(xSMC, 10, W, epsilon)
+# sobolev_norm_kde(xWGF, 10, WGFWeights, epsilon)
