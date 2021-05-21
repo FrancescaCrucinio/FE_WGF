@@ -8,9 +8,7 @@ using Statistics;
 using StatsBase;
 using Random;
 using LinearAlgebra;
-using Interpolations;
 using Images;
-using Distances;
 # custom packages
 using samplers;
 using wgf_prior;
@@ -50,7 +48,7 @@ dt = 1e-3;
 # number of iterations
 Niter = 200;
 # regularisation parameter
-alpha = 0.0001;
+alpha = 0.007;
 # prior mean
 m0 = [0; 0];
 sigma0 = [0.35; 0.35];
