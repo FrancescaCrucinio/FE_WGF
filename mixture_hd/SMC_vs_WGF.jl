@@ -7,7 +7,6 @@ using Distributions;
 using Statistics;
 using StatsBase;
 using Random;
-using Distances;
 using LinearAlgebra;
 # custom packages
 using wgf_prior;
@@ -29,7 +28,7 @@ mu = MixtureModel(MvNormal, [(means[1]*ones(d), diagm(variances[1]*ones(d) .+ si
 # parameters for penalised KL
 # regularisation parameters
 epsilon = 1e-03;
-alpha = 0.01;
+alpha = 0.015;
 # number of iterations
 Niter = 100;
 # time discretisation
@@ -38,17 +37,17 @@ dt = 1e-2;
 m0 = 0.5;
 sigma0 = 0.25;
 # number of particles
-Nparticles = 10^3;
+Nparticles = 10^4;
 # sample from μ
 muSample = rand(mu, 10^6);
-x0 = rand(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), Nparticles);
+x0 = rand(mu, Nparticles);
 
 
 # SMC-EMS
 tSMC = @elapsed begin
 xSMC, W, funSMC = smc_mixture_hd(Nparticles, Niter, epsilon, x0, muSample, sigmaK, true);
 end
-entSMC = mixture_hd_kde_weighted(xSMC, W, xSMC', epsilon);
+entSMC = mean(log.(mixture_hd_kde_weighted(xSMC, W, xSMC', epsilon)));
 mean(xSMC[1, :])
 var(xSMC[1, :])
 # WGF

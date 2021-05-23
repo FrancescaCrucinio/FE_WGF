@@ -168,6 +168,8 @@ function wgf_ct_tamed(N, dt, Niter, alpha, x0, m0, sigma0, M, sinogram, phi_angl
         x1[n+1, :] = x1[n, :] .+ dt * driftX1./(1 .+ dt * drift_norm) .+ sqrt(2*alpha*dt)*randn(N, 1);
         x2[n+1, :] = x2[n, :] .+ dt * driftX2./(1 .+ dt * drift_norm) .+ sqrt(2*alpha*dt)*randn(N, 1);
     end
+    # get sample from μ(y)
+    y = histogram2D_sampler(sinogram, xi, phi_angle, M);
     muN = zeros(M);
     for i=1:M
         muN[i] = mean(pdf.(Normal.(0, sigma), x1[Niter, :] * cos(y[i, 2]) .+
@@ -356,7 +358,7 @@ INPUTS
 function mixture_hd_kde(piSample, KDEeval)
     # dimension
     d = size(piSample, 1);
-    # number of samples 
+    # number of samples
     N = size(piSample, 2);
     # Silverman's plug in bandwidth
     bw = zeros(d);

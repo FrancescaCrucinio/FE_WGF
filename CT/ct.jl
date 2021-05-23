@@ -32,8 +32,8 @@ xi = range(-floor(offsets/2), stop = floor(offsets/2), length = offsets);
 xi = xi/maximum(xi);
 
 # grid
-X1bins = range(-0.75 + 1/pixels, stop = 0.75 - 1/pixels, length = pixels);
-X2bins = range(-0.75 + 1/pixels, stop = 0.75 - 1/pixels, length = pixels);
+X1bins = range(-0.7 + 1/pixels, stop = 0.7 - 1/pixels, length = pixels);
+X2bins = range(-0.7 + 1/pixels, stop = 0.7 - 1/pixels, length = pixels);
 gridX1 = repeat(X1bins, inner=[pixels, 1]);
 gridX2 = repeat(X2bins, outer=[pixels 1]);
 KDEeval = [gridX1 gridX2];
