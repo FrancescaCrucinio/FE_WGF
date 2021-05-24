@@ -32,28 +32,22 @@ dt = 1e-2;
 m0 = 0.5;
 sigma0 = 0.25;
 # number of particles
-Nparticles = 10^5;
+Nparticles = 10^4;
 # dimension
 d = 1;
 # find bins closest to number of particles
-function find_bins(Nparticles, d)
-    bins = [[ceil(Nparticles^(1/i))^i for i in 1:d]';
-        [floor(Nparticles^(1/i))^i for i in 1:d]'];
-    solve = argmin(abs.(bins .- Nparticles), dims = 1);
-    optima = [solve[i][1] for i in 1:d];
-    Nbins = [bins[optima[i], i]^(1/i) for i in 1:d];
-    return Nbins
-end
-Nbins = trunc.(Int, find_bins(Nparticles, 5));
+bins = [ceil(Nparticles^(1/d)) floor(Nparticles^(1/d))];
+solve = argmin(abs.(bins.^d .- Nparticles));
+Nbins = trunc.(Int, bins[solve[1][1]]);
 
 # mixture of Gaussians
-pi = MixtureModel(MvNormal, [(means[1]*ones(d), diagm(variances[1]*ones(d))), (means[2]*ones(d), diagm(variances[2]*ones(d)))], [1/3, 2/3]);
+# pi = MixtureModel(MvNormal, [(means[1]*ones(d), diagm(variances[1]*ones(d))), (means[2]*ones(d), diagm(variances[2]*ones(d)))], [1/3, 2/3]);
 sigmaK = 0.15;
 mu = MixtureModel(MvNormal, [(means[1]*ones(d), diagm(variances[1]*ones(d) .+ sigmaK^2)), (means[2]*ones(d), diagm(variances[2]*ones(d) .+ sigmaK^2))], [1/3, 2/3]);
 
 # discretisation
 # bin centres
-Xbins = range(1/Nbins[d], stop = 1-1/Nbins[d], length = Nbins[d]);
+Xbins = range(1/Nbins, stop = 1-1/Nbins, length = Nbins);
 iter = Iterators.product((Xbins for _ in 1:d)...);
 KDEeval = reduce(hcat, [collect(i) for i in iter])';
 KDEeval = reverse(KDEeval, dims = 2);
@@ -68,7 +62,7 @@ dKDEx = KDEx[2] - KDEx[1];
 truth = pdf.(Normal(means[1], sqrt(variances[1])), KDEx)/3 + 2*pdf.(Normal(means[2], sqrt(variances[2])), KDEx)/3;
 
 # number of replicates
-Nrep = 1;
+Nrep = 100;
 tEM = zeros(Nrep);
 iseEM = zeros(Nrep);
 tWGF = zeros(Nrep);
@@ -82,14 +76,14 @@ for j=1:Nrep
     binCENTRE = [searchsortedlast(Xbins, i) for i in KDEx];
     binCENTRE[binCENTRE .== 0] .= 1;
     if(d>1)
-        resEMmarginal = [sum(resEM[(i*Nbins[d] + 1):(i+1)*Nbins[d]]) for i in 0:Nbins[d]-1];
+        resEMmarginal = [sum(resEM[(i*Nbins + 1):(i+1)*Nbins]) for i in 0:Nbins-1];
         EM = [resEMmarginal[i] for i in binCENTRE];
         EM = EM/sum(EM)*sum(truth);
     else
         # if we have more or equal just choose the closest one
         EM = resEM[binCENTRE];
     end
-    iseEM[j, d] = dKDEx * sum((EM .- truth).^2);
+    iseEM[j] = dKDEx * sum((EM .- truth).^2);
     # WGF
     # sample from μ
     muSample = rand(mu, 10^6);
@@ -103,5 +97,5 @@ for j=1:Nrep
     println("$d, $j")
 end
 open("em_vs_wgf_1d.txt", "w") do io
-           writedlm(io, [tEM iseEM tWGF iseWGF], ',')
+           writedlm(io, [tEM; iseEM; tWGF; iseWGF], ',')
        end
