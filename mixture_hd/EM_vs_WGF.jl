@@ -67,7 +67,7 @@ tEM = zeros(Nrep);
 iseEM = zeros(Nrep);
 tWGF = zeros(Nrep);
 iseWGF = zeros(Nrep);
-for j=1:Nrep
+Threads.@threads for j=1:Nrep
     # OSL-EM
     tEM[j] = @elapsed begin
     resEM, _ = osl_em(muDisc, sigmaK, alpha, Niter, pi0, pi0, KDEeval, false);
