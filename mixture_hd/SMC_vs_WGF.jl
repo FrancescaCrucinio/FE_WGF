@@ -16,7 +16,7 @@ include("sobolev_norm_kde");
 # set seed
 Random.seed!(1234);
 
-d = 2;
+d = 1;
 # mixture of Gaussians
 means = [0.3 0.7];
 variances = [0.07^2; 0.1^2];
@@ -37,7 +37,7 @@ dt = 1e-2;
 m0 = 0.5;
 sigma0 = 0.25;
 # number of particles
-Nparticles = 10^4;
+Nparticles = 10^2;
 # sample from μ
 muSample = rand(mu, 10^6);
 x0 = rand(mu, Nparticles);

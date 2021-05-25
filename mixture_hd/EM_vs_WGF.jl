@@ -1,4 +1,5 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -33,7 +34,7 @@ sigma0 = 0.25;
 # number of particles
 Nparticles = 10^4;
 # dimension
-d = 1;
+d = 2;
 # find bins closest to number of particles
 bins = [ceil(Nparticles^(1/d)) floor(Nparticles^(1/d))];
 solve = argmin(abs.(bins.^d .- Nparticles));
@@ -95,6 +96,6 @@ for j=1:Nrep
     iseWGF[j] = dKDEx * sum((WGF .- truth).^2);
     println("$d, $j")
 end
-open("em_vs_wgf_1d.txt", "w") do io
+open("em_vs_wgf_2d.txt", "w") do io
            writedlm(io, [tEM; iseEM; tWGF; iseWGF], ',')
        end

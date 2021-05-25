@@ -133,7 +133,7 @@ function smc_mixture_hd(N, Niter, epsilon, x0, muSample, sigmaK, functional)
     # initial distribution
     x = copy(x0);
     # number of dimensions
-    p = size(x0, 1);
+    d = size(x0, 1);
     # uniform weights at time n = 1
     W = ones(N)/N;
     # number of samples to draw from μ(y)
@@ -153,12 +153,12 @@ function smc_mixture_hd(N, Niter, epsilon, x0, muSample, sigmaK, functional)
         end
 
         # Markov kernel
-        x = x .+ epsilon*randn(p, N);
+        x = x .+ epsilon*randn(d, N);
 
         # Compute μ^N_{n}
-        muN = zeros(M, 1);
+        muN = zeros(M);
         for j=1:M
-            muN[j] = mean(W .* pdf(MvNormal(y[:, j], sigmaK^2*Matrix{Float64}(I, 2, 2)), x));
+            muN[j] = mean(W .* pdf(MvNormal(y[:, j], sigmaK^2*Matrix{Float64}(I, d, d)), x));
         end
 
         if(functional)
@@ -169,7 +169,7 @@ function smc_mixture_hd(N, Niter, epsilon, x0, muSample, sigmaK, functional)
 
         # update weights
         for i=1:N
-            g = pdf(MvNormal(x[:, i], sigmaK^2*Matrix{Float64}(I, 2, 2)), y);
+            g = pdf(MvNormal(x[:, i], sigmaK^2*Matrix{Float64}(I, d, d)), y);
             # potential at time n
             potential = mean(g ./ muN);
             # update weight
