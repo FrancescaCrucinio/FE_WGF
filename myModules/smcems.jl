@@ -184,7 +184,7 @@ function smc_mixture_hd(N, Niter, epsilon, x0, muSample, sigmaK, functional)
     # Compute μ^N_{n}
     muN = zeros(M, 1);
     for j=1:M
-        muN[j] = mean(W .* pdf(MvNormal(y[:, j], sigmaK^2*Matrix{Float64}(I, 2, 2)), x));
+        muN[j] = mean(W .* pdf(MvNormal(y[:, j], sigmaK^2*Matrix{Float64}(I, d, d)), x));
     end
     if(functional)
         # log-likelihood
