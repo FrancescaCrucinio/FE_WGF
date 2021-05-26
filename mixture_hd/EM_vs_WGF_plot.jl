@@ -12,10 +12,10 @@ using DelimitedFiles;
 
 Nrep = 100;
 dims = 4;
-tEM = zeros(Nrep, dims);
-iseEM = zeros(Nrep, dims);
-tWGF = zeros(Nrep, dims);
-iseWGF = zeros(Nrep, dims);
+tEM = ones(Nrep, dims);
+iseEM = ones(Nrep, dims);
+tWGF = ones(Nrep, dims);
+iseWGF = ones(Nrep, dims);
 # d = 1
 readf1 = readdlm("mixture_hd/em_vs_wgf_1d.txt", ',', Float64);
 tEM[:, 1] = readf1[:, 1];
@@ -40,3 +40,9 @@ tEM[:, 4] = readf[1, :];
 iseEM[:, 4] = readf[2, :];
 tWGF[:, 4] = readf[3, :];
 iseWGF[:, 4] = readf[4, :];
+
+gain = iseEM./iseWGF;
+
+boxplot(gain, yaxis = :log10, legend = :none, bar_width = 0.2, range = 0, tickfontsize = 15)
+plot(1:dims, mean(tEM, dims = 1)[:])
+plot!(1:dims, mean(tWGF, dims = 1)[:])
