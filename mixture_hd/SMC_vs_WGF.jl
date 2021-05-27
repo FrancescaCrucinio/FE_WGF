@@ -45,10 +45,10 @@ alpha = 1e-01;
 # number of replicates
 Nrep = 10;
 tSMC = zeros(Nrep);
-statsSMC = zeros(3, Nrep);
+statsSMC = zeros(Nrep, 3);
 entSMC = zeros(Nrep);
 tWGF = zeros(Nrep);
-statsWGF = zeros(3, Nrep);
+statsWGF = zeros(Nrep, 3);
 entWGF = zeros(Nrep);
 for j=1:Nrep
     # sample from μ
@@ -60,17 +60,17 @@ for j=1:Nrep
     xSMC, W, _ = smc_mixture_hd(Nparticles, Niter, epsilon, x0, muSample, sigmaK, false);
     end
     entSMC[j] = mean(log.(mixture_hd_kde_weighted(xSMC, W, xSMC', epsilon)));
-    statsSMC[:, j] .= mixture_hd_stats(xSMC, W, 1);
+    statsSMC[j, :] .= mixture_hd_stats(xSMC, W, 1);
     # WGF
     tWGF[j] = @elapsed begin
     xWGF, _ = wgf_hd_mixture_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, sigmaK, false);
     end
     entWGF[j] = mean(log.(mixture_hd_kde(xWGF, xWGF')));
-    statsWGF[:, j] .= mixture_hd_stats(xWGF, ones(Nparticles)/Nparticles, 1);
+    statsWGF[j, :] .= mixture_hd_stats(xWGF, ones(Nparticles)/Nparticles, 1);
     println("$d, $j")
 end
-statsSMC = statsSMC .- [m; v; p];
-statsWGF = statsWGF .- [m; v; p];
-# open("1000smc_vs_wgf_1d.txt", "w") do io
-#            writedlm(io, [tSMC; statsSMC; entSMC; tWGF; statsWGF; entWGF], ',')
-#        end
+statsSMC = (statsSMC .- [m v p]).^2;
+statsWGF = (statsWGF .- [m v p]).^2;
+open("1000smc_vs_wgf_1.txt", "w") do io
+           writedlm(io, [tSMC statsSMC entSMC tWGF statsWGF entWGF], ',')
+       end
