@@ -17,7 +17,7 @@ include("mixture_hd_stats.jl")
 # set seed
 Random.seed!(1234);
 # dimension
-d = 1;
+d = 3;
 # mixture of Gaussians
 means = [0.3 0.7];
 variances = [0.07^2; 0.1^2];
@@ -40,10 +40,11 @@ sigma0 = 0.25;
 Nparticles = 10^3;
 # regularisation parameters
 epsilon = 1e-02;
-alpha = 1e-01;
-
+# alpha = 1e-01;
+# alpha = 3e-02;
+alpha = 7e-02;
 # number of replicates
-Nrep = 10;
+Nrep = 100;
 tSMC = zeros(Nrep);
 statsSMC = zeros(Nrep, 3);
 entSMC = zeros(Nrep);
@@ -71,6 +72,8 @@ for j=1:Nrep
 end
 statsSMC = (statsSMC .- [m v p]).^2;
 statsWGF = (statsWGF .- [m v p]).^2;
-open("1000smc_vs_wgf_1.txt", "w") do io
-           writedlm(io, [tSMC statsSMC entSMC tWGF statsWGF entWGF], ',')
-       end
+open("1000smc_vs_wgf_3.txt", "w") do io
+    writedlm(io, [tSMC statsSMC entSMC tWGF statsWGF entWGF], ',')
+end
+histogram(entSMC[:])
+histogram!(entWGF[:])
