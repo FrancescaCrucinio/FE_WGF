@@ -17,7 +17,7 @@ include("mixture_hd_stats.jl")
 # set seed
 Random.seed!(1234);
 # dimension
-d = 4;
+d = 5;
 # mixture of Gaussians
 means = [0.3 0.7];
 variances = [0.07^2; 0.1^2];
@@ -43,7 +43,8 @@ epsilon = 1e-03;
 alpha = 1e-01;
 alpha = 1e-02;
 alpha = 2.5e-02;
-alpha = 4e-02
+alpha = 4e-02;
+alpha = 5e-04;
 # number of replicates
 Nrep = 100;
 tSMC = zeros(Nrep);
