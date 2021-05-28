@@ -11,7 +11,7 @@ using KernelEstimator;
 using DelimitedFiles;
 
 Nrep = 100;
-dims = 3;
+dims = 4;
 tSMC1000 = ones(Nrep, dims);
 tWGF1000 = ones(Nrep, dims);
 entWGF1000 = ones(Nrep, dims);
@@ -36,14 +36,14 @@ for i in 1:dims
     pWGF1000[:, i] = readf[:, 9];
 end
 # m,v,p and time vs dims
-p1 = plot(1:dims, mean(mSMC1000, dims = 1)[:])
-plot!(1:dims, mean(mWGF1000, dims = 1)[:])
+p1 = plot(1:dims, mean(mSMC1000, dims = 1)[:], yaxis  = :log)
+plot!(1:dims, mean(mWGF1000, dims = 1)[:], yaxis  = :log)
 
-p2 = plot(1:dims, mean(vSMC1000, dims = 1)[:])
-plot!(1:dims, mean(vWGF1000, dims = 1)[:])
+p2 = plot(1:dims, mean(vSMC1000, dims = 1)[:], yaxis  = :log)
+plot!(1:dims, mean(vWGF1000, dims = 1)[:], yaxis  = :log)
 
-p3 = plot(1:dims, mean(pSMC1000, dims = 1)[:])
-plot!(1:dims, mean(pWGF1000, dims = 1)[:])
+p3 = plot(1:dims, mean(pSMC1000, dims = 1)[:], yaxis  = :log)
+plot!(1:dims, mean(pWGF1000, dims = 1)[:], yaxis  = :log)
 
 p4 = plot(1:dims, mean(tSMC1000, dims = 1)[:])
 plot!(1:dims, mean(tWGF1000, dims = 1)[:])
