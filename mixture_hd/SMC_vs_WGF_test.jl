@@ -16,7 +16,7 @@ include("sobolev_norm_kde");
 # set seed
 Random.seed!(1234);
 
-d = 4;
+d = 1;
 # mixture of Gaussians
 means = [0.3 0.7];
 variances = [0.07^2; 0.1^2];
@@ -49,7 +49,6 @@ entSMC = mean(log.(mixture_hd_kde_weighted(xSMC, W, xSMC', epsilon)));
 mean(xSMC[1, :])
 var(xSMC[1, :])
 # WGF
-dt = 1e-2;
 tWGF = @elapsed begin
 xWGF, funWGF = wgf_hd_mixture_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, sigmaK, true);
 end
