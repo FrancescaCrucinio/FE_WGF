@@ -17,7 +17,7 @@ include("mixture_hd_stats.jl")
 # set seed
 Random.seed!(1234);
 # dimension
-d = 5;
+d = 1;
 # mixture of Gaussians
 means = [0.3 0.7];
 variances = [0.07^2; 0.1^2];
@@ -32,7 +32,7 @@ p = ((cdf(Normal(means[1], variances[1]), 0.5) - cdf(Normal(means[1], variances[
 # number of iterations
 Niter = 50;
 # time discretisation
-dt = 1e-2;
+dt = 1e-3;
 # reference measure
 m0 = 0.5;
 sigma0 = 0.25;
@@ -40,11 +40,7 @@ sigma0 = 0.25;
 Nparticles = 10^3;
 # regularisation parameters
 epsilon = 1e-03;
-alpha = 1e-01;
-alpha = 1e-02;
-alpha = 2.5e-02;
-alpha = 4e-02;
-alpha = 5e-04;
+alpha = 1e-03;
 # number of replicates
 Nrep = 100;
 tSMC = zeros(Nrep);
