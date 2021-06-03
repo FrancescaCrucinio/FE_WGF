@@ -12,35 +12,41 @@ using DelimitedFiles;
 
 Nrep = 100;
 dims = 4;
-tEM = zeros(Nrep, dims);
-iseEM = zeros(Nrep, dims);
-tWGF = zeros(Nrep, dims);
-iseWGF = zeros(Nrep, dims);
+tEM = ones(Nrep, dims);
+iseEM = ones(Nrep, dims);
+tWGF = ones(Nrep, dims);
+iseWGF = ones(Nrep, dims);
 # d = 1
 readf1 = readdlm("mixture_hd/em_vs_wgf_1d.txt", ',', Float64);
-tEM[:, 1] = readf[1, :];
-iseEM[:, 1] = readf[2, :];
-tWGF[:, 1] = readf[3, :];
-iseWGF[:, 1] = readf[4, :];
+tEM[:, 1] = readf1[1:100];
+iseEM[:, 1] = readf1[101:200];
+tWGF[:, 1] = readf1[201:300];
+iseWGF[:, 1] = readf1[301:400];
 # d = 2
-readf1 = readdlm("mixture_hd/em_vs_wgf_2d.txt", ',', Float64);
-tEM[:, 2] = readf[1, :];
-iseEM[:, 2] = readf[2, :];
-tWGF[:, 2] = readf[3, :];
-iseWGF[:, 2] = readf[4, :];
+readf2 = readdlm("mixture_hd/em_vs_wgf_2d.txt", ',', Float64);
+tEM[:, 2] = readf2[1:100];
+iseEM[:, 2] = readf2[101:200];
+tWGF[:, 2] = readf2[201:300];
+iseWGF[:, 2] = readf2[301:400];
 # d = 3
-readf1 = readdlm("mixture_hd/em_vs_wgf_3d.txt", ',', Float64);
-tEM[:, 3] = readf[1, :];
-iseEM[:, 3] = readf[2, :];
-tWGF[:, 3] = readf[3, :];
-iseWGF[:, 3] = readf[4, :];
-# d = 4
-readf1 = readdlm("mixture_hd/em_vs_wgf_4d.txt", ',', Float64);
-tEM[:, 4] = readf[1, :];
-iseEM[:, 4] = readf[2, :];
-tWGF[:, 4] = readf[3, :];
-iseWGF[:, 4] = readf[4, :];
+readf3 = readdlm("mixture_hd/em_vs_wgf_3d.txt", ',', Float64);
+tEM[:, 3] = readf3[1:100];
+iseEM[:, 3] = readf3[101:200];
+tWGF[:, 3] = readf3[201:300];
+iseWGF[:, 3] = readf3[301:400];
+# # d = 4
+readf4 = readdlm("mixture_hd/em_vs_wgf_4d.txt", ',', Float64);
+tEM[:, 4] = readf4[1:100];
+iseEM[:, 4] = readf4[101:200];
+tWGF[:, 4] = readf4[201:300];
+iseWGF[:, 4] = readf4[301:400];
 
+gain = iseEM./iseWGF;
 
-
-plot(alpha,  mean(E, dims = 2))
+bp = boxplot(gain, yaxis = :log10, legend = :none, bar_width = 0.5, range = 0, tickfontsize = 15, color = :gray)
+# savefig(bp, "mixture_hd_boxplot.pdf")
+p = plot(1:dims, mean(tEM, dims = 1)[:], yaxis = :log10, lw = 3, color = :blue,
+    line = :dash, tickfontsize = 15, label = "OSL-EM", legend = :bottomright, legendfontsize = 10)
+plot!(p, 1:dims, mean(tWGF, dims = 1)[:], yaxis = :log10, lw = 3, color = :red,
+    line = :solid, label = "WGF")
+# savefig(p, "mixture_hd_times.pdf")
