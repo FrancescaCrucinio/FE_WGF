@@ -36,17 +36,26 @@ for i in 1:dims
     pWGF1000[:, i] = readf[:, 9];
 end
 # m,v,p and time vs dims
-p1 = plot(1:dims, mean(mSMC1000, dims = 1)[:], yaxis  = :log)
-plot!(1:dims, mean(mWGF1000, dims = 1)[:], yaxis  = :log)
+p1 = plot(1:dims, mean(mSMC1000, dims = 1)[:], yaxis = :log10, lw = 3, color = :blue,
+    line = :dash, tickfontsize = 15, label = "SMC-EMS", legend = :bottomright, legendfontsize = 10)
+plot!(1:dims, mean(mWGF1000, dims = 1)[:], yaxis = :log10, lw = 3, color = :red,
+    line = :solid, label = "WGF")
+# savefig(p1, "mixture_hd_means.pdf")
 
-p2 = plot(1:dims, mean(vSMC1000, dims = 1)[:], yaxis  = :log)
-plot!(1:dims, mean(vWGF1000, dims = 1)[:], yaxis  = :log)
+p2 = plot(1:dims, mean(vSMC1000, dims = 1)[:], yaxis = :log10, lw = 3, color = :blue,
+    line = :dash, tickfontsize = 15, label = "SMC-EMS", legend = :bottomright, legendfontsize = 10)
+plot!(1:dims, mean(vWGF1000, dims = 1)[:], yaxis = :log10, lw = 3, color = :red,
+    line = :solid, label = "WGF")
+# savefig(p1, "mixture_hd_variances.pdf")
 
-p3 = plot(1:dims, mean(pSMC1000, dims = 1)[:], yaxis  = :log)
-plot!(1:dims, mean(pWGF1000, dims = 1)[:], yaxis  = :log)
+p3 = plot(1:dims, mean(pSMC1000, dims = 1)[:], yaxis = :log10, lw = 3, color = :blue,
+    line = :dash, tickfontsize = 15, label = "SMC-EMS", legend = :bottomright, legendfontsize = 10)
+plot!(1:dims, mean(pWGF1000, dims = 1)[:], yaxis = :log10, lw = 3, color = :red,
+    line = :solid, label = "WGF")
+# savefig(p3, "mixture_hd_probs.pdf")
 
-p4 = plot(1:dims, mean(tSMC1000, dims = 1)[:])
-plot!(1:dims, mean(tWGF1000, dims = 1)[:])
-
-p5 = plot(1:dims, mean(entSMC1000, dims = 1)[:])
-plot!(1:dims, mean(entWGF1000, dims = 1)[:])
+p4 = plot(1:dims, mean(tSMC1000, dims = 1)[:], yaxis = :log10, lw = 3, color = :blue,
+    line = :dash, tickfontsize = 15, label = "SMC-EMS", legend = :bottomright, legendfontsize = 10)
+plot!(1:dims, mean(tWGF1000, dims = 1)[:], yaxis = :log10, lw = 3, color = :red,
+    line = :solid, label = "WGF")
+# savefig(p4, "mixture_hd_times.pdf")
