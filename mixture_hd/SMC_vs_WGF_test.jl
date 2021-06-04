@@ -16,7 +16,7 @@ include("sobolev_norm_kde");
 # set seed
 Random.seed!(1234);
 
-d = 1;
+d = 10;
 # mixture of Gaussians
 means = [0.3 0.7];
 variances = [0.07^2; 0.1^2];
