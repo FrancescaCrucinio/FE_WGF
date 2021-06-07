@@ -54,7 +54,7 @@ KDEeval = reverse(KDEeval, dims = 2);
 # discretise μ
 muDisc = pdf(mu, KDEeval');
 # reference measure
-pi0 = pdf(MvNormal(m0*ones(d), sigma0^2*Matrix{Float64}(I, d, d))), KDEeval');
+pi0 = pdf(MvNormal(m0*ones(d), sigma0^2*Matrix{Float64}(I, d, d)), KDEeval');
 
 # 1d marginal
 KDEx = range(0, stop = 1, length = 100);
