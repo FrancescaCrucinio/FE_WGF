@@ -17,7 +17,7 @@ include("mixture_hd_stats.jl")
 # set seed
 Random.seed!(1234);
 # dimension
-d = 1;
+d = 6;
 # mixture of Gaussians
 means = [0.3 0.7];
 variances = [0.07^2; 0.1^2];
@@ -39,8 +39,8 @@ sigma0 = 0.25;
 # number of particles
 Nparticles = 10^3;
 # regularisation parameters
-epsilon = 1e-03;
-alpha = 1e-03;
+epsilon = [8e-03 1e-05 2e-3 5e-3 5e-3 5e-3];
+alpha = [2.5e-3 5e-4 1e-5 1e-5 5e-5 5e-5];
 # number of replicates
 Nrep = 100;
 tSMC = zeros(Nrep);
@@ -56,13 +56,13 @@ for j=1:Nrep
     x0 = rand(mu, Nparticles);
     # SMC-EMS
     tSMC[j] = @elapsed begin
-    xSMC, W, _ = smc_mixture_hd(Nparticles, Niter, epsilon, x0, muSample, sigmaK, false);
+    xSMC, W, _ = smc_mixture_hd(Nparticles, Niter, epsilon[d], x0, muSample, sigmaK, false);
     end
-    entSMC[j] = mean(log.(mixture_hd_kde_weighted(xSMC, W, xSMC', epsilon)));
+    entSMC[j] = mean(log.(mixture_hd_kde_weighted(xSMC, W, xSMC', epsilon[d])));
     statsSMC[j, :] .= mixture_hd_stats(xSMC, W, 1);
     # WGF
     tWGF[j] = @elapsed begin
-    xWGF, _ = wgf_hd_mixture_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, sigmaK, false);
+    xWGF, _ = wgf_hd_mixture_tamed(Nparticles, dt, Niter, alpha[d], x0, m0, sigma0, muSample, sigmaK, false);
     end
     entWGF[j] = mean(log.(mixture_hd_kde(xWGF, xWGF')));
     statsWGF[j, :] .= mixture_hd_stats(xWGF, ones(Nparticles)/Nparticles, 1);

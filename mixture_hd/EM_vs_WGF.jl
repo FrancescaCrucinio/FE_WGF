@@ -34,7 +34,7 @@ sigma0 = 0.25;
 # number of particles
 Nparticles = 10^4;
 # dimension
-d = 4;
+d = 1;
 # find bins closest to number of particles
 bins = [ceil(Nparticles^(1/d)) floor(Nparticles^(1/d))];
 solve = argmin(abs.(bins.^d .- Nparticles));
@@ -54,7 +54,7 @@ KDEeval = reverse(KDEeval, dims = 2);
 # discretise μ
 muDisc = pdf(mu, KDEeval');
 # reference measure
-pi0 = pdf(MvNormal(m0*ones(d), diagm(sigma0*ones(d))), KDEeval');
+pi0 = pdf(MvNormal(m0*ones(d), sigma0^2*Matrix{Float64}(I, d, d)), KDEeval');
 
 # 1d marginal
 KDEx = range(0, stop = 1, length = 100);
@@ -96,6 +96,6 @@ Threads.@threads for j=1:Nrep
     iseWGF[j] = dKDEx * sum((WGF .- truth).^2);
     println("$d, $j")
 end
-open("em_vs_wgf_4d.txt", "w") do io
+open("em_vs_wgf_1d.txt", "w") do io
            writedlm(io, [tEM; iseEM; tWGF; iseWGF], ',')
        end
