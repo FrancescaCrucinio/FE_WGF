@@ -32,7 +32,7 @@ p = ((cdf(Normal(means[1], variances[1]), 0.5) - cdf(Normal(means[1], variances[
 # number of iterations
 Niter = 50;
 # time discretisation
-dt = 1e-3;
+dt = 1e-2;
 # reference measure
 m0 = 0.5;
 sigma0 = 0.25;
@@ -45,10 +45,10 @@ alpha = [2.5e-3 5e-4 1e-5 1e-5 5e-5 5e-5];
 Nrep = 100;
 tSMC = zeros(Nrep);
 statsSMC = zeros(Nrep, 3);
-entSMC = zeros(Nrep);
+# entSMC = zeros(Nrep);
 tWGF = zeros(Nrep);
 statsWGF = zeros(Nrep, 3);
-entWGF = zeros(Nrep);
+# entWGF = zeros(Nrep);
 for j=1:Nrep
     # sample from μ
     muSample = rand(mu, 10^6);
@@ -58,20 +58,18 @@ for j=1:Nrep
     tSMC[j] = @elapsed begin
     xSMC, W, _ = smc_mixture_hd(Nparticles, Niter, epsilon[d], x0, muSample, sigmaK, false);
     end
-    entSMC[j] = mean(log.(mixture_hd_kde_weighted(xSMC, W, xSMC', epsilon[d])));
+    # entSMC[j] = mean(log.(mixture_hd_kde_weighted(xSMC, W, xSMC', epsilon[d])));
     statsSMC[j, :] .= mixture_hd_stats(xSMC, W, 1);
     # WGF
     tWGF[j] = @elapsed begin
     xWGF, _ = wgf_hd_mixture_tamed(Nparticles, dt, Niter, alpha[d], x0, m0, sigma0, muSample, sigmaK, false);
     end
-    entWGF[j] = mean(log.(mixture_hd_kde(xWGF, xWGF')));
+    # entWGF[j] = mean(log.(mixture_hd_kde(xWGF, xWGF')));
     statsWGF[j, :] .= mixture_hd_stats(xWGF, ones(Nparticles)/Nparticles, 1);
     println("$d, $j")
 end
 statsSMC = (statsSMC .- [m v p]).^2;
 statsWGF = (statsWGF .- [m v p]).^2;
 open("1000smc_vs_wgf_$d.txt", "w") do io
-    writedlm(io, [tSMC statsSMC entSMC tWGF statsWGF entWGF], ',')
+    writedlm(io, [tSMC statsSMC tWGF statsWGF], ',')
 end
-histogram(entSMC[:])
-histogram!(entWGF[:])

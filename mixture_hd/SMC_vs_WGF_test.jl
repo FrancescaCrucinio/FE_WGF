@@ -16,7 +16,7 @@ include("sobolev_norm_kde");
 # set seed
 Random.seed!(1234);
 
-d = 1;
+d = 2;
 # mixture of Gaussians
 means = [0.3 0.7];
 variances = [0.07^2; 0.1^2];
@@ -30,14 +30,14 @@ mu = MixtureModel(MvNormal, [(means[1]*ones(d), diagm(variances[1]*ones(d) .+ si
 epsilon = 1e-03;
 alpha = 1e-02;
 # number of iterations
-Niter = 100;
+Niter = 50;
 # time discretisation
-dt = 1e-3;
+dt = 1e-2;
 # reference measure
 m0 = 0.5;
 sigma0 = 0.25;
 # number of particles
-Nparticles = 10^3;
+Nparticles = 10^4;
 # sample from μ
 muSample = rand(mu, 10^6);
 x0 = rand(mu, Nparticles);
