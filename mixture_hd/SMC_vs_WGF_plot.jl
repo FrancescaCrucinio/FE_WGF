@@ -11,7 +11,7 @@ using KernelEstimator;
 using DelimitedFiles;
 
 Nrep = 100;
-dims = 6;
+dims = 7;
 tSMC1000 = zeros(Nrep, dims);
 tWGF1000 = zeros(Nrep, dims);
 entWGF1000 = zeros(Nrep, dims);

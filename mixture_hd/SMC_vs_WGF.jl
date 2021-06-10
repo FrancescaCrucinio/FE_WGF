@@ -17,7 +17,7 @@ include("mixture_hd_stats.jl")
 # set seed
 Random.seed!(1234);
 # dimension
-d = 6;
+d = 9;
 # mixture of Gaussians
 means = [0.3 0.7];
 variances = [0.07^2; 0.1^2];
@@ -39,8 +39,8 @@ sigma0 = 0.25;
 # number of particles
 Nparticles = 10^3;
 # regularisation parameters
-epsilon = [8e-03 1e-05 2e-3 5e-3 5e-3 5e-3];
-alpha = [2.5e-3 5e-4 1e-5 1e-5 5e-5 5e-5];
+epsilon = [8e-03 1e-05 2e-3 5e-3 5e-3 5e-3 7e-03 6e-03 7e-03];
+alpha = [2.5e-3 5e-4 1e-5 1e-5 5e-5 5e-5 5e-4 1e-05 1e-05];
 # number of replicates
 Nrep = 100;
 tSMC = zeros(Nrep);
