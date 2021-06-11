@@ -202,21 +202,25 @@ bp = plot(bp1, bp2, bp3, bp4, legend, layout = @layout([[A B; C D] E{.15w}]), si
 #       "entSMC", entSMC, "entWGF", entWGF,
 #       "qdistPI", qdistPI,  "qdistCV", qdistCV, "qdistSMC", qdistSMC, "qdistWGF", qdistWGF);
 
-tPI = load("prior_deconv_rate3Apr2021.jld", "tPI");
-tCV = load("prior_deconv_rate3Apr2021.jld", "tCV");
-tSMC = load("prior_deconv_rate3Apr2021.jld", "tSMC");
-tWGF = load("prior_deconv_rate3Apr2021.jld", "tWGF");
-isePI = load("prior_deconv_rate3Apr2021.jld", "isePI");
-iseCV = load("prior_deconv_rate3Apr2021.jld", "iseCV");
-iseSMC = load("prior_deconv_rate3Apr2021.jld", "iseSMC");
-iseWGF = load("prior_deconv_rate3Apr2021.jld", "iseWGF");
-qdistPI = load("prior_deconv_rate3Apr2021.jld", "qdistPI");
-qdistCV = load("prior_deconv_rate3Apr2021.jld", "qdistCV");
-qdistSMC = load("prior_deconv_rate3Apr2021.jld", "qdistSMC");
-qdistWGF = load("prior_deconv_rate3Apr2021.jld", "qdistWGF");
-entSMC = load("prior_deconv_rate3Apr2021.jld", "entSMC");
-entWGF = load("prior_deconv_rate3Apr2021.jld", "entWGF");
+tPI = load("deconvolution/prior_deconv_rate3Apr2021.jld", "tPI");
+tCV = load("deconvolution/prior_deconv_rate3Apr2021.jld", "tCV");
+tSMC = load("deconvolution/prior_deconv_rate3Apr2021.jld", "tSMC");
+tWGF = load("deconvolution/prior_deconv_rate3Apr2021.jld", "tWGF");
+isePI = load("deconvolution/prior_deconv_rate3Apr2021.jld", "isePI");
+iseCV = load("deconvolution/prior_deconv_rate3Apr2021.jld", "iseCV");
+iseSMC = load("deconvolution/prior_deconv_rate3Apr2021.jld", "iseSMC");
+iseWGF = load("deconvolution/prior_deconv_rate3Apr2021.jld", "iseWGF");
+qdistPI = load("deconvolution/prior_deconv_rate3Apr2021.jld", "qdistPI");
+qdistCV = load("deconvolution/prior_deconv_rate3Apr2021.jld", "qdistCV");
+qdistSMC = load("deconvolution/prior_deconv_rate3Apr2021.jld", "qdistSMC");
+qdistWGF = load("deconvolution/prior_deconv_rate3Apr2021.jld", "qdistWGF");
+entSMC = load("deconvolution/prior_deconv_rate3Apr2021.jld", "entSMC");
+entWGF = load("deconvolution/prior_deconv_rate3Apr2021.jld", "entWGF");
 
 i = 3
 histogram(entWGF[i, :])
 histogram!(entSMC[i, :])
+
+iseSMC./iseWGF
+tSMC./tWGF
+mean(entSMC, dims = 2)./mean(entWGF, dims = 2)
