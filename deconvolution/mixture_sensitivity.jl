@@ -1,5 +1,4 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -23,7 +22,6 @@ mu(x) = 2*pdf.(Normal(0.3, sqrt(0.043^2 + 0.045^2)), x)/3 +
 K(x, y) = pdf.(Normal(x, 0.045), y);
 sdK = 0.045;
 
-# functional approximation
 function psi(piSample, a, m0, sigma0, muSample)
     loglik = zeros(1, length(muSample));
     for i=1:length(muSample)
@@ -47,22 +45,25 @@ Nparticles = 100;
 # regularisation parameters
 alpha = range(0, stop = 0.001, length = 100);
 
-L = 10;
-E = zeros(length(alpha), L);
+Nrep = 100;
+E = zeros(length(alpha), Nrep);
 for i=1:length(alpha)
-    for l=1:L
-        muSample = Ysample_gaussian_mixture(10^3);
-        x0 = sample(muSample, Nparticles, replace = !(Nparticles <= 10^3));
-        # prior mean = mean of μ
-        m0 = mean(muSample);
-        sigma0 = std(muSample);
-        # size of sample from μ
-        M = min(Nparticles, length(muSample));
-        # WGF
-        x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSample, M, sdK);
-        # estimate functional
-        E[i, l] = psi(x[Niter, :], alpha[i], m0, sigma0, muSample);
-        println("$i, $l")
+    for j=1:Nrep
+    muSample = Ysample_gaussian_mixture(10^3);
+    x0 = sample(muSample, Nparticles, replace = !(Nparticles <= 10^3));
+    # prior mean = mean of μ
+    m0 = mean(muSample);
+    sigma0 = std(muSample);
+    # size of sample from μ
+    M = min(Nparticles, length(muSample));
+    # WGF
+    x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSample, M, sdK);
+    # estimate functional
+    E[i, j] = psi(x[Niter, :], alpha[i], m0, sigma0, muSample);
+    println("$i, $j")
     end
 end
-plot(alpha,  mean(E, dims = 2))
+
+Eavg = mean(E, dims = 2);
+p = plot(alpha, Eavg, lw = 2, label = "", legendfontsize = 15, tickfontsize = 10)
+# savefig(p,"mixture_sensitivity_E.pdf")
