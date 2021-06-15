@@ -17,7 +17,7 @@ using samplers;
 Random.seed!(1234);
 
 # data for gaussian mixture example
-pi(x) = pdf.(Normal(0.3, 0.015), x)/3 + 2*pdf.(Normal(0.5, 0.043), x)/3;
+rho(x) = pdf.(Normal(0.3, 0.015), x)/3 + 2*pdf.(Normal(0.5, 0.043), x)/3;
 mu(x) = 2*pdf.(Normal(0.3, sqrt(0.043^2 + 0.045^2)), x)/3 +
         pdf.(Normal(0.5, sqrt(0.015^2 + 0.045^2)), x)/3;
 K(x, y) = pdf.(Normal(x, 0.045), y);
@@ -47,7 +47,7 @@ Nparticles = 100;
 # regularisation parameters
 alpha = range(0, stop = 0.001, length = 100);
 
-L = 10;
+L = 100;
 E = zeros(length(alpha), L);
 for i=1:length(alpha)
     for l=1:L
@@ -65,4 +65,5 @@ for i=1:length(alpha)
         println("$i, $l")
     end
 end
-plot(alpha,  mean(E, dims = 2))
+p = plot(alpha,  mean(E, dims = 2), lw = 3, tickfontsize = 15)
+# savefig(p, "mixture_sensitivity_zoom.pdf")
