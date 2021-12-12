@@ -136,14 +136,14 @@ end
 RLyRec = RLyRec*5000/sum(RLyRec);
 
 estimators = [It_normalised rhoCounts[200, :]/5000 @rget(RIDE_incidence)/5000 KDEyWGF];
-p1=plot(t, estimators, lw = 1, label = ["true incidence" "RL" "RIDE" "WGF"],
+p1=plot(t, estimators, lw = 1, label = ["true incidence" "RL" "RIDE" "Algo 1"],
     color = [:black :gray :blue :red], line=[:dashdot :solid :solid :solid],
     legendfontsize = 15, tickfontsize = 10)
 # savefig(p1,"synthetic_epidem_incidence.pdf")
 
 reconvolutions = [RLyRec[:] @rget(RIDE_reconstruction) KDEyRec]
 p2=scatter(t, muCounts, marker=:x, markersize=3, label = "reported cases", color = :black)
-plot!(p2, t, reconvolutions, lw = 1, label = ["RL" "RIDE" "WGF"],
+plot!(p2, t, reconvolutions, lw = 1, label = ["RL" "RIDE" "Algo 1"],
     color = [:gray :blue :red], line=[:solid :solid :solid],
     legendfontsize = 15, tickfontsize = 10)
 # savefig(p2,"synthetic_epidem_reconvolution.pdf")

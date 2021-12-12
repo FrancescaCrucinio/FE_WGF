@@ -23,8 +23,10 @@ for i = 1:length(alpha)
 end
 
 p1 = plot(alpha, beta, lw = 3, tickfontsize = 15, legend = :none)
+hline!(p1, [sigmaPi], lw = 3)
 # savefig(p1, "AT_beta.pdf")
 p2 = plot(alpha, E, yaxis = :log10, lw = 3, tickfontsize = 15, legend = :none)
+hline!(p2, [E[1]], lw = 3)
 # savefig(p2, "AT_functional.pdf")
 
 KDEx = range(-3, stop = 3, length = 100);
