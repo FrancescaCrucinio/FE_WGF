@@ -48,5 +48,5 @@ bp = boxplot(gain, yaxis = :log10, legend = :none, bar_width = 0.5, range = 0, t
 p = plot(1:dims, mean(tEM, dims = 1)[:], yaxis = :log10, lw = 3, color = :blue,
     line = :dash, tickfontsize = 15, label = "OSL-EM", legend = :bottomright, legendfontsize = 10)
 plot!(p, 1:dims, mean(tWGF, dims = 1)[:], yaxis = :log10, lw = 3, color = :red,
-    line = :solid, label = "WGF")
+    line = :solid, label = "Algo 1")
 # savefig(p, "mixture_hd_times.pdf")

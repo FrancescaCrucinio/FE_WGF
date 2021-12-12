@@ -128,14 +128,14 @@ end
 RLyRec = RLyRec/sum(RLyRec);
 
 estimators = [rhoCounts[200, :]/sum(rhoCounts[200, :]) @rget(RIDE_incidence)/sum(@rget(RIDE_incidence)) KDEyWGF];
-p1=plot(KDEx, estimators, lw = 1, label = ["RL" "RIDE" "WGF"],
+p1=plot(KDEx, estimators, lw = 1, label = ["RL" "RIDE" "Algo 1"],
     color = [:gray :blue :red], line=[:solid :solid :solid],
     legendfontsize = 15, tickfontsize = 10)
 # savefig(p1,"1918flu_incidence.pdf")
 
 reconvolutions = [RLyRec[:] @rget(RIDE_reconstruction) KDEyRec].*sum(muCounts);
 p2=scatter(KDEx, muCounts, marker=:x, markersize=3, label = "reported cases", color = :black)
-plot!(p2, KDEx, reconvolutions, lw = 1, label = ["RL" "RIDE" "WGF"],
+plot!(p2, KDEx, reconvolutions, lw = 1, label = ["RL" "RIDE" "Algo 1"],
     color = [:gray :blue :red], line=[:solid :solid :solid],
     legendfontsize = 15, tickfontsize = 10)
 # savefig(p2,"1918flu_reconvolution.pdf")
