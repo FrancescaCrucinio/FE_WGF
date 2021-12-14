@@ -7,7 +7,6 @@ using Statistics;
 using StatsBase;
 using Random;
 using LinearAlgebra;
-using KernelEstimator;
 using DelimitedFiles;
 
 means = [0.3 0.7];
@@ -20,8 +19,6 @@ Nrep = 100;
 dims = 10;
 tSMC1000 = zeros(Nrep, dims);
 tWGF1000 = zeros(Nrep, dims);
-entWGF1000 = zeros(Nrep, dims);
-entSMC1000 = zeros(Nrep, dims);
 mWGF1000 = zeros(Nrep, dims);
 mSMC1000 = zeros(Nrep, dims);
 vWGF1000 = zeros(Nrep, dims);
@@ -33,12 +30,12 @@ for i in 1:dims
         2*(cdf(Normal(means[2], variances[2]), 0.5) - cdf(Normal(means[2], variances[2]), 0)))/3)^i;
     readf = readdlm("mixture_hd/1000smc_vs_wgf_$i.txt", ',', Float64);
     tSMC1000[:, i] = readf[:, 1];
-    mSMC1000[:, i] = readf[:, 2]/m;
-    vSMC1000[:, i] = readf[:, 3]/v;
+    mSMC1000[:, i] = readf[:, 2];
+    vSMC1000[:, i] = readf[:, 3];
     pSMC1000[:, i] = readf[:, 4]/p;
     tWGF1000[:, i] = readf[:, 5];
-    mWGF1000[:, i] = readf[:, 6]/m;
-    vWGF1000[:, i] = readf[:, 7]/v;
+    mWGF1000[:, i] = readf[:, 6];
+    vWGF1000[:, i] = readf[:, 7];
     pWGF1000[:, i] = readf[:, 8]/p;
 end
 # m,v,p and time vs dims
@@ -65,3 +62,16 @@ p4 = plot(1:dims, mean(tSMC1000, dims = 1)[:], yaxis = :log10, lw = 3, color = :
 plot!(1:dims, mean(tWGF1000, dims = 1)[:], yaxis = :log10, lw = 3, color = :red,
     line = :solid, label = "Algo 1")
 # savefig(p4, "mixture_hd_times2.pdf")
+
+bp1 = boxplot(mSMC1000/v, yaxis = :log10, legend = :none, bar_width = 0.5, range = 0,
+    tickfontsize = 15, color = :gray, ylims = [1e-11, 1e-2])
+savefig(bp1, "mixture_hd_bp1.pdf")
+bp2 = boxplot(mWGF1000/v, yaxis = :log10, legend = :none, bar_width = 0.5, range = 0,
+    tickfontsize = 15, color = :gray, ylims = [1e-11, 1e-2])
+savefig(bp2, "mixture_hd_bp2.pdf")
+
+boxplot(vSMC1000, yaxis = :log10, legend = :none, bar_width = 0.5, range = 0, tickfontsize = 15)
+boxplot(vWGF1000, yaxis = :log10, legend = :none, bar_width = 0.5, range = 0, tickfontsize = 15)
+
+boxplot(pSMC1000, yaxis = :log10, legend = :none, bar_width = 0.5, range = 0, tickfontsize = 15)
+boxplot(pWGF1000, yaxis = :log10, legend = :none, bar_width = 0.5, range = 0, tickfontsize = 15)

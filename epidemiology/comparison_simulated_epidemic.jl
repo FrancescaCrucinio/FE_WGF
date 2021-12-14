@@ -1,5 +1,4 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "/Users/francescacrucinio/Documents/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -12,6 +11,7 @@ using RCall;
 @rimport ks as rks;
 # custom packages
 using wgf_prior;
+using smcems;
 include("RL.jl")
 R"""
 library(tictoc)
@@ -59,10 +59,10 @@ alpha = 0.0009;
 
 # misspecified or not
 misspecified = true;
-Nrep = 100;
-ise = zeros(3, Nrep);
-ise_reconvolved = zeros(3, Nrep);
-runtime = zeros(3, Nrep);
+Nrep = 2;
+ise = zeros(4, Nrep);
+ise_reconvolved = zeros(4, Nrep);
+runtime = zeros(4, Nrep);
 for i=1:Nrep
     if(misspecified)
         # misspecified model
@@ -123,13 +123,13 @@ for i=1:Nrep
 
     # WGF
     # initial distribution
-    x0 = sample(muSample, M, replace = false) .- 10;
+    x0 = sample(muSample, M, replace = false) .- 9;
     # prior mean = mean of μ shifted back by 10 days
-    m0 = mean(muSample) - 10;
+    m0 = mean(muSample) - 9;
     sigma0 = std(muSample);
     runtime[3, i] = @elapsed begin
-    x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);
-    RKDEyWGF = rks.kde(x = x[Niter, :], var"eval.points" = t);
+    xWGF = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);
+    RKDEyWGF = rks.kde(x = xWGF[Niter, :], var"eval.points" = t);
     KDEyWGF = abs.(rcopy(RKDEyWGF[3]));
     end
     ise[3, i] = sum((KDEyWGF .- It_normalised).^2);
@@ -140,6 +140,21 @@ for i=1:Nrep
     end
     KDEyRec = KDEyRec/sum(KDEyRec);
     ise_reconvolved[3, i] = sum((KDEyRec .- muCounts/5000).^2);
+    # SMCEMS
+    runtime[4, i] = @elapsed begin
+    xSMC, W = smc_flu(Nparticles, Niter, epsilon, x0, muSample, M);
+    bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
+    RKDESMC = rks.kde(x = xSMC[end,:], var"h" = bw, var"eval.points" = KDEx, var"w" = Nparticles[i]*W[end, :]);
+    KDEySMC =  abs.(rcopy(RKDESMC[3]));
+    end
+    ise[4, i] = sum((KDEySMC .- It_normalised).^2);
+    # recovolve SMCEMS
+    KDEyRecSMCEMS = zeros(length(refY), 1);
+    for i=1:length(refY)
+        KDEyRecSMCEMS[i] = delta*sum(K.(t, refY[i]).*KDEySMC);
+    end
+    KDEyRecSMCEMS = KDEyRecSMCEMS/sum(KDEyRecSMCEMS);
+    ise_reconvolved[4, i] = sum((KDEyRecSMCEMS .- muCounts/5000).^2);
 end
 mean(ise, dims = 2)
 mean(ise_reconvolved, dims = 2)

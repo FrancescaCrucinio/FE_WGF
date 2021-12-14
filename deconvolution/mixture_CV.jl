@@ -1,5 +1,4 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "/Users/francescacrucinio/Documents/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -7,7 +6,6 @@ using Distributions;
 using Statistics;
 using StatsBase;
 using Random;
-using JLD;
 using RCall;
 @rimport ks as rks
 # custom packages
@@ -24,7 +22,7 @@ K(x, y) = pdf.(Normal(x, 0.045), y);
 sdK = 0.045;
 
 # functional approximation
-function psi(piSample, a, m0, sigma0, muSample)
+function psiWGF(piSample, a, m0, sigma0, muSample)
     loglik = zeros(1, length(muSample));
     for i=1:length(muSample)
         loglik[i] = mean(K.(piSample, muSample[i]));
@@ -37,6 +35,16 @@ function psi(piSample, a, m0, sigma0, muSample)
     kl_prior = mean(log.(pihat./prior));
     return kl+a*kl_prior;
 end
+function psiSMC(piSample, W, muSample)
+    loglik = zeros(1, length(muSample));
+    muN = zeros(M, 1);
+    for i=1:length(muSample)
+        loglik[i] = sum(W .* K.(piSample, muSample[i]));
+    end
+    loglik = -log.(loglik);
+    kl = mean(loglik);
+    return kl;
+end
 
 # parameters
 # dt and number of iterations
@@ -45,10 +53,11 @@ Niter = 100;
 # number of particles
 Nparticles = 100;
 # regularisation parameters
-alpha = range(0, stop = 0.001, length = 100);
-
+alpha = range(0, stop = 0.002, length = 10);
+epsilon = range(0, stop = 0.0002, length = 10);
 L = 100;
-E = zeros(length(alpha), L);
+EWGF = zeros(length(alpha), L);
+ESMC = zeros(length(alpha), L);
 for i=1:length(alpha)
     for l=1:L
         muSample = Ysample_gaussian_mixture(10^3);
@@ -59,11 +68,17 @@ for i=1:length(alpha)
         # size of sample from μ
         M = min(Nparticles, length(muSample));
         # WGF
-        x = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSample, M, sdK);
+        xWGF = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSample, M, sdK);
         # estimate functional
-        E[i, l] = psi(x[Niter, :], alpha[i], m0, sigma0, muSample);
+        EWGF[i, l] = psiWGF(xWGF[Niter, :], alpha[i], m0, sigma0, muSample);
+        # SMCEMS
+        xSMC, W = smc_gaussian_mixture(Nparticles, Niter, epsilon[i], x0, muSample, M);
+        # estimate functional
+        ESMC[i, l] = psiSMC(xSMC[Niter, :], W[Niter, :], muSample);
         println("$i, $l")
     end
 end
-p = plot(alpha,  mean(E, dims = 2), lw = 3, tickfontsize = 15)
+p = plot(alpha,  mean(EWGF, dims = 2), lw = 3, tickfontsize = 15)
+p = plot(epsilon,  mean(ESMC, dims = 2), lw = 3, tickfontsize = 15)
+
 # savefig(p, "mixture_sensitivity_zoom.pdf")
