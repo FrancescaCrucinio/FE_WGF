@@ -55,7 +55,8 @@ dt = 1e-1;
 # number of iterations
 Niter = 3000;
 # regularisation parameter
-alpha = 0.0009;
+alpha = 0.001;
+epislon = 0.0002;
 
 # misspecified or not
 misspecified = true;

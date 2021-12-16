@@ -46,8 +46,8 @@ KDEx = range(0, stop = 1, length = 100);
 dx = KDEx[2] - KDEx[1];
 true_density = pi(KDEx);
 # regularisation parameters
-epsilon = 1e-3;
-alpha = [1.1e-1 5e-2 6e-2 3.1e-2 2.1e-2];
+epsilon = [4.5e-4 ];
+alpha = [4.5e-4 5e-2 6e-2 3.1e-2 2.1e-2];
 # number of repetitions
 Nrep = 100;
 
@@ -118,7 +118,7 @@ for i=1:length(Nparticles)
         x0 = sample(muSample, Nparticles[i], replace = true);
         M = min(Nparticles[i], length(muSample));
         trepSMC[j] = @elapsed begin
-            xSMC, W = smc_gaussian_mixture(Nparticles[i], Niter, epsilon, x0, muSample, M);
+            xSMC, W = smc_gaussian_mixture(Nparticles[i], Niter, epsilon[i], x0, muSample, M);
             # kde
             bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
             RKDESMC = rks.kde(x = xSMC[end,:], var"h" = bw, var"eval.points" = KDEx, var"w" = Nparticles[i]*W[end, :]);

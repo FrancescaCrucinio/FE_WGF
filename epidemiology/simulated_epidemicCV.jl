@@ -1,4 +1,4 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "/Users/francescacrucinio/Documents/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -11,7 +11,7 @@ using RCall;
 @rimport ks as rks;
 # custom packages
 using wgf_prior;
-
+using smcems
 # set seed
 Random.seed!(1234);
 
@@ -25,7 +25,7 @@ It = It * 5000/sum(It);
 It = round.(It, digits = 0);
 
 # functional approximation
-function psi(piSample, alpha, m0, sigma0, muSample)
+function psiWGF(piSample, alpha, m0, sigma0, muSample)
     loglik = zeros(1, length(muSample));
     for i=1:length(muSample)
         loglik[i] = mean(K.(piSample, muSample[i]));
@@ -38,7 +38,16 @@ function psi(piSample, alpha, m0, sigma0, muSample)
     kl_prior = mean(log.(pihat./prior));
     return kl+alpha*kl_prior;
 end
-
+function psiSMC(piSample, W, muSample)
+    loglik = zeros(1, length(muSample));
+    muN = zeros(M, 1);
+    for i=1:length(muSample)
+        loglik[i] = sum(W .* K.(piSample, muSample[i]));
+    end
+    loglik = -log.(loglik);
+    kl = mean(loglik);
+    return kl;
+end
 # parameters for WGF
 # number of particles
 Nparticles = 500;
@@ -49,11 +58,12 @@ dt = 1e-1;
 # number of iterations
 Niter = 3000;
 # regularisation parameter
-alpha = range(0.0001, stop = 0.001, length = 10);
-
+alpha = range(0.0001, stop = 0.01, length = 10);
+epsilon = range(0, stop = 0.01, length = 10);
 # repetitions
 L = 5;
-E = zeros(length(alpha), L);
+EWGF = zeros(length(alpha), L);
+ESMC = zeros(length(alpha), L);
 for i=1:length(alpha)
     for l=1:L
         # misspecified sample
@@ -72,15 +82,20 @@ for i=1:length(alpha)
         # well specified
         muSample = round.(Isample .+ rand(MixtureModel(Normal, [(8.63, 2.56), (15.24, 5.39)], [0.595, 0.405]), length(Isample), 1), digits = 0);
         # initial distribution
-        x0 = sample(muSample, M, replace = false) .- 10;
+        x0 = sample(muSample, M, replace = false) .- 9;
         # prior mean = mean of μ
-        m0 = mean(muSample) .- 10;
+        m0 = mean(muSample) .- 9;
         sigma0 = std(muSample);
         # WGF
-        x = wgf_flu_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSample, M);
+        xWGF = wgf_flu_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSample, M);
         # functional
-        E[i, l] = psi(x[Niter, :], alpha[i], m0, sigma0, muSample);
+        EWGF[i, l] = psiWGF(xWGF[Niter, :], alpha[i], m0, sigma0, muSample);
+        # SMCEMS
+        xSMC, W = smc_flu(Nparticles, Niter, epsilon[i], x0, muSample, M);
+        # functional
+        ESMC[i, l] = psiSMC(xSMC[Niter, :], W[Niter, :], muSample);
         println("$i, $l")
     end
 end
-plot(alpha,  mean(E, dims = 2))
+plot(alpha,  mean(EWGF, dims = 2))
+plot(epsilon,  mean(ESMC, dims = 2))

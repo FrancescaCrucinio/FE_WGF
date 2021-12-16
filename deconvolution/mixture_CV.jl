@@ -11,6 +11,8 @@ using RCall;
 # custom packages
 using wgf_prior;
 using samplers;
+using smcems;
+
 # set seed
 Random.seed!(1234);
 
@@ -51,10 +53,10 @@ end
 dt = 1e-03;
 Niter = 100;
 # number of particles
-Nparticles = 100;
+Nparticles = 500;
 # regularisation parameters
-alpha = range(0, stop = 0.002, length = 10);
-epsilon = range(0, stop = 0.0002, length = 10);
+alpha = range(0, stop = 0.001, length = 10);
+epsilon = range(0, stop = 0.001, length = 10);
 L = 100;
 EWGF = zeros(length(alpha), L);
 ESMC = zeros(length(alpha), L);
