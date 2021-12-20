@@ -39,7 +39,6 @@ function psiWGF(piSample, a, m0, sigma0, muSample)
 end
 function psiSMC(piSample, W, muSample)
     loglik = zeros(1, length(muSample));
-    muN = zeros(M, 1);
     for i=1:length(muSample)
         loglik[i] = sum(W .* K.(piSample, muSample[i]));
     end
@@ -53,7 +52,7 @@ end
 dt = 1e-03;
 Niter = 100;
 # number of particles
-Nparticles = 500;
+Nparticles = 1000;
 # regularisation parameters
 alpha = range(0, stop = 0.001, length = 10);
 epsilon = range(0, stop = 0.001, length = 10);

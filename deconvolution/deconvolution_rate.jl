@@ -46,8 +46,8 @@ KDEx = range(0, stop = 1, length = 100);
 dx = KDEx[2] - KDEx[1];
 true_density = pi(KDEx);
 # regularisation parameters
-epsilon = [4.5e-4 ];
-alpha = [4.5e-4 5e-2 6e-2 3.1e-2 2.1e-2];
+epsilon = [4.5e-4 3.3e-4];
+alpha = [4.5e-4 3.3e-4 6e-2 3.1e-2 2.1e-2];
 # number of repetitions
 Nrep = 100;
 
