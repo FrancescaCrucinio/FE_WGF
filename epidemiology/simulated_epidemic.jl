@@ -93,9 +93,9 @@ plot(EWGF)
 
 # run SMCEMS
 runtimeSMC = @elapsed begin
-xSMC = smc_flu(Nparticles, Niter, epsilon, x0, muSample, M);
+xSMC, W = smc_flu(Nparticles, Niter, epsilon, x0, muSample, M);
 bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
-RKDESMC = rks.kde(x = xSMC[Niter,:], var"h" = bw, var"eval.points" = KDEx, var"w" = Nparticles[i]*W[end, :]);
+RKDESMC = rks.kde(x = xSMC[Niter,:], var"h" = bw, var"eval.points" = t, var"w" = Nparticles*W[end, :]);
 KDEySMC =  abs.(rcopy(RKDESMC[3]));
 end
 
@@ -153,14 +153,14 @@ end
 RLyRec = RLyRec*5000/sum(RLyRec);
 
 estimators = [It_normalised rhoCounts[200, :]/5000 @rget(RIDE_incidence)/5000 KDEySMC KDEyWGF];
-p1=plot(t, estimators, lw = 1, label = ["true incidence" "RL" "RIDE" "SMC-EMS" "Algo 1"],
-    color = [:black :gray :blue :red], line=[:dashdot :solid :solid :solid],
+p1=plot(t, estimators, lw = 2, label = ["true incidence" "RL" "RIDE" "SMC-EMS" "Algo 1"],
+    color = [:black :gray :blue :red :green], line=[:solid :dot :dashdot :dashdotdot :dash],
     legendfontsize = 15, tickfontsize = 10)
 # savefig(p1,"synthetic_epidem_incidence.pdf")
 
 reconvolutions = [RLyRec[:] @rget(RIDE_reconstruction) KDEyRecSMCEMS KDEyRec]
 p2=scatter(t, muCounts, marker=:x, markersize=3, label = "reported cases", color = :black)
-plot!(p2, t, reconvolutions, lw = 1, label = ["RL" "RIDE" "SMC-EMS" "Algo 1"],
-    color = [:gray :blue :red], line=[:solid :solid :solid],
+plot!(p2, t, reconvolutions, lw = 2, label = ["RL" "RIDE" "SMC-EMS" "Algo 1"],
+    color = [:gray :blue :red :green], line=[:dot :dashdot :dashdotdot :dash],
     legendfontsize = 15, tickfontsize = 10)
 # savefig(p2,"synthetic_epidem_reconvolution.pdf")

@@ -1,4 +1,5 @@
 push!(LOAD_PATH, "/Users/francescacrucinio/Documents/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -59,7 +60,7 @@ alpha = 0.001;
 epsilon = 0.0002;
 
 # misspecified or not
-misspecified = false;
+misspecified = true;
 Nrep = 100;
 ise = zeros(4, Nrep);
 ise_reconvolved = zeros(4, Nrep);
@@ -145,7 +146,7 @@ for i=1:Nrep
     runtime[4, i] = @elapsed begin
     xSMC, W = smc_flu(Nparticles, Niter, epsilon, x0, muSample, M);
     bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
-    RKDESMC = rks.kde(x = xSMC[end,:], var"h" = bw, var"eval.points" = KDEx, var"w" = Nparticles[i]*W[end, :]);
+    RKDESMC = rks.kde(x = xSMC[Niter,:], var"h" = bw, var"eval.points" = t, var"w" = Nparticles*W[Niter, :]);
     KDEySMC =  abs.(rcopy(RKDESMC[3]));
     end
     ise[4, i] = sum((KDEySMC .- It_normalised).^2);
@@ -161,6 +162,6 @@ mean(ise, dims = 2)
 mean(ise_reconvolved, dims = 2)
 times = mean(runtime, dims = 2);
 using JLD;
-save("sim_epidem11Mar2021misspecified.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
+save("sim_epidem20Dec2021misspecified.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
 # ise = load("sim_epidem9Mar2021misspecified.jld", "ise");
 # runtime = load("sim_epidem9Mar2021misspecified.jld", "runtime");
