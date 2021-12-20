@@ -11,6 +11,7 @@ using RCall;
 @rimport ks as rks;
 # custom packages
 using wgf_prior;
+using smcems;
 include("RL.jl")
 
 # set seed
@@ -73,21 +74,30 @@ dt = 1e-1;
 # number of iterations
 Niter = 3000;
 # initial distribution
-x0 = sample(muSample, M, replace = false) .- 10;
+x0 = sample(muSample, M, replace = false) .- 9;
 # prior mean = mean of μ shifted back by 10 days
-m0 = mean(muSample) - 10;
+m0 = mean(muSample) - 9;
 sigma0 = std(muSample);
 # regularisation parameter
-alpha = 0.0009;
+alpha = 0.001;
+epsilon = 0.0002;
 # run WGF
 runtimeWGF = @elapsed begin
-x = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);
-RKDEyWGF = rks.kde(x = x[Niter, :], var"eval.points" = t);
+xWGF = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);
+RKDEyWGF = rks.kde(x = xWGF[Niter, :], var"eval.points" = t);
 KDEyWGF = abs.(rcopy(RKDEyWGF[3]));
 end
 # check convergence
-EWGF = mapslices(psi, x, dims = 2);
+EWGF = mapslices(psi, xWGF, dims = 2);
 plot(EWGF)
+
+# run SMCEMS
+runtimeSMC = @elapsed begin
+xSMC = smc_flu(Nparticles, Niter, epsilon, x0, muSample, M);
+bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
+RKDESMC = rks.kde(x = xSMC[Niter,:], var"h" = bw, var"eval.points" = KDEx, var"w" = Nparticles[i]*W[end, :]);
+KDEySMC =  abs.(rcopy(RKDESMC[3]));
+end
 
 # RL
 # initial distribution
@@ -127,6 +137,13 @@ for i=1:length(refY)
     KDEyRec[i] = delta*sum(K.(t, refY[i]).*KDEyWGF);
 end
 KDEyRec = KDEyRec*5000/sum(KDEyRec);
+# reconvolve SMCEMS
+# recovolve SMCEMS
+KDEyRecSMCEMS = zeros(length(refY), 1);
+for i=1:length(refY)
+    KDEyRecSMCEMS[i] = delta*sum(K.(t, refY[i]).*KDEySMC);
+end
+KDEyRecSMCEMS = KDEyRecSMCEMS*5000/sum(KDEyRecSMCEMS);
 
 # recovolve RL
 RLyRec = zeros(length(refY), 1);
@@ -135,15 +152,15 @@ for i=1:length(refY)
 end
 RLyRec = RLyRec*5000/sum(RLyRec);
 
-estimators = [It_normalised rhoCounts[200, :]/5000 @rget(RIDE_incidence)/5000 KDEyWGF];
-p1=plot(t, estimators, lw = 1, label = ["true incidence" "RL" "RIDE" "Algo 1"],
+estimators = [It_normalised rhoCounts[200, :]/5000 @rget(RIDE_incidence)/5000 KDEySMC KDEyWGF];
+p1=plot(t, estimators, lw = 1, label = ["true incidence" "RL" "RIDE" "SMC-EMS" "Algo 1"],
     color = [:black :gray :blue :red], line=[:dashdot :solid :solid :solid],
     legendfontsize = 15, tickfontsize = 10)
 # savefig(p1,"synthetic_epidem_incidence.pdf")
 
-reconvolutions = [RLyRec[:] @rget(RIDE_reconstruction) KDEyRec]
+reconvolutions = [RLyRec[:] @rget(RIDE_reconstruction) KDEyRecSMCEMS KDEyRec]
 p2=scatter(t, muCounts, marker=:x, markersize=3, label = "reported cases", color = :black)
-plot!(p2, t, reconvolutions, lw = 1, label = ["RL" "RIDE" "Algo 1"],
+plot!(p2, t, reconvolutions, lw = 1, label = ["RL" "RIDE" "SMC-EMS" "Algo 1"],
     color = [:gray :blue :red], line=[:solid :solid :solid],
     legendfontsize = 15, tickfontsize = 10)
 # savefig(p2,"synthetic_epidem_reconvolution.pdf")

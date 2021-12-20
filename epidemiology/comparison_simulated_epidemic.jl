@@ -56,11 +56,11 @@ dt = 1e-1;
 Niter = 3000;
 # regularisation parameter
 alpha = 0.001;
-epislon = 0.0002;
+epsilon = 0.0002;
 
 # misspecified or not
-misspecified = true;
-Nrep = 2;
+misspecified = false;
+Nrep = 100;
 ise = zeros(4, Nrep);
 ise_reconvolved = zeros(4, Nrep);
 runtime = zeros(4, Nrep);
