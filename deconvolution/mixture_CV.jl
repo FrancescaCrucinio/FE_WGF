@@ -54,8 +54,8 @@ Niter = 100;
 # number of particles
 Nparticles = 1000;
 # regularisation parameters
-alpha = range(0, stop = 0.001, length = 10);
-epsilon = range(0, stop = 0.001, length = 10);
+alpha = range(0, stop = 0.005, length = 10);
+epsilon = range(0, stop = 0.005, length = 10);
 L = 100;
 EWGF = zeros(length(alpha), L);
 ESMC = zeros(length(alpha), L);
