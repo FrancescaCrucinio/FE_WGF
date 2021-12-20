@@ -50,3 +50,4 @@ p = plot(1:dims, mean(tEM, dims = 1)[:], yaxis = :log10, lw = 3, color = :blue,
 plot!(p, 1:dims, mean(tWGF, dims = 1)[:], yaxis = :log10, lw = 3, color = :red,
     line = :solid, label = "Algo 1")
 # savefig(p, "mixture_hd_times.pdf")
+mean(tWGF, dims = 1)[:]./ mean(tEM, dims = 1)[:]
