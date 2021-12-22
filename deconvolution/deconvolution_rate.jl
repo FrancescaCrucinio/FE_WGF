@@ -205,7 +205,7 @@ scatter!(legend, [0], markercolor = :white, label = "", markerstrokecolor = :whi
 bp = plot(bp1, bp3, bp4, legend, layout = @layout([[A B C] E{.15w}]), size = (900, 400), tickfontsize = 10)
 # savefig(bp, "mixture_runtime_vs_mse.pdf")
 
-save("prior_deconv_rate17Sep2021.jld", "tPI", tPI,  "tCV", tCV, "tSMC", tSMC, "tWGF", tWGF,
+save("prior_deconv_rate22December2021.jld", "tPI", tPI,  "tCV", tCV, "tSMC", tSMC, "tWGF", tWGF,
       "isePI", isePI,  "iseCV", iseCV, "iseSMC", iseSMC, "iseWGF", iseWGF,
       "entSMC", entSMC, "entWGF", entWGF,
       "qdistPI", qdistPI,  "qdistCV", qdistCV, "qdistSMC", qdistSMC, "qdistWGF", qdistWGF);
