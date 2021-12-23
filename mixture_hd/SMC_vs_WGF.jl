@@ -1,4 +1,6 @@
 push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "/Users/francescacrucinio/Documents/WGF/myModules")
+
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -11,7 +13,7 @@ using DelimitedFiles;
 # custom packages
 using wgf_prior;
 using smcems;
-include("mixture_hd_stats.jl")
+include("mixture_hd/mixture_hd_stats.jl")
 
 
 # set seed
@@ -68,8 +70,8 @@ for j=1:Nrep
     statsWGF[j, :] .= mixture_hd_stats(xWGF, ones(Nparticles)/Nparticles, 1);
     println("$d, $j")
 end
-statsSMC = (statsSMC .- [m v p]).^2;
-statsWGF = (statsWGF .- [m v p]).^2;
+statsSMC[:, 3] = (statsSMC[:, 3] .- [m v p]).^2;
+statsWGF[:, 3] = (statsWGF[:, 3] .- [m v p]).^2;
 open("1000smc_vs_wgf_$d.txt", "w") do io
     writedlm(io, [tSMC statsSMC tWGF statsWGF], ',')
 end
