@@ -1,4 +1,5 @@
 push!(LOAD_PATH, "/Users/francescacrucinio/Documents/WGF/myModules")
+push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -52,11 +53,11 @@ end
 dt = 1e-03;
 Niter = 100;
 # number of particles
-Nparticles = 10000;
+Nparticles = 100;
 # regularisation parameters
-alpha = range(0, stop = 0.005, length = 10);
-epsilon = range(0, stop = 0.005, length = 10);
-L = 100;
+alpha = range(0, stop = 0.003, length = 10);
+epsilon = range(0, stop = 0.003, length = 10);
+L = 1000;
 EWGF = zeros(length(alpha), L);
 ESMC = zeros(length(alpha), L);
 for i=1:length(alpha)
@@ -72,10 +73,10 @@ for i=1:length(alpha)
         xWGF = wgf_DKDE_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSample, M, sdK);
         # estimate functional
         EWGF[i, l] = psiWGF(xWGF[Niter, :], alpha[i], m0, sigma0, muSample);
-        # SMCEMS
-        xSMC, W = smc_gaussian_mixture(Nparticles, Niter, epsilon[i], x0, muSample, M);
-        # estimate functional
-        ESMC[i, l] = psiSMC(xSMC[Niter, :], W[Niter, :], muSample);
+        # # SMCEMS
+        # xSMC, W = smc_gaussian_mixture(Nparticles, Niter, epsilon[i], x0, muSample, M);
+        # # estimate functional
+        # ESMC[i, l] = psiSMC(xSMC[Niter, :], W[Niter, :], muSample);
         println("$i, $l")
     end
 end
