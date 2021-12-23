@@ -60,7 +60,7 @@ alpha = 0.001;
 epsilon = 0.0002;
 
 # misspecified or not
-misspecified = true;
+misspecified = false;
 Nrep = 100;
 ise = zeros(4, Nrep);
 ise_reconvolved = zeros(4, Nrep);
@@ -160,8 +160,8 @@ for i=1:Nrep
 end
 mean(ise, dims = 2)
 mean(ise_reconvolved, dims = 2)
-times = mean(runtime, dims = 2);
+times = mean(runtime, dims = 2)
 using JLD;
-save("sim_epidem20Dec2021misspecified.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
+save("sim_epidem20Dec2021.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
 # ise = load("sim_epidem9Mar2021misspecified.jld", "ise");
 # runtime = load("sim_epidem9Mar2021misspecified.jld", "runtime");
