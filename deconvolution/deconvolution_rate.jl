@@ -85,19 +85,11 @@ for i=1:length(Nparticles)
         fdec_hPI <- fdecUknown($KDEx, c($muSampleDKDE), hPI, "norm", $sdK, $dx);
         exectime <- toc()
         exectimePI <- exectime$toc - exectime$tic
-        # tic()
-        # hCV <- CVdeconv(c($muSampleDKDE), "norm", $sdK);
-        # fdec_hCV <-  fdecUknown($KDEx, c($muSampleDKDE), hCV, "norm", $sdK, $dx);
-        # exectime <- toc()
-        # exectimeCV <- exectime$toc - exectime$tic
         """
         # runtimes and ise
         trepPI[j] = @rget exectimePI;
-        # trepCV[j] = @rget exectimeCV;
         qdistrepPI[j, :] = (true_density .- @rget(fdec_hPI)).^2;
-        # qdistrepCV[j, :] = (true_density .- @rget(fdec_hCV)).^2;
         isePI[i, j] = dx*sum(qdistrepPI[j, :]);
-        # iserepCV[j] = dx*sum(qdistrepCV[j, :]);
 
         # SMC
         # initial distribution
@@ -191,10 +183,10 @@ scatter!(legend, [0], markercolor = :white, label = "", markerstrokecolor = :whi
 bp = plot(bp1, bp3, bp4, legend, layout = @layout([[A B C] E{.15w}]), size = (900, 400), tickfontsize = 10)
 # savefig(bp, "mixture_runtime_vs_mse.pdf")
 
-save("prior_deconv_rate24December2021.jld", "tPI", tPI,  "tCV", tCV, "tSMC", tSMC, "tWGF", tWGF,
-      "isePI", isePI,  "iseCV", iseCV, "iseSMC", iseSMC, "iseWGF", iseWGF,
-      "entSMC", entSMC, "entWGF", entWGF,
-      "qdistPI", qdistPI,  "qdistCV", qdistCV, "qdistSMC", qdistSMC, "qdistWGF", qdistWGF);
+# save("prior_deconv_rate24December2021.jld", "tPI", tPI,  "tCV", tCV, "tSMC", tSMC, "tWGF", tWGF,
+#       "isePI", isePI,  "iseCV", iseCV, "iseSMC", iseSMC, "iseWGF", iseWGF,
+#       "entSMC", entSMC, "entWGF", entWGF,
+#       "qdistPI", qdistPI,  "qdistCV", qdistCV, "qdistSMC", qdistSMC, "qdistWGF", qdistWGF);
 
 # tPI = load("deconvolution/prior_deconv_rate3Apr2021.jld", "tPI");
 # tCV = load("deconvolution/prior_deconv_rate3Apr2021.jld", "tCV");
