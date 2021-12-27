@@ -17,16 +17,10 @@ using smcems;
 R"""
 library(fDKDE)
 library(tictoc)
-memory.limit(17000)
 """
 
 # set seed
 Random.seed!(1234);
-
-function remove_non_finite(x)
-       return isfinite(x) ? x : 0
-end
-
 
 # data for gaussian mixture example
 pi(x) = pdf.(Normal(0.3, 0.015), x)/3 + 2*pdf.(Normal(0.5, 0.043), x)/3;
@@ -53,23 +47,19 @@ Nrep = 100;
 
 # diagnostics
 tPI = zeros(length(Nparticles), 1);
-isePI = zeros(length(Nparticles), 1);
-var_isePI = zeros(length(Nparticles), 1);
+isePI = zeros(length(Nparticles), Nrep);
 qdistPI = zeros(length(KDEx), length(Nparticles));
 tCV = zeros(length(Nparticles), 1);
 iseCV = zeros(length(Nparticles), 1);
 var_iseCV = zeros(length(Nparticles), 1);
 qdistCV = zeros(length(KDEx), length(Nparticles));
 tSMC = zeros(length(Nparticles), 1);
-iseSMC = zeros(length(Nparticles), 1);
-var_iseSMC = zeros(length(Nparticles), 1);
+iseSMC = zeros(length(Nparticles), Nrep);
 qdistSMC = zeros(length(KDEx), length(Nparticles));
 tWGF = zeros(length(Nparticles), 1);
-iseWGF = zeros(length(Nparticles), 1);
+iseWGF = zeros(length(Nparticles), Nrep);
 var_iseWGF = zeros(length(Nparticles), 1);
 qdistWGF = zeros(length(KDEx), length(Nparticles));
-entSMC = zeros(length(Nparticles), Nrep);
-entWGF = zeros(length(Nparticles), Nrep);
 
 for i=1:length(Nparticles)
     # times
@@ -77,11 +67,6 @@ for i=1:length(Nparticles)
     trepCV = zeros(Nrep, 1);
     trepSMC = zeros(Nrep, 1);
     trepWGF = zeros(Nrep, 1);
-    # ise
-    iserepPI = zeros(Nrep, 1);
-    iserepCV = zeros(Nrep, 1);
-    iserepSMC = zeros(Nrep, 1);
-    iserepWGF = zeros(Nrep, 1);
     # mse
     qdistrepPI = zeros(Nrep, length(KDEx));
     qdistrepCV = zeros(Nrep, length(KDEx));
@@ -110,7 +95,7 @@ for i=1:length(Nparticles)
         # trepCV[j] = @rget exectimeCV;
         qdistrepPI[j, :] = (true_density .- @rget(fdec_hPI)).^2;
         # qdistrepCV[j, :] = (true_density .- @rget(fdec_hCV)).^2;
-        iserepPI[j] = dx*sum(qdistrepPI[j, :]);
+        isePI[i, j] = dx*sum(qdistrepPI[j, :]);
         # iserepCV[j] = dx*sum(qdistrepCV[j, :]);
 
         # SMC
@@ -120,13 +105,12 @@ for i=1:length(Nparticles)
         trepSMC[j] = @elapsed begin
             xSMC, W = smc_gaussian_mixture(Nparticles[i], Niter, epsilon[i], x0, muSample, M);
             # kde
-            bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
+            bw = sqrt(epsilon[i]^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
             RKDESMC = rks.kde(x = xSMC[end,:], var"h" = bw, var"eval.points" = KDEx, var"w" = Nparticles[i]*W[end, :]);
             KDEySMC =  abs.(rcopy(RKDESMC[3]));
         end
         qdistrepSMC[j, :] = (true_density .- KDEySMC).^2;
-        iserepSMC[j] = dx*sum(qdistrepSMC[j, :]);
-        entSMC[i, j] = -dx*sum(remove_non_finite.(KDEySMC .* log.(KDEySMC)));
+        iseSMC[i, j] = dx*sum(qdistrepSMC[j, :]);
 
         # WGF
         # prior mean = mean of μ
@@ -139,34 +123,35 @@ for i=1:length(Nparticles)
         KDEyWGF = abs.(rcopy(RKDEyWGF[3]));
         end
         qdistrepWGF[j, :] = (true_density .- KDEyWGF).^2;
-        iserepWGF[j] = dx*sum(qdistrepWGF[j, :]);
-        entWGF[i, j] = -dx*sum(remove_non_finite.(KDEyWGF .* log.(KDEyWGF)));
+        iseWGF[i, j] = dx*sum(qdistrepWGF[j, :]);
         println("$i, $j")
     end
     tPI[i] = mean(trepPI);
     # tCV[i] = mean(trepCV);
     tSMC[i] = mean(trepSMC);
     tWGF[i] = mean(trepWGF);
-    isePI[i] = mean(iserepPI);
-    # iseCV[i] = mean(iserepCV);
-    iseSMC[i] = mean(iserepSMC);
-    iseWGF[i] = mean(iserepWGF);
-    var_isePI[i] = var(iserepPI);
-    # var_iseCV[i] = var(iserepCV);
-    var_iseSMC[i] = var(iserepSMC);
-    var_iseWGF[i] = var(iserepWGF);
     qdistPI[:, i] = mean(qdistrepPI, dims = 1);
     # qdistCV[:, i] = mean(qdistrepCV, dims = 1);
     qdistSMC[:, i] = mean(qdistrepSMC, dims = 1);
     qdistWGF[:, i] = mean(qdistrepWGF, dims = 1);
 end
 
-
-p = plot(tPI, isePI, xaxis = :log, lw = 3, color = :orange, line = :dashdotdot, label = "DKDE-pi",
-    legendfontsize = 10, tickfontsize = 10, legend = :outerright, size=(700, 400), ribbon = sqrt.(var_isePI), fillalpha = .2)
+var_isePI = var(isePI, dims = 2);
+var_iseSMC = var(iseSMC, dims = 2);
+var_iseWGF = var(iseWGF, dims = 2);
+quantiles_PI = zeros(5, 2);
+quantiles_SMC = zeros(5, 2);
+quantiles_WGF = zeros(5, 2);
+for i=1:5
+    quantiles_PI[i, :] = quantile(isePI[i, :], [0.05, 0.95]);
+    quantiles_SMC[i, :] = quantile(iseSMC[i, :], [0.05, 0.95]);
+    quantiles_WGF[i, :] = quantile(iseWGF[i, :], [0.05, 0.95]);
+end
+p = plot(tPI, mean(isePI, dims = 2), xaxis = :log, lw = 3, color = :orange, line = :dashdotdot, label = "DKDE-pi",
+    legendfontsize = 10, tickfontsize = 10, legend = :outerright, size=(700, 400), ribbon = quantiles_PI .- mean(isePI, dims = 2), fillalpha = .2)
 # plot!(p, tCV, iseCV, xaxis = :log, lw = 3, color = :blue, line = :dot,  label = "DKDE-cv")
-plot!(p, tSMC, iseSMC, xaxis = :log, lw = 3, color = :purple, line = :dash,  label = "SMC-EMS", ribbon = sqrt.(var_iseSMC), fillalpha = .2)
-plot!(p, tWGF, iseWGF, xaxis = :log, lw = 3, color = :red, line = :solid, label = "Algo 1", ribbon = sqrt.(var_iseWGF), fillalpha = .2)
+plot!(p, tSMC, mean(iseSMC, dims = 2), xaxis = :log, lw = 3, color = :purple, line = :dash,  label = "SMC-EMS", ribbon = quantiles_SMC .- mean(iseSMC, dims = 2), fillalpha = .2)
+plot!(p, tWGF, mean(iseWGF, dims = 2), xaxis = :log, lw = 3, color = :red, line = :solid, label = "Algo 1", ribbon = quantiles_WGF .- mean(iseWGF, dims = 2), fillalpha = .2)
 markers = [:circle :rect :diamond :star5 :xcross];
 for i=1:length(Nparticles)
     N = Nparticles[i];
@@ -205,7 +190,7 @@ scatter!(legend, [0], markercolor = :white, label = "", markerstrokecolor = :whi
 bp = plot(bp1, bp3, bp4, legend, layout = @layout([[A B C] E{.15w}]), size = (900, 400), tickfontsize = 10)
 # savefig(bp, "mixture_runtime_vs_mse.pdf")
 
-save("prior_deconv_rate22December2021.jld", "tPI", tPI,  "tCV", tCV, "tSMC", tSMC, "tWGF", tWGF,
+save("prior_deconv_rate24December2021.jld", "tPI", tPI,  "tCV", tCV, "tSMC", tSMC, "tWGF", tWGF,
       "isePI", isePI,  "iseCV", iseCV, "iseSMC", iseSMC, "iseWGF", iseWGF,
       "entSMC", entSMC, "entWGF", entWGF,
       "qdistPI", qdistPI,  "qdistCV", qdistCV, "qdistSMC", qdistSMC, "qdistWGF", qdistWGF);
@@ -224,12 +209,3 @@ save("prior_deconv_rate22December2021.jld", "tPI", tPI,  "tCV", tCV, "tSMC", tSM
 # qdistWGF = load("deconvolution/prior_deconv_rate3Apr2021.jld", "qdistWGF");
 # entSMC = load("deconvolution/prior_deconv_rate3Apr2021.jld", "entSMC");
 # entWGF = load("deconvolution/prior_deconv_rate3Apr2021.jld", "entWGF");
-
-i = 3
-histogram(entWGF[i, :])
-histogram!(entSMC[i, :])
-
-iseSMC./iseWGF
-var_iseSMC./var_iseWGF
-tSMC./tWGF
-mean(entSMC, dims = 2)./mean(entWGF, dims = 2)
