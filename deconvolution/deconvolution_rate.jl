@@ -48,6 +48,7 @@ true_density = pi(KDEx);
 # regularisation parameters
 epsilon = [4.5e-4 3.3e-4 1.1e-3 3.3e-3 3.8e-3];
 alpha = [4.5e-4 3.3e-4 1.1e-3 3.3e-3 3.8e-3];
+# alpha = [1.1e-1 5e-2 6e-2 3.1e-2 2.1e-2];
 # number of repetitions
 Nrep = 100;
 

@@ -13,7 +13,7 @@ function mixture_hd_stats(x, W, component)
     w1 = (KDEx[2] - KDEx[1])*sum(abs.(quantile(rand(pi_marginal, 10^6), KDEx) .- quantile(x[component, :], weights(W), KDEx)));
     # KS distance
     true_cdf = cdf.(Normal(0.3, 0.07^2), KDEx)/3 .+ 2*cdf.(Normal(0.7, 0.1^2), KDEx)/3;
-    empirical_cdf = ecdf(xWGF[component, :], weights = W);
+    empirical_cdf = ecdf(x[component, :], weights = W);
     ks = maximum(abs.(true_cdf .- empirical_cdf(KDEx)));
 
     return m, v, p, ks, w1

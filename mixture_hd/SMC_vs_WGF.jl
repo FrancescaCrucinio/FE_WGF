@@ -13,13 +13,13 @@ using DelimitedFiles;
 # custom packages
 using wgf_prior;
 using smcems;
-include("mixture_hd/mixture_hd_stats.jl")
+include("mixture_hd_stats.jl")
 
 
 # set seed
 Random.seed!(1234);
 # dimension
-d = 5;
+d = 2;
 # mixture of Gaussians
 means = [0.3 0.7];
 variances = [0.07^2; 0.1^2];
@@ -46,10 +46,10 @@ alpha = [2.5e-3 5e-4 1e-5 1e-5 5e-5 5e-4 5e-4 1e-05 1e-05 1e-05];
 # number of replicates
 Nrep = 100;
 tSMC = zeros(Nrep);
-statsSMC = zeros(Nrep, 3);
+statsSMC = zeros(Nrep, 5);
 # entSMC = zeros(Nrep);
 tWGF = zeros(Nrep);
-statsWGF = zeros(Nrep, 3);
+statsWGF = zeros(Nrep, 5);
 # entWGF = zeros(Nrep);
 for j=1:Nrep
     # sample from μ
@@ -70,8 +70,8 @@ for j=1:Nrep
     statsWGF[j, :] .= mixture_hd_stats(xWGF, ones(Nparticles)/Nparticles, 1);
     println("$d, $j")
 end
-statsSMC[:, 3] = (statsSMC[:, 3] .- [m v p]).^2;
-statsWGF[:, 3] = (statsWGF[:, 3] .- [m v p]).^2;
+statsSMC[:, 1:3] = (statsSMC[:, 1:3] .- [m v p]).^2;
+statsWGF[:, 1:3] = (statsWGF[:, 1:3] .- [m v p]).^2;
 open("1000smc_vs_wgf_$d.txt", "w") do io
     writedlm(io, [tSMC statsSMC tWGF statsWGF], ',')
 end
