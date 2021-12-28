@@ -19,7 +19,7 @@ include("mixture_hd_stats.jl")
 # set seed
 Random.seed!(1234);
 # dimension
-d = 2;
+d = 5;
 # mixture of Gaussians
 means = [0.3 0.7];
 variances = [0.07^2; 0.1^2];

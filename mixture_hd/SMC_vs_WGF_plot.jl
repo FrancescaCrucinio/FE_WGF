@@ -16,7 +16,7 @@ m = means[1]/3 + 2*means[2]/3;
 v = variances[1]/3 + 2*variances[2]/3 + means[1]^2/3 + 2*means[2]^2/3 - m^2;
 
 Nrep = 100;
-dims = 10;
+dims = 5;
 tSMC1000 = zeros(Nrep, dims);
 tWGF1000 = zeros(Nrep, dims);
 mWGF1000 = zeros(Nrep, dims);
@@ -29,10 +29,10 @@ ksWGF1000 = zeros(Nrep, dims);
 ksSMC1000 = zeros(Nrep, dims);
 w1WGF1000 = zeros(Nrep, dims);
 w1SMC1000 = zeros(Nrep, dims);
-for i in 1:dims
+for i in 2:dims
     p = ((cdf(Normal(means[1], variances[1]), 0.5) - cdf(Normal(means[1], variances[1]), 0) +
         2*(cdf(Normal(means[2], variances[2]), 0.5) - cdf(Normal(means[2], variances[2]), 0)))/3)^i;
-    readf = readdlm("mixture_hd/1000smc_vs_wgf_$i.txt", ',', Float64);
+    readf = readdlm("1000smc_vs_wgf_$i.txt", ',', Float64);
     tSMC1000[:, i] = readf[:, 1];
     mSMC1000[:, i] = readf[:, 2];
     vSMC1000[:, i] = readf[:, 3];
@@ -84,5 +84,12 @@ boxplot(vWGF1000, yaxis = :log10, legend = :none, bar_width = 0.5, range = 0, ti
 boxplot(pSMC1000, yaxis = :log10, legend = :none, bar_width = 0.5, range = 0, tickfontsize = 15)
 boxplot(pWGF1000, yaxis = :log10, legend = :none, bar_width = 0.5, range = 0, tickfontsize = 15)
 
-bp = boxplot(w1SMC1000, legend = :none, bar_width = 0.5, range = 0, tickfontsize = 15, color = :blue)
-boxplot!(w1WGF1000, legend = :none, bar_width = 0.5, range = 0, tickfontsize = 15, color = :red)
+g = repeat(2:dims, inner = Nrep);
+bp = violin(g, w1SMC1000[:, 2:dims][:], group = g, legend = :none, side = :left,
+    bar_width = 0.5, range = 0, tickfontsize = 15, color = :blue, fillalpha = 0.5, linecolor = :blue)
+violin!(g, w1WGF1000[:, 2:dims][:], group = g, legend = :none, side = :right,
+    bar_width = 0.5, range = 0, tickfontsize = 15, color = :red, fillalpha = 0.5, linecolor = :red)
+plot!(2:dims, mean(w1SMC1000[:, 2:dims], dims = 1)', color = :blue, lw = 2)
+plot!(2:dims, mean(w1WGF1000[:, 2:dims], dims = 1)', color = :red, lw = 2)
+scatter!(2:dims, mean(w1SMC1000[:, 2:dims], dims = 1)', color = :blue)
+scatter!(2:dims, mean(w1WGF1000[:, 2:dims], dims = 1)', color = :red)
