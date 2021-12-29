@@ -85,11 +85,11 @@ boxplot(pSMC1000, yaxis = :log10, legend = :none, bar_width = 0.5, range = 0, ti
 boxplot(pWGF1000, yaxis = :log10, legend = :none, bar_width = 0.5, range = 0, tickfontsize = 15)
 
 g = repeat(2:dims, inner = Nrep);
-bp = violin(g, w1SMC1000[:, 2:dims][:], group = g, legend = :none, side = :left,
+bp = violin(g, w1SMC1000[:, 2:dims][:], group = g, label = "", side = :left,
     bar_width = 0.5, range = 0, tickfontsize = 15, color = :blue, fillalpha = 0.5, linecolor = :blue)
-violin!(g, w1WGF1000[:, 2:dims][:], group = g, legend = :none, side = :right,
+violin!(g, w1WGF1000[:, 2:dims][:], group = g, label = "", side = :right,
     bar_width = 0.5, range = 0, tickfontsize = 15, color = :red, fillalpha = 0.5, linecolor = :red)
-plot!(2:dims, mean(w1SMC1000[:, 2:dims], dims = 1)', color = :blue, lw = 2)
-plot!(2:dims, mean(w1WGF1000[:, 2:dims], dims = 1)', color = :red, lw = 2)
-scatter!(2:dims, mean(w1SMC1000[:, 2:dims], dims = 1)', color = :blue)
-scatter!(2:dims, mean(w1WGF1000[:, 2:dims], dims = 1)', color = :red)
+plot!(2:dims, mean(w1SMC1000[:, 2:dims], dims = 1)', color = :blue, lw = 2, label = "")
+plot!(2:dims, mean(w1WGF1000[:, 2:dims], dims = 1)', color = :red, lw = 2, label = "")
+scatter!(2:dims, mean(w1SMC1000[:, 2:dims], dims = 1)', color = :blue, label = "SMC-EMS")
+scatter!(2:dims, mean(w1WGF1000[:, 2:dims], dims = 1)', color = :red, label = "Algo 1")
