@@ -65,12 +65,10 @@ qdistWGF = zeros(length(KDEx), length(Nparticles));
 for i=1:length(Nparticles)
     # times
     trepPI = zeros(Nrep, 1);
-    trepCV = zeros(Nrep, 1);
     trepSMC = zeros(Nrep, 1);
     trepWGF = zeros(Nrep, 1);
     # mse
     qdistrepPI = zeros(Nrep, length(KDEx));
-    qdistrepCV = zeros(Nrep, length(KDEx));
     qdistrepWGF = zeros(Nrep, length(KDEx));
     qdistrepSMC = zeros(Nrep, length(KDEx));
     for j=1:Nrep
@@ -132,48 +130,33 @@ end
 var_isePI = var(isePI, dims = 2);
 var_iseSMC = var(iseSMC, dims = 2);
 var_iseWGF = var(iseWGF, dims = 2);
-quantiles_PI = zeros(5, 2);
-quantiles_SMC = zeros(5, 2);
-quantiles_WGF = zeros(5, 2);
-for i=1:5
-    quantiles_PI[i, :] = quantile(isePI[i, :], [0.05, 0.95]);
-    quantiles_SMC[i, :] = quantile(iseSMC[i, :], [0.05, 0.95]);
-    quantiles_WGF[i, :] = quantile(iseWGF[i, :], [0.05, 0.95]);
-end
 p = plot(tPI, mean(isePI, dims = 2), xaxis = :log, lw = 3, color = :orange, line = :dashdotdot, label = "DKDE-pi",
-    legendfontsize = 10, tickfontsize = 10, legend = :outerright, size=(700, 400), ribbon = quantiles_PI .- mean(isePI, dims = 2), fillalpha = .2)
-# plot!(p, tCV, iseCV, xaxis = :log, lw = 3, color = :blue, line = :dot,  label = "DKDE-cv")
-plot!(p, tSMC, mean(iseSMC, dims = 2), xaxis = :log, lw = 3, color = :purple, line = :dash,  label = "SMC-EMS", ribbon = quantiles_SMC .- mean(iseSMC, dims = 2), fillalpha = .2)
-plot!(p, tWGF, mean(iseWGF, dims = 2), xaxis = :log, lw = 3, color = :red, line = :solid, label = "Algo 1", ribbon = quantiles_WGF .- mean(iseWGF, dims = 2), fillalpha = .2)
+    legendfontsize = 10, tickfontsize = 10, legend = :outerright, size=(700, 400), ribbon = sqrt.(var_isePI), fillalpha = .2)
+plot!(p, tSMC, mean(iseSMC, dims = 2), xaxis = :log, lw = 3, color = :purple, line = :dash,  label = "SMC-EMS", ribbon =  sqrt.(var_iseSMC), fillalpha = .2)
+plot!(p, tWGF, mean(iseWGF, dims = 2), xaxis = :log, lw = 3, color = :red, line = :solid, label = "Algo 1", ribbon = sqrt.(var_iseWGF), fillalpha = .2)
 markers = [:circle :rect :diamond :star5 :xcross];
 for i=1:length(Nparticles)
     N = Nparticles[i];
-    scatter!(p, [tPI[i]], [isePI[i]], xaxis = :log, color = :black,
+    scatter!(p, [tPI[i]], [mean(isePI, dims = 2)[i]], xaxis = :log, color = :black,
         markerstrokecolor = :black, marker = markers[i], markersize = 5, label = "N = $N")
-    scatter!(p, [tPI[i]], [isePI[i]], xaxis = :log, color = :orange,
+    scatter!(p, [tPI[i]], [mean(isePI, dims = 2)[i]], xaxis = :log, color = :orange,
         markerstrokecolor = :orange, marker = markers[i], markersize = 5, label = "")
-    # scatter!(p, [tCV[i]], [iseCV[i]], xaxis = :log, color = :blue,
-    #     markerstrokecolor = :blue, marker = markers[i], markersize = 5, label = "")
-    scatter!(p, [tSMC[i]], [iseSMC[i]], xaxis = :log, color = :purple,
+    scatter!(p, [tSMC[i]], [mean(iseSMC, dims = 2)[i]], xaxis = :log, color = :purple,
         markerstrokecolor = :purple, marker = markers[i], markersize = 5, label = "")
-    scatter!(p, [tWGF[i]], [iseWGF[i]], xaxis = :log, color = :red,
+    scatter!(p, [tWGF[i]], [mean(iseWGF, dims = 2)[i]], xaxis = :log, color = :red,
         markerstrokecolor = :red, marker = markers[i], markersize = 5, label = "")
 end
 # savefig(p, "mixture_runtime_vs_mise.pdf")
 bp1 = boxplot(transpose(log10.(tPI)), qdistPI, yaxis = :log10, legend = :none, bar_width = 0.2, range = 0,
-tickfontsize = 15, ylims = (0.5*minimum(qdistSMC), maximum(qdistSMC)))
+tickfontsize = 15, ylims = (0.5*minimum(qdistSMC), maximum(qdistPI)))
 # title = "DKDE-pi", ylabel = "MSE", xlabel = "Runtime (log s)")
 # savefig(bp1, "mixture_runtime_vs_mse_pi.pdf")
-# bp2 = boxplot(transpose(log10.(tCV)), qdistCV, yaxis = :log10, legend = :none, bar_width = 0.2, range = 0,
-# tickfontsize = 15, ylims = (0.5*minimum(qdistSMC), maximum(qdistSMC)))
-# title = "DKDE-cv", ylabel = "MSE", xlabel = "Runtime (log s)")
-# savefig(bp2, "mixture_runtime_vs_mse_cv.pdf")
 bp3 = boxplot(transpose(log10.(tSMC)), qdistSMC, yaxis = :log10, legend = :none, bar_width = 0.3, range = 0,
-tickfontsize = 15, ylims = (0.5*minimum(qdistSMC), maximum(qdistSMC)))
+tickfontsize = 15, ylims = (0.5*minimum(qdistSMC), maximum(qdistPI)))
 # title = "SMC-EMS", ylabel = "MSE", xlabel = "Runtime (log s)")
 # savefig(bp3, "mixture_runtime_vs_mse_smc.pdf")
 bp4 = boxplot(transpose(log10.(tWGF)), qdistWGF, yaxis = :log10, legend = :none, bar_width = 0.3, range = 0,
-tickfontsize = 15, ylims = (0.5*minimum(qdistSMC), maximum(qdistSMC)))
+tickfontsize = 15, ylims = (0.5*minimum(qdistSMC), maximum(qdistPI)))
 # title = "WGF", ylabel = "MSE", xlabel = "Runtime (log s)")
 # savefig(bp4, "mixture_runtime_vs_mse_wgf.pdf")
 legend = scatter([0 0 0 0 0], showaxis = false, grid = false, label = ["N = 100" "N = 500" "N=1000" "N=5000" "N=10000"],
@@ -183,22 +166,16 @@ scatter!(legend, [0], markercolor = :white, label = "", markerstrokecolor = :whi
 bp = plot(bp1, bp3, bp4, legend, layout = @layout([[A B C] E{.15w}]), size = (900, 400), tickfontsize = 10)
 # savefig(bp, "mixture_runtime_vs_mse.pdf")
 
-# save("prior_deconv_rate24December2021.jld", "tPI", tPI,  "tCV", tCV, "tSMC", tSMC, "tWGF", tWGF,
-#       "isePI", isePI,  "iseCV", iseCV, "iseSMC", iseSMC, "iseWGF", iseWGF,
-#       "entSMC", entSMC, "entWGF", entWGF,
-#       "qdistPI", qdistPI,  "qdistCV", qdistCV, "qdistSMC", qdistSMC, "qdistWGF", qdistWGF);
+# save("prior_deconv_rate24December2021.jld", "tPI", tPI, "tSMC", tSMC, "tWGF", tWGF,
+#       "isePI", isePI, "iseSMC", iseSMC, "iseWGF", iseWGF,
+#       "qdistPI", qdistPI, "qdistSMC", qdistSMC, "qdistWGF", qdistWGF);
 
-# tPI = load("deconvolution/prior_deconv_rate3Apr2021.jld", "tPI");
-# tCV = load("deconvolution/prior_deconv_rate3Apr2021.jld", "tCV");
-# tSMC = load("deconvolution/prior_deconv_rate3Apr2021.jld", "tSMC");
-# tWGF = load("deconvolution/prior_deconv_rate3Apr2021.jld", "tWGF");
-# isePI = load("deconvolution/prior_deconv_rate3Apr2021.jld", "isePI");
-# iseCV = load("deconvolution/prior_deconv_rate3Apr2021.jld", "iseCV");
-# iseSMC = load("deconvolution/prior_deconv_rate3Apr2021.jld", "iseSMC");
-# iseWGF = load("deconvolution/prior_deconv_rate3Apr2021.jld", "iseWGF");
-# qdistPI = load("deconvolution/prior_deconv_rate3Apr2021.jld", "qdistPI");
-# qdistCV = load("deconvolution/prior_deconv_rate3Apr2021.jld", "qdistCV");
-# qdistSMC = load("deconvolution/prior_deconv_rate3Apr2021.jld", "qdistSMC");
-# qdistWGF = load("deconvolution/prior_deconv_rate3Apr2021.jld", "qdistWGF");
-# entSMC = load("deconvolution/prior_deconv_rate3Apr2021.jld", "entSMC");
-# entWGF = load("deconvolution/prior_deconv_rate3Apr2021.jld", "entWGF");
+tPI = load("deconvolution/prior_deconv_rate24December2021.jld", "tPI");
+tSMC = load("deconvolution/prior_deconv_rate24December2021.jld", "tSMC");
+tWGF = load("deconvolution/prior_deconv_rate24December2021.jld", "tWGF");
+isePI = load("deconvolution/prior_deconv_rate24December2021.jld", "isePI");
+iseSMC = load("deconvolution/prior_deconv_rate24December2021.jld", "iseSMC");
+iseWGF = load("deconvolution/prior_deconv_rate24December2021.jld", "iseWGF");
+qdistPI = load("deconvolution/prior_deconv_rate24December2021.jld", "qdistPI");
+qdistSMC = load("deconvolution/prior_deconv_rate24December2021.jld", "qdistSMC");
+qdistWGF = load("deconvolution/prior_deconv_rate24December2021.jld", "qdistWGF");
