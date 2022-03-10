@@ -1,4 +1,5 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+push!(LOAD_PATH, "/Users/francescacrucinio/Documents/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -63,7 +64,15 @@ function psi(piSample)
     kl_prior = mean(log.(pihat./prior));
     return kl+alpha*kl_prior;
 end
-
+function psi_smc(piSample, W)
+    loglik = zeros(1, length(muSample));
+    for i=1:length(muSample)
+        loglik[i] = sum(W.*K.(piSample, muSample[i]));
+    end
+    loglik = -log.(loglik);
+    kl = mean(loglik);
+    return kl;
+end
 # parameters for WGF
 # number of particles
 Nparticles = 500;
@@ -72,7 +81,9 @@ M = 500;
 # time discretisation
 dt = 1e-1;
 # number of iterations
-Niter = 3000;
+Niter_wgf = 3000;
+Niter_smc = 100;
+Niter_rl = 100;
 # initial distribution
 x0 = sample(muSample, M, replace = false) .- 9;
 # prior mean = mean of μ shifted back by 10 days
@@ -83,8 +94,8 @@ alpha = 0.001;
 epsilon = 0.0002;
 # run WGF
 runtimeWGF = @elapsed begin
-xWGF = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);
-RKDEyWGF = rks.kde(x = xWGF[Niter, :], var"eval.points" = t);
+xWGF = wgf_flu_tamed_truncated(Nparticles, dt, Niter_wgf, alpha, x0, m0, sigma0, muSample, M);
+RKDEyWGF = rks.kde(x = xWGF[Niter_wgf, :], var"eval.points" = t);
 KDEyWGF = abs.(rcopy(RKDEyWGF[3]));
 end
 # check convergence
@@ -93,11 +104,17 @@ plot(EWGF)
 
 # run SMCEMS
 runtimeSMC = @elapsed begin
-xSMC, W = smc_flu(Nparticles, Niter, epsilon, x0, muSample, M);
-bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
-RKDESMC = rks.kde(x = xSMC[Niter,:], var"h" = bw, var"eval.points" = t, var"w" = Nparticles*W[end, :]);
+xSMC, W = smc_flu(Nparticles, Niter_smc, epsilon, x0, muSample, M);
+bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter_smc, :], W[Niter_smc, :])^2);
+RKDESMC = rks.kde(x = xSMC[Niter_smc,:], var"h" = bw, var"eval.points" = t, var"w" = Nparticles*W[Niter_smc, :]);
 KDEySMC =  abs.(rcopy(RKDESMC[3]));
 end
+# check convergence
+ESMC = zeros(Niter_smc);
+for i in 1:Niter_smc
+    ESMC[i] = psi_smc(xSMC[i, :], W[i, :]);
+end
+plot(ESMC)
 
 # RL
 # initial distribution
@@ -110,7 +127,7 @@ for i=1:length(muCounts)
     end
 end
 runtimeRL = @elapsed begin
-rhoCounts = RL(KDisc, muCounts, 200, pi0);
+rhoCounts = RL(KDisc, muCounts, Niter_rl, pi0);
 end
 # RIDE estimator
 # discretise delay distribution
@@ -148,11 +165,11 @@ KDEyRecSMCEMS = KDEyRecSMCEMS*5000/sum(KDEyRecSMCEMS);
 # recovolve RL
 RLyRec = zeros(length(refY), 1);
 for i=1:length(refY)
-    RLyRec[i] = delta*sum(K(t, refY[i]).*rhoCounts[200,:]);
+    RLyRec[i] = delta*sum(K(t, refY[i]).*rhoCounts[Niter_rl,:]);
 end
 RLyRec = RLyRec*5000/sum(RLyRec);
 
-estimators = [It_normalised rhoCounts[200, :]/5000 @rget(RIDE_incidence)/5000 KDEySMC KDEyWGF];
+estimators = [It_normalised rhoCounts[Niter_rl, :]/5000 @rget(RIDE_incidence)/5000 KDEySMC KDEyWGF];
 p1=plot(t, estimators, lw = 2, label = ["true incidence" "RL" "RIDE" "SMC-EMS" "Algo 1"],
     color = [:black :gray :blue :red :green], line=[:solid :dot :dashdot :dashdotdot :dash],
     legendfontsize = 15, tickfontsize = 10)

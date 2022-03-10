@@ -56,7 +56,8 @@ M = 500;
 # time discretisation
 dt = 1e-1;
 # number of iterations
-Niter = 3000;
+Niter_wgf = 3000;
+Niter_smc = 100;
 # regularisation parameter
 alpha = range(0.0001, stop = 0.01, length = 10);
 epsilon = range(0, stop = 0.01, length = 10);
@@ -87,13 +88,13 @@ for i=1:length(alpha)
         m0 = mean(muSample) .- 9;
         sigma0 = std(muSample);
         # WGF
-        xWGF = wgf_flu_tamed(Nparticles, dt, Niter, alpha[i], x0, m0, sigma0, muSample, M);
+        xWGF = wgf_flu_tamed(Nparticles, dt, Niter_wgf, alpha[i], x0, m0, sigma0, muSample, M);
         # functional
-        EWGF[i, l] = psiWGF(xWGF[Niter, :], alpha[i], m0, sigma0, muSample);
+        EWGF[i, l] = psiWGF(xWGF[Niter_wgf, :], alpha[i], m0, sigma0, muSample);
         # SMCEMS
-        xSMC, W = smc_flu(Nparticles, Niter, epsilon[i], x0, muSample, M);
+        xSMC, W = smc_flu(Nparticles, Niter_smc, epsilon[i], x0, muSample, M);
         # functional
-        ESMC[i, l] = psiSMC(xSMC[Niter, :], W[Niter, :], muSample);
+        ESMC[i, l] = psiSMC(xSMC[Niter_smc, :], W[Niter_smc, :], muSample);
         println("$i, $l")
     end
 end

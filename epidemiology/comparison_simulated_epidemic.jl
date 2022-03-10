@@ -54,7 +54,9 @@ M = 500;
 # time discretisation
 dt = 1e-1;
 # number of iterations
-Niter = 3000;
+Niter_wgf = 3000;
+Niter_smc = 100;
+Niter_rl = 100;
 # regularisation parameter
 alpha = 0.001;
 epsilon = 0.0002;
@@ -96,13 +98,13 @@ for i=1:Nrep
     # initial distribution
     pi0 = 100*rand(1, length(muCounts));
     runtime[1, i] = @elapsed begin
-    rhoCounts = RL(KDisc, muCounts, 200, pi0);
+    rhoCounts = RL(KDisc, muCounts, Niter_rl, pi0);
     end
-    ise[1, i] = sum((rhoCounts[200, :]/5000 .- It_normalised).^2);
+    ise[1, i] = sum((rhoCounts[Niter_rl, :]/5000 .- It_normalised).^2);
     # recovolve RL
     RLyRec = zeros(length(refY), 1);
     for i=1:length(refY)
-        RLyRec[i] = delta*sum(K(t, refY[i]).*rhoCounts[200,:]);
+        RLyRec[i] = delta*sum(K(t, refY[i]).*rhoCounts[Niter_rl,:]);
     end
     RLyRec = RLyRec/sum(RLyRec);
     ise_reconvolved[1, i] = sum((RLyRec .- muCounts/5000).^2);
@@ -130,8 +132,8 @@ for i=1:Nrep
     m0 = mean(muSample) - 9;
     sigma0 = std(muSample);
     runtime[3, i] = @elapsed begin
-    xWGF = wgf_flu_tamed(Nparticles, dt, Niter, alpha, x0, m0, sigma0, muSample, M);
-    RKDEyWGF = rks.kde(x = xWGF[Niter, :], var"eval.points" = t);
+    xWGF = wgf_flu_tamed(Nparticles, dt, Niter_wgf, alpha, x0, m0, sigma0, muSample, M);
+    RKDEyWGF = rks.kde(x = xWGF[Niter_wgf, :], var"eval.points" = t);
     KDEyWGF = abs.(rcopy(RKDEyWGF[3]));
     end
     ise[3, i] = sum((KDEyWGF .- It_normalised).^2);
@@ -144,9 +146,9 @@ for i=1:Nrep
     ise_reconvolved[3, i] = sum((KDEyRec .- muCounts/5000).^2);
     # SMCEMS
     runtime[4, i] = @elapsed begin
-    xSMC, W = smc_flu(Nparticles, Niter, epsilon, x0, muSample, M);
-    bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter, :], W[Niter, :])^2);
-    RKDESMC = rks.kde(x = xSMC[Niter,:], var"h" = bw, var"eval.points" = t, var"w" = Nparticles*W[Niter, :]);
+    xSMC, W = smc_flu(Nparticles, Niter_smc, epsilon, x0, muSample, M);
+    bw = sqrt(epsilon^2 + optimal_bandwidthESS(xSMC[Niter_smc, :], W[Niter_smc, :])^2);
+    RKDESMC = rks.kde(x = xSMC[Niter_smc,:], var"h" = bw, var"eval.points" = t, var"w" = Nparticles*W[Niter_smc, :]);
     KDEySMC =  abs.(rcopy(RKDESMC[3]));
     end
     ise[4, i] = sum((KDEySMC .- It_normalised).^2);
@@ -162,6 +164,6 @@ mean(ise, dims = 2)
 mean(ise_reconvolved, dims = 2)
 times = mean(runtime, dims = 2)
 using JLD;
-save("sim_epidem20Dec2021.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
+save("sim_epidem9Mar2022.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
 # ise = load("sim_epidem9Mar2021misspecified.jld", "ise");
 # runtime = load("sim_epidem9Mar2021misspecified.jld", "runtime");

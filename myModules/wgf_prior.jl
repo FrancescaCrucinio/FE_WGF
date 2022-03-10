@@ -6,6 +6,7 @@ using LinearAlgebra;
 
 using samplers;
 
+export wgf_flu_tamed_truncated
 export wgf_flu_tamed
 export wgf_DKDE_tamed
 export wgf_ct_tamed
@@ -13,6 +14,62 @@ export wgf_ct_tamed_cv
 export wgf_hd_mixture_tamed
 export ct_kde
 export mixture_hd_kde
+
+#= WGF for Spanish flu data with truncated kernel
+OUTPUTS
+1 - particle locations
+INPUTS
+'N' number of particles
+'dt' discretisation step
+'Niter' number of iterations
+'alpha' regularisation parameter
+'x0' initial distribution
+'m0' mean of prior
+'sigma0' standard deviation of prior
+'muSample' sample from μ
+'M' number of samples from μ(y) to be drawn at each iteration
+=#
+function wgf_flu_tamed_truncated(N, dt, Niter, alpha, x0, m0, sigma0, muSample, M)
+   # initialise a matrix x storing the particles
+   x = zeros(Niter, N);
+   # initial distribution is given as input:
+   x[1, :] = x0;
+   # define truncated kernel
+   function k_truncated(t)
+       if(t >= 0)
+           (0.595*pdf(Normal(8.63, 2.56), t) + 0.405*pdf(Normal(15.24, 5.39), t))/(0.9988)
+        else
+        0
+    end
+   end
+   function k_truncated_gradient(t)
+       if(t > 0)
+           (0.595*pdf(Normal(8.63, 2.56), t) * (t - 8.63)/(2.56^2) +
+             0.405*pdf(Normal(15.24, 5.39), t) * (t - 15.24)/(5.39^2))/(0.9988)
+        else
+        0
+    end
+   end
+   for n=1:(Niter-1)
+       # get samples from μ(y)
+       y = sample(muSample, M, replace = false);
+       # Compute denominator
+       muN = zeros(M, 1);
+       for j=1:M
+           muN[j] = mean(k_truncated.(y[j] .- x[n, :]));
+       end
+
+       # gradient and drift
+       drift = zeros(N, 1);
+       for i=1:N
+           gradient = k_truncated_gradient.(y .- x[n, i]);
+           drift[i] = mean(gradient./muN) + alpha*(x[n, i] .- m0)/sigma0^2;
+       end
+       # update locations
+       x[n+1, :] = x[n, :] .+ dt * drift./(1 .+ dt * abs.(drift)) .+  sqrt(2*alpha*dt)*randn(N, 1);
+   end
+   return x
+end
 
 #= WGF for Spanish flu data
 OUTPUTS
