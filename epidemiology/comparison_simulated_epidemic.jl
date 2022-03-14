@@ -132,7 +132,7 @@ for i=1:Nrep
     m0 = mean(muSample) - 9;
     sigma0 = std(muSample);
     runtime[3, i] = @elapsed begin
-    xWGF = wgf_flu_tamed(Nparticles, dt, Niter_wgf, alpha, x0, m0, sigma0, muSample, M);
+    xWGF = wgf_flu_tamed_truncated(Nparticles, dt, Niter_wgf, alpha, x0, m0, sigma0, muSample, M);
     RKDEyWGF = rks.kde(x = xWGF[Niter_wgf, :], var"eval.points" = t);
     KDEyWGF = abs.(rcopy(RKDEyWGF[3]));
     end
@@ -164,6 +164,7 @@ mean(ise, dims = 2)
 mean(ise_reconvolved, dims = 2)
 times = mean(runtime, dims = 2)
 using JLD;
-save("sim_epidem9Mar2022.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
-# ise = load("sim_epidem9Mar2021misspecified.jld", "ise");
-# runtime = load("sim_epidem9Mar2021misspecified.jld", "runtime");
+save("sim_epidem10Mar2022_truncated.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
+# ise = load("sim_epidem10Mar2022misspecified.jld", "ise");
+# runtime = load("sim_epidem10Mar2022misspecified.jld", "runtime");
+ise_reconvolved = load("sim_epidem10Mar2022misspecified.jld", "ise_reconvolved");
