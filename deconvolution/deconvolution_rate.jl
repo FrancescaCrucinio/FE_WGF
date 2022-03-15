@@ -1,5 +1,6 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
-push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/francesca/Documents/GitHub/WGF/myModules")
+push!(LOAD_PATH, "/Users/francescacrucinio/Documents/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
@@ -146,17 +147,17 @@ for i=1:length(Nparticles)
     scatter!(p, [tWGF[i]], [mean(iseWGF, dims = 2)[i]], xaxis = :log, color = :red,
         markerstrokecolor = :red, marker = markers[i], markersize = 5, label = "")
 end
-# savefig(p, "mixture_runtime_vs_mise.pdf")
-bp1 = boxplot(transpose(log10.(tPI)), qdistPI, yaxis = :log10, legend = :none, bar_width = 0.2, range = 0,
-tickfontsize = 15, ylims = (0.5*minimum(qdistSMC), maximum(qdistPI)))
+# savefig(p, "mixture_runtime_vs_mise2.pdf")
+bp1 = boxplot(transpose(log10.(tPI)), qdistPI, yaxis = :log10, legend = :none, bar_width = 0.2,
+tickfontsize = 15, ylims = (0.5*minimum(qdistSMC), maximum(qdistPI)), xlims = (minimum(log10.(tSMC))-0.5, maximum(log10.(tSMC))+0.5))
 # title = "DKDE-pi", ylabel = "MSE", xlabel = "Runtime (log s)")
 # savefig(bp1, "mixture_runtime_vs_mse_pi.pdf")
 bp3 = boxplot(transpose(log10.(tSMC)), qdistSMC, yaxis = :log10, legend = :none, bar_width = 0.3, range = 0,
-tickfontsize = 15, ylims = (0.5*minimum(qdistSMC), maximum(qdistPI)))
+tickfontsize = 15, ylims = (0.5*minimum(qdistSMC), maximum(qdistPI)), xlims = (minimum(log10.(tSMC))-0.5, maximum(log10.(tSMC))+0.5))
 # title = "SMC-EMS", ylabel = "MSE", xlabel = "Runtime (log s)")
 # savefig(bp3, "mixture_runtime_vs_mse_smc.pdf")
 bp4 = boxplot(transpose(log10.(tWGF)), qdistWGF, yaxis = :log10, legend = :none, bar_width = 0.3, range = 0,
-tickfontsize = 15, ylims = (0.5*minimum(qdistSMC), maximum(qdistPI)))
+tickfontsize = 15, ylims = (0.5*minimum(qdistSMC), maximum(qdistPI)), xlims = (minimum(log10.(tSMC))-0.5, maximum(log10.(tSMC))+0.5))
 # title = "WGF", ylabel = "MSE", xlabel = "Runtime (log s)")
 # savefig(bp4, "mixture_runtime_vs_mse_wgf.pdf")
 legend = scatter([0 0 0 0 0], showaxis = false, grid = false, label = ["N = 100" "N = 500" "N=1000" "N=5000" "N=10000"],
@@ -170,12 +171,40 @@ bp = plot(bp1, bp3, bp4, legend, layout = @layout([[A B C] E{.15w}]), size = (90
 #       "isePI", isePI, "iseSMC", iseSMC, "iseWGF", iseWGF,
 #       "qdistPI", qdistPI, "qdistSMC", qdistSMC, "qdistWGF", qdistWGF);
 
-tPI = load("deconvolution/prior_deconv_rate24December2021.jld", "tPI");
-tSMC = load("deconvolution/prior_deconv_rate24December2021.jld", "tSMC");
-tWGF = load("deconvolution/prior_deconv_rate24December2021.jld", "tWGF");
-isePI = load("deconvolution/prior_deconv_rate24December2021.jld", "isePI");
-iseSMC = load("deconvolution/prior_deconv_rate24December2021.jld", "iseSMC");
-iseWGF = load("deconvolution/prior_deconv_rate24December2021.jld", "iseWGF");
-qdistPI = load("deconvolution/prior_deconv_rate24December2021.jld", "qdistPI");
-qdistSMC = load("deconvolution/prior_deconv_rate24December2021.jld", "qdistSMC");
-qdistWGF = load("deconvolution/prior_deconv_rate24December2021.jld", "qdistWGF");
+tPI = load("deconvolution/prior_deconv_rate14March2022.jld", "tPI");
+tSMC = load("deconvolution/prior_deconv_rate14March2022.jld", "tSMC");
+tWGF = load("deconvolution/prior_deconv_rate14March2022.jld", "tWGF");
+isePI = load("deconvolution/prior_deconv_rate14March2022.jld", "isePI");
+iseSMC = load("deconvolution/prior_deconv_rate14March2022.jld", "iseSMC");
+iseWGF = load("deconvolution/prior_deconv_rate14March2022.jld", "iseWGF");
+qdistPI = load("deconvolution/prior_deconv_rate14March2022.jld", "qdistPI");
+qdistSMC = load("deconvolution/prior_deconv_rate14March2022.jld", "qdistSMC");
+qdistWGF = load("deconvolution/prior_deconv_rate14March2022.jld", "qdistWGF");
+
+R"""
+library(ggplot2)
+df <- data.frame(c($qdistPI, $qdistSMC, $qdistWGF), rep(c($tPI, $tSMC, $tWGF), each = 100),
+    rep($Nparticles, each = 100), rep(c("DKDEpi", "SMCEMS", "WGF"), each = 5*100))
+colnames(df) <- c("qdist", "t", "N", "algo")
+df$N <- as.factor(df$N)
+distances_mean <- data.frame(aggregate(qdist ~ algo + N, data = df, FUN = "mean"))
+time_means <- aggregate(t ~ algo + N, data = df, FUN= "mean" )
+distances_mean <- merge(distances_mean, time_means, by=c("algo", "N"))
+ggplot(data = df, aes(x = t, y = qdist, group = N, colour = N, fill = N)) +
+    geom_boxplot(width = 0.2, alpha = 0.2, lwd = 1, coef = 6) +
+#    geom_point(data = distances_mean, shape = 4, lwd = 10, aes(x = t, y = qdist, group = interaction(algo, N), fill = N, colour = N)) +
+    scale_x_log10(
+        breaks = scales::trans_breaks("log10", function(x) 10^x),
+        labels = scales::trans_format("log10", scales::math_format(10^.x))
+    ) +
+    scale_y_log10(
+        breaks = scales::trans_breaks("log10", function(x) 10^x),
+        labels = scales::trans_format("log10", scales::math_format(10^.x))
+        ) +
+    facet_wrap(~algo) +
+    theme_bw() +
+    theme(axis.title.x=element_blank(), axis.title.y=element_blank(),
+        legend.title = element_blank(), legend.text=element_text(size=25),
+        text = element_text(size=20), legend.position="right")
+ggsave("mixture_runtime_vs_mse2.pdf", width = 14, height = 8, dpi = 300)
+"""
