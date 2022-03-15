@@ -164,6 +164,7 @@ mean(ise, dims = 2)
 mean(ise_reconvolved, dims = 2)
 times = mean(runtime, dims = 2)
 using JLD;
-save("sim_epidem9Mar2022_truncated.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
-# ise = load("sim_epidem9Mar2021misspecified.jld", "ise");
-# runtime = load("sim_epidem9Mar2021misspecified.jld", "runtime");
+save("sim_epidem10Mar2022_truncated.jld", "runtime", runtime, "ise", ise, "ise_reconvolved", ise_reconvolved);
+# ise = load("sim_epidem10Mar2022misspecified.jld", "ise");
+# runtime = load("sim_epidem10Mar2022misspecified.jld", "runtime");
+# ise_reconvolved = load("sim_epidem10Mar2022misspecified.jld", "ise_reconvolved");
