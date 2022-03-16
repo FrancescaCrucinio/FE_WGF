@@ -132,7 +132,8 @@ var_isePI = var(isePI, dims = 2);
 var_iseSMC = var(iseSMC, dims = 2);
 var_iseWGF = var(iseWGF, dims = 2);
 p = plot(tPI, mean(isePI, dims = 2), xaxis = :log, lw = 3, color = :orange, line = :dashdotdot, label = "DKDE-pi",
-    legendfontsize = 10, tickfontsize = 10, legend = :outerright, size=(700, 400), ribbon = sqrt.(var_isePI), fillalpha = .2)
+    legendfontsize = 12, tickfontsize = 10, legend = :outerright, size=(800, 400), ribbon = sqrt.(var_isePI), fillalpha = .2,
+    xlim = (minimum(tWGF), maximum(tSMC)+35), xticks = [1e-01, 1e+00, 1e+01, 1e+02])
 plot!(p, tSMC, mean(iseSMC, dims = 2), xaxis = :log, lw = 3, color = :purple, line = :dash,  label = "SMC-EMS", ribbon =  sqrt.(var_iseSMC), fillalpha = .2)
 plot!(p, tWGF, mean(iseWGF, dims = 2), xaxis = :log, lw = 3, color = :red, line = :solid, label = "Algo 1", ribbon = sqrt.(var_iseWGF), fillalpha = .2)
 markers = [:circle :rect :diamond :star5 :xcross];
@@ -147,7 +148,7 @@ for i=1:length(Nparticles)
     scatter!(p, [tWGF[i]], [mean(iseWGF, dims = 2)[i]], xaxis = :log, color = :red,
         markerstrokecolor = :red, marker = markers[i], markersize = 5, label = "")
 end
-# savefig(p, "mixture_runtime_vs_mise2.pdf")
+# savefig(p, "mixture_runtime_vs_mise.pdf")
 bp1 = boxplot(transpose(log10.(tPI)), qdistPI, yaxis = :log10, legend = :none, bar_width = 0.2,
 tickfontsize = 15, ylims = (0.5*minimum(qdistSMC), maximum(qdistPI)), xlims = (minimum(log10.(tSMC))-0.5, maximum(log10.(tSMC))+0.5))
 # title = "DKDE-pi", ylabel = "MSE", xlabel = "Runtime (log s)")
@@ -171,15 +172,15 @@ bp = plot(bp1, bp3, bp4, legend, layout = @layout([[A B C] E{.15w}]), size = (90
 #       "isePI", isePI, "iseSMC", iseSMC, "iseWGF", iseWGF,
 #       "qdistPI", qdistPI, "qdistSMC", qdistSMC, "qdistWGF", qdistWGF);
 
-tPI = load("deconvolution/prior_deconv_rate14March2022.jld", "tPI");
-tSMC = load("deconvolution/prior_deconv_rate14March2022.jld", "tSMC");
-tWGF = load("deconvolution/prior_deconv_rate14March2022.jld", "tWGF");
-isePI = load("deconvolution/prior_deconv_rate14March2022.jld", "isePI");
-iseSMC = load("deconvolution/prior_deconv_rate14March2022.jld", "iseSMC");
-iseWGF = load("deconvolution/prior_deconv_rate14March2022.jld", "iseWGF");
-qdistPI = load("deconvolution/prior_deconv_rate14March2022.jld", "qdistPI");
-qdistSMC = load("deconvolution/prior_deconv_rate14March2022.jld", "qdistSMC");
-qdistWGF = load("deconvolution/prior_deconv_rate14March2022.jld", "qdistWGF");
+tPI = load("data/prior_deconv_rate14March2022.jld", "tPI");
+tSMC = load("data/prior_deconv_rate14March2022.jld", "tSMC");
+tWGF = load("data/prior_deconv_rate14March2022.jld", "tWGF");
+isePI = load("data/prior_deconv_rate14March2022.jld", "isePI");
+iseSMC = load("data/prior_deconv_rate14March2022.jld", "iseSMC");
+iseWGF = load("data/prior_deconv_rate14March2022.jld", "iseWGF");
+qdistPI = load("data/prior_deconv_rate14March2022.jld", "qdistPI");
+qdistSMC = load("data/prior_deconv_rate14March2022.jld", "qdistSMC");
+qdistWGF = load("data/prior_deconv_rate14March2022.jld", "qdistWGF");
 
 R"""
 library(ggplot2)
@@ -206,5 +207,5 @@ ggplot(data = df, aes(x = t, y = qdist, group = N, colour = N, fill = N)) +
     theme(axis.title.x=element_blank(), axis.title.y=element_blank(),
         legend.title = element_blank(), legend.text=element_text(size=25),
         text = element_text(size=20), legend.position="right")
-ggsave("mixture_runtime_vs_mse2.pdf", width = 14, height = 8, dpi = 300)
+ggsave("mixture_runtime_vs_mse.pdf", width = 14, height = 8, dpi = 300)
 """
