@@ -1,4 +1,4 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
+# push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 push!(LOAD_PATH, "/Users/francescacrucinio/Documents/WGF/myModules")
 
 # Julia packages
@@ -19,7 +19,7 @@ include("mixture_hd_stats.jl")
 # set seed
 Random.seed!(1234);
 # dimension
-d = 10;
+d = 9;
 # mixture of Gaussians
 means = [0.3 0.7];
 variances = [0.07^2; 0.1^2];

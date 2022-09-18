@@ -101,12 +101,6 @@ end
 # check convergence
 # EWGF = mapslices(psi, xWGF, dims = 2);
 # plot(EWGF)
-# run truncated WGF
-runtimeWGF_truncated = @elapsed begin
-xWGF_truncated = wgf_flu_tamed_truncated(Nparticles, dt, Niter_wgf, alpha, x0, m0, sigma0, muSample, M);
-RKDEyWGF_truncated = rks.kde(x = xWGF_truncated[Niter_wgf, :], var"eval.points" = t);
-KDEyWGF_truncated = abs.(rcopy(RKDEyWGF_truncated[3]));
-end
 
 # run SMCEMS
 runtimeSMC = @elapsed begin
@@ -160,12 +154,6 @@ for i=1:length(refY)
     KDEyRec[i] = delta*sum(K.(t, refY[i]).*KDEyWGF);
 end
 KDEyRec = KDEyRec*5000/sum(KDEyRec);
-# recovolve WGF
-KDEyRec_truncated = zeros(length(refY), 1);
-for i=1:length(refY)
-    KDEyRec_truncated[i] = delta*sum(K.(t, refY[i]).*KDEyWGF_truncated);
-end
-KDEyRec_truncated = KDEyRec_truncated*5000/sum(KDEyRec_truncated);
 # reconvolve SMCEMS
 KDEyRecSMCEMS = zeros(length(refY), 1);
 for i=1:length(refY)
@@ -180,15 +168,15 @@ for i=1:length(refY)
 end
 RLyRec = RLyRec*5000/sum(RLyRec);
 
-estimators = [It_normalised rhoCounts[Niter_rl, :]/5000 @rget(RIDE_incidence)/5000 KDEySMC KDEyWGF KDEyWGF_truncated];
-p1=plot(t, estimators, lw = 2, label = ["true incidence" "RL" "RIDE" "SMC-EMS" "Algo 1" "Algo 1 -- truncated"],
+estimators = [It_normalised rhoCounts[Niter_rl, :]/5000 @rget(RIDE_incidence)/5000 KDEySMC KDEyWGF];
+p1=plot(t, estimators, lw = 2, label = ["true incidence" "RL" "RIDE" "SMC-EMS" "FE-WGF"],
     color = [:black :gray :blue :red :green :lightgreen], line=[:solid :dot :dashdot :dashdotdot :dash :dash],
     legendfontsize = 15, tickfontsize = 10)
 # savefig(p1,"synthetic_epidem_incidence.pdf")
 
-reconvolutions = [RLyRec[:] @rget(RIDE_reconstruction) KDEyRecSMCEMS KDEyRec KDEyRec_truncated]
+reconvolutions = [RLyRec[:] @rget(RIDE_reconstruction) KDEyRecSMCEMS KDEyRec]
 p2=scatter(t, muCounts, marker=:x, markersize=3, label = "reported cases", color = :black)
-plot!(p2, t, reconvolutions, lw = 2, label = ["RL" "RIDE" "SMC-EMS" "Algo 1" "Algo 1 -- truncated"],
+plot!(p2, t, reconvolutions, lw = 2, label = ["RL" "RIDE" "SMC-EMS" "FE-WGF"],
     color = [:gray :blue :red :green :lightgreen], line=[:dot :dashdot :dashdotdot :dash :dash],
     legendfontsize = 15, tickfontsize = 10)
 # savefig(p2,"synthetic_epidem_reconvolution.pdf")

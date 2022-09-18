@@ -135,7 +135,7 @@ p = plot(tPI, mean(isePI, dims = 2), xaxis = :log, lw = 3, color = :orange, line
     legendfontsize = 12, tickfontsize = 10, legend = :outerright, size=(800, 400), ribbon = sqrt.(var_isePI), fillalpha = .2,
     xlim = (minimum(tWGF), maximum(tSMC)+35), xticks = [1e-01, 1e+00, 1e+01, 1e+02])
 plot!(p, tSMC, mean(iseSMC, dims = 2), xaxis = :log, lw = 3, color = :purple, line = :dash,  label = "SMC-EMS", ribbon =  sqrt.(var_iseSMC), fillalpha = .2)
-plot!(p, tWGF, mean(iseWGF, dims = 2), xaxis = :log, lw = 3, color = :red, line = :solid, label = "Algo 1", ribbon = sqrt.(var_iseWGF), fillalpha = .2)
+plot!(p, tWGF, mean(iseWGF, dims = 2), xaxis = :log, lw = 3, color = :red, line = :solid, label = "FE-WGF", ribbon = sqrt.(var_iseWGF), fillalpha = .2)
 markers = [:circle :rect :diamond :star5 :xcross];
 for i=1:length(Nparticles)
     N = Nparticles[i];
@@ -185,7 +185,7 @@ qdistWGF = load("data/prior_deconv_rate14March2022.jld", "qdistWGF");
 R"""
 library(ggplot2)
 df <- data.frame(c($qdistPI, $qdistSMC, $qdistWGF), rep(c($tPI, $tSMC, $tWGF), each = 100),
-    rep($Nparticles, each = 100), rep(c("DKDEpi", "SMCEMS", "WGF"), each = 5*100))
+    rep($Nparticles, each = 100), rep(c("DKDEpi", "SMCEMS", "FE-WGF"), each = 5*100))
 colnames(df) <- c("qdist", "t", "N", "algo")
 df$N <- as.factor(df$N)
 distances_mean <- data.frame(aggregate(qdist ~ algo + N, data = df, FUN = "mean"))

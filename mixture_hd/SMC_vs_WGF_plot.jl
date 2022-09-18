@@ -20,6 +20,7 @@ for i in 2:dims
     w1SMC1000[:, i] = readf[:, 6];
     tWGF1000[:, i] = readf[:, 7];
     w1WGF1000[:, i] = readf[:, 12];
+    print("$i")
 end
 
 p = plot(2:dims, mean(tSMC1000[:,2:dims], dims = 1)[:], lw = 3, color = :blue,
@@ -38,6 +39,6 @@ violin!(g, w1WGF1000[:, 2:dims][:], group = g, label = "", side = :right,
 plot!(2:dims, mean(w1SMC1000[:, 2:dims], dims = 1)', color = :blue, lw = 2, label = "")
 plot!(2:dims, mean(w1WGF1000[:, 2:dims], dims = 1)', color = :red, lw = 2, label = "")
 scatter!(2:dims, mean(w1SMC1000[:, 2:dims], dims = 1)', color = :blue, label = "SMC-EMS")
-scatter!(2:dims, mean(w1WGF1000[:, 2:dims], dims = 1)', color = :red, label = "Algo 1",
+scatter!(2:dims, mean(w1WGF1000[:, 2:dims], dims = 1)', color = :red, label = "FE-WGF",
     legendfontsize = 15, legend = :topleft)
 # savefig(bp, "mixture_hd_w1.pdf")
