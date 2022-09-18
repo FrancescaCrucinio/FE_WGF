@@ -1,4 +1,3 @@
-push!(LOAD_PATH, "/Users/francescacrucinio/Documents/WGF/myModules")
 # Julia packages
 using StatsPlots;
 using Distributions;

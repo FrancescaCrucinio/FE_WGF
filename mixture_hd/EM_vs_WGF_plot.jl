@@ -1,4 +1,3 @@
-push!(LOAD_PATH, "C:/Users/Francesca/Desktop/WGF/myModules")
 # Julia packages
 using Revise;
 using StatsPlots;
